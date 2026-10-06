@@ -1,0 +1,936 @@
+============================================================
+ REACT CODING TASKS — practice for practical rounds
+============================================================
+Format per task:
+  QUESTION            - exactly what the interviewer asks
+  WHAT TO BUILD       - the deliverable
+  CONCEPTS TESTED     - hooks / patterns being checked
+  EXPECTED UI         - what the page should look like
+  HINTS               - the key ideas that unlock the solution
+  REFERENCE SOLUTION  - small working code
+
+The 20 classic tasks also live in folder 41_interview_tasks with
+more detail. Do these with a timer and talk while you code.
+
+------------------------------------------------------------
+ EASY
+------------------------------------------------------------
+
+------------------------------------------------------------
+1. COUNTER
+------------------------------------------------------------
+QUESTION: "Build a counter with increment, decrement, and reset."
+WHAT TO BUILD: three buttons + a number.
+CONCEPTS TESTED: useState.
+EXPECTED UI: shows 0; + / - / Reset change it.
+HINTS: count in state; every button calls setCount; disable - at 0.
+REFERENCE SOLUTION:
+  function App() {
+    const [count, setCount] = useState(0);
+    return (
+      <div>
+        <h1>{count}</h1>
+        <button onClick={() => setCount((c) => c + 1)}>+</button>
+        <button onClick={() => setCount((c) => c - 1)}>-</button>
+        <button onClick={() => setCount(0)}>Reset</button>
+      </div>
+    );
+  }
+
+------------------------------------------------------------
+2. TOGGLE BUTTON
+------------------------------------------------------------
+QUESTION: "Build a toggle switch that shows ON/OFF."
+WHAT TO BUILD: one button whose label flips.
+CONCEPTS TESTED: useState, conditional rendering.
+EXPECTED UI: button says ON; click -> OFF; click -> ON.
+HINTS: boolean state; label via ternary.
+REFERENCE SOLUTION:
+  function App() {
+    const [on, setOn] = useState(false);
+    return <button onClick={() => setOn(!on)}>{on ? "ON" : "OFF"}</button>;
+  }
+
+------------------------------------------------------------
+3. SHOW / HIDE
+------------------------------------------------------------
+QUESTION: "Show and hide a paragraph with a button."
+WHAT TO BUILD: button + conditional paragraph.
+CONCEPTS TESTED: useState, && or ternary.
+EXPECTED UI: click Show -> paragraph appears; click Hide -> gone.
+HINTS: {visible && <p>...}. Toggle with !visible.
+REFERENCE SOLUTION:
+  function App() {
+    const [visible, setVisible] = useState(false);
+    return (
+      <div>
+        <button onClick={() => setVisible(!visible)}>
+          {visible ? "Hide" : "Show"}
+        </button>
+        {visible && <p>Hello from memory</p>}
+      </div>
+    );
+  }
+
+------------------------------------------------------------
+4. CONTROLLED INPUT (echo)
+------------------------------------------------------------
+QUESTION: "Type in an input and display the value below it."
+WHAT TO BUILD: input + live display.
+CONCEPTS TESTED: controlled input.
+EXPECTED UI: text appears under the box as you type.
+HINTS: value + onChange -> setState.
+REFERENCE SOLUTION:
+  function App() {
+    const [text, setText] = useState("");
+    return (
+      <div>
+        <input value={text} onChange={(e) => setText(e.target.value)} />
+        <p>{text}</p>
+      </div>
+    );
+  }
+
+------------------------------------------------------------
+5. CHARACTER COUNTER
+------------------------------------------------------------
+QUESTION: "Show the number of characters as the user types."
+WHAT TO BUILD: input + count.
+CONCEPTS TESTED: controlled input, string .length.
+EXPECTED UI: "0 / 100" under the box, updates live.
+HINTS: text.length; cap at 100 with maxLength.
+REFERENCE SOLUTION:
+  function App() {
+    const [text, setText] = useState("");
+    return (
+      <div>
+        <input maxLength={100} value={text}
+          onChange={(e) => setText(e.target.value)} />
+        <p>{text.length} / 100</p>
+      </div>
+    );
+  }
+
+------------------------------------------------------------
+6. LIST RENDERING
+------------------------------------------------------------
+QUESTION: "Render this array as a list: ['React','JSX','Hooks']."
+WHAT TO BUILD: an <ul>.
+CONCEPTS TESTED: map, keys.
+EXPECTED UI: three bullet points.
+HINTS: map over the array; key = the item (strings are unique here).
+REFERENCE SOLUTION:
+  function App() {
+    const items = ["React", "JSX", "Hooks"];
+    return <ul>{items.map((i) => <li key={i}>{i}</li>)}</ul>;
+  }
+
+------------------------------------------------------------
+7. SEARCH FILTER (basic)
+------------------------------------------------------------
+QUESTION: "Filter a list of names as the user types."
+WHAT TO BUILD: input + filtered <ul>.
+CONCEPTS TESTED: controlled input, filter, conditional text.
+EXPECTED UI: type "an" -> list shrinks to matches; "No results" if none.
+HINTS: toLowerCase().includes(search.toLowerCase()).
+REFERENCE SOLUTION:
+  function App() {
+    const names = ["Hemanth", "Ravi", "Anu", "Priya"];
+    const [q, setQ] = useState("");
+    const filtered = names.filter((n) =>
+      n.toLowerCase().includes(q.toLowerCase()));
+    return (
+      <div>
+        <input value={q} onChange={(e) => setQ(e.target.value)} />
+        {filtered.length === 0
+          ? <p>No results</p>
+          : <ul>{filtered.map((n) => <li key={n}>{n}</li>)}</ul>}
+      </div>
+    );
+  }
+
+------------------------------------------------------------
+8. COLOR BOX
+------------------------------------------------------------
+QUESTION: "A box that changes color when you click it."
+WHAT TO BUILD: a colored div that cycles colors.
+CONCEPTS TESTED: useState, inline styles, arrays + index.
+EXPECTED UI: clicking flips between 3 colors.
+HINTS: colors array + index state; style={{ background: colors[i] }}.
+REFERENCE SOLUTION:
+  function App() {
+    const colors = ["red", "green", "blue"];
+    const [i, setI] = useState(0);
+    return (
+      <div
+        onClick={() => setI((i + 1) % colors.length)}
+        style={{ width: 120, height: 120, background: colors[i] }}
+      />
+    );
+  }
+
+------------------------------------------------------------
+9. CLICK MESSAGE
+------------------------------------------------------------
+QUESTION: "Show a message after the user clicks a button."
+WHAT TO BUILD: button + message.
+CONCEPTS TESTED: event handling, conditional rendering.
+EXPECTED UI: message appears after click.
+HINTS: clicked boolean.
+REFERENCE SOLUTION:
+  function App() {
+    const [clicked, setClicked] = useState(false);
+    return (
+      <div>
+        <button onClick={() => setClicked(true)}>Click me</button>
+        {clicked && <p>Thanks!</p>}
+      </div>
+    );
+  }
+
+------------------------------------------------------------
+10. TIMER (setInterval)
+------------------------------------------------------------
+QUESTION: "Show a running timer in seconds."
+WHAT TO BUILD: seconds counter + start/pause.
+CONCEPTS TESTED: useEffect, cleanup, setInterval.
+EXPECTED UI: 0, 1, 2... every second.
+HINTS: interval in useEffect with [] deps; clearInterval in cleanup;
+      use the functional update to avoid stale state.
+REFERENCE SOLUTION:
+  function App() {
+    const [seconds, setSeconds] = useState(0);
+    const [running, setRunning] = useState(false);
+    useEffect(() => {
+      if (!running) return;
+      const id = setInterval(() => setSeconds((s) => s + 1), 1000);
+      return () => clearInterval(id);
+    }, [running]);
+    return (
+      <div>
+        <h1>{seconds}s</h1>
+        <button onClick={() => setRunning(!running)}>
+          {running ? "Pause" : "Start"}
+        </button>
+      </div>
+    );
+  }
+
+------------------------------------------------------------
+ MEDIUM
+------------------------------------------------------------
+
+------------------------------------------------------------
+11. TODO — ADD + DELETE
+------------------------------------------------------------
+QUESTION: "A todo list where you can add and remove items."
+WHAT TO BUILD: input + Add button + list with Delete buttons.
+CONCEPTS TESTED: useState, [...items], filter.
+EXPECTED UI: type -> Add -> item appears; Delete removes it.
+HINTS: id = Date.now(); never mutate directly.
+REFERENCE SOLUTION:
+  function App() {
+    const [todos, setTodos] = useState([]);
+    const [text, setText] = useState("");
+    const add = (e) => {
+      e.preventDefault();
+      if (!text.trim()) return;
+      setTodos([...todos, { id: Date.now(), text }]);
+      setText("");
+    };
+    return (
+      <div>
+        <form onSubmit={add}>
+          <input value={text} onChange={(e) => setText(e.target.value)} />
+          <button>Add</button>
+        </form>
+        <ul>
+          {todos.map((t) => (
+            <li key={t.id}>
+              {t.text}
+              <button onClick={() => setTodos(todos.filter((x) => x.id !== t.id))}>
+                Delete
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+
+------------------------------------------------------------
+12. TODO — TOGGLE COMPLETE
+------------------------------------------------------------
+QUESTION: "Add a strikethrough when a todo is completed."
+WHAT TO BUILD: same as 11 + click-to-toggle.
+CONCEPTS TESTED: map + spread update.
+EXPECTED UI: clicking an item strikes it through; clicking again unstrikes.
+HINTS: map and replace the matched item; style={{textDecoration}}.
+REFERENCE SOLUTION:
+  function App() {
+    const [todos, setTodos] = useState([]);
+    const [text, setText] = useState("");
+    const add = (e) => {
+      e.preventDefault();
+      if (!text.trim()) return;
+      setTodos([...todos, { id: Date.now(), text, done: false }]);
+      setText("");
+    };
+    const toggle = (id) =>
+      setTodos(todos.map((t) =>
+        t.id === id ? { ...t, done: !t.done } : t));
+    return (
+      <div>
+        <form onSubmit={add}>
+          <input value={text} onChange={(e) => setText(e.target.value)} />
+          <button>Add</button>
+        </form>
+        <ul>
+          {todos.map((t) => (
+            <li key={t.id}
+                onClick={() => toggle(t.id)}
+                style={{ textDecoration: t.done ? "line-through" : "none" }}>
+              {t.text}
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+
+------------------------------------------------------------
+13. LOGIN FORM
+------------------------------------------------------------
+QUESTION: "Build a login form with validation and a loading state."
+WHAT TO BUILD: email + password + button with Show/Hide + errors.
+CONCEPTS TESTED: controlled inputs, validation, fake async, loading.
+EXPECTED UI: errors under fields; button says "Logging in..."; success message.
+HINTS: follow the order in 13_login_page / REACT_LOGIN_PAGE_INTERVIEW.txt.
+REFERENCE SOLUTION: see folder 13_login_page/App.jsx (complete).
+
+------------------------------------------------------------
+14. SIGNUP FORM
+------------------------------------------------------------
+QUESTION: "Build a signup form (name, email, password, confirm)."
+WHAT TO BUILD: 4 fields + validation.
+CONCEPTS TESTED: one state object, computed fields, validation.
+EXPECTED UI: password min length + "passwords must match" errors.
+HINTS: one form object; name attribute + [e.target.name].
+REFERENCE SOLUTION: see folder 14_register_page/App.jsx (complete).
+
+------------------------------------------------------------
+15. FORM VALIDATION (email/password)
+------------------------------------------------------------
+QUESTION: "Validate an email (regex) and a password (min 6 chars)."
+WHAT TO BUILD: 2 fields + inline errors.
+CONCEPTS TESTED: validation object, early return in submit.
+EXPECTED UI: clear error text under each invalid field.
+HINTS: /^\S+@\S+\.\S+$/.test(email).
+REFERENCE SOLUTION: see folder 12_form_validation/App.jsx (complete).
+
+------------------------------------------------------------
+16. TABS
+------------------------------------------------------------
+QUESTION: "Build tabs: Profile, Settings, Security."
+WHAT TO BUILD: 3 tab buttons + one content area.
+CONCEPTS TESTED: state, conditional content, arrays.
+EXPECTED UI: clicking a tab highlights it and swaps content.
+HINTS: active id in state; find content from an array.
+REFERENCE SOLUTION: see folder 33_tabs/App.jsx (complete).
+
+------------------------------------------------------------
+17. MODAL
+------------------------------------------------------------
+QUESTION: "Build a modal that opens and closes."
+WHAT TO BUILD: Open button + overlay with content + Close.
+CONCEPTS TESTED: conditional rendering, events, stopPropagation.
+EXPECTED UI: overlay covers screen; click outside or Close hides it.
+HINTS: isOpen state; overlay onClick closes; modal onClick stops it.
+REFERENCE SOLUTION: see folder 32_modal/App.jsx (complete).
+
+------------------------------------------------------------
+18. PAGINATION
+------------------------------------------------------------
+QUESTION: "Paginate a list of 50 items, 5 per page."
+WHAT TO BUILD: page numbers or Prev/Next buttons.
+CONCEPTS TESTED: slice, page state, disabled buttons.
+EXPECTED UI: shows items 1-5, then 6-10, etc.
+HINTS: (page-1)*PAGE_SIZE to page*PAGE_SIZE.
+REFERENCE SOLUTION: see folder 35_pagination/App.jsx (complete).
+
+------------------------------------------------------------
+19. FETCH AND DISPLAY API DATA
+------------------------------------------------------------
+QUESTION: "Fetch users from an API and display them with a loading state."
+WHAT TO BUILD: list of names from jsonplaceholder users.
+CONCEPTS TESTED: useEffect, fetch, loading.
+EXPECTED UI: "Loading..." then the list.
+HINTS: empty dep array; then -> json -> setData.
+REFERENCE SOLUTION: see folder 16_fetch_api/App.jsx (complete).
+
+------------------------------------------------------------
+20. DEBOUNCED SEARCH
+------------------------------------------------------------
+QUESTION: "Search input that waits 500ms after the user stops typing."
+WHAT TO BUILD: input + result label.
+CONCEPTS TESTED: useEffect, setTimeout, cleanup.
+EXPECTED UI: a message appears only after typing pauses.
+HINTS: timer in effect; clearTimeout in cleanup.
+REFERENCE SOLUTION: see folder 31_debounce_search/App.jsx (complete).
+
+------------------------------------------------------------
+21. SHOPPING CART
+------------------------------------------------------------
+QUESTION: "A product list with an add-to-cart cart and total."
+WHAT TO BUILD: products + cart list + total price.
+CONCEPTS TESTED: state objects, array updates, reduce.
+EXPECTED UI: Add -> item in cart; total updates; Remove works.
+HINTS: cart as array of {id, qty}; total = reduce.
+REFERENCE SOLUTION:
+  const PRODUCTS = [
+    { id: 1, name: "Apple", price: 30 },
+    { id: 2, name: "Milk", price: 55 },
+    { id: 3, name: "Bread", price: 40 },
+  ];
+
+  function App() {
+    const [cart, setCart] = useState([]);   // [{id, qty}]
+    const add = (product) => {
+      const found = cart.find((c) => c.id === product.id);
+      if (found) {
+        setCart(cart.map((c) =>
+          c.id === product.id ? { ...c, qty: c.qty + 1 } : c));
+      } else {
+        setCart([...cart, { id: product.id, qty: 1 }]);
+      }
+    };
+    const remove = (id) =>
+      setCart(cart.filter((c) => c.id !== id));
+
+    const total = cart.reduce((sum, c) => {
+      const p = PRODUCTS.find((p) => p.id === c.id);
+      return sum + p.price * c.qty;
+    }, 0);
+
+    return (
+      <div>
+        {PRODUCTS.map((p) => (
+          <div key={p.id}>
+            {p.name} — Rs {p.price}
+            <button onClick={() => add(p)}>Add</button>
+          </div>
+        ))}
+        <h2>Cart (total Rs {total})</h2>
+        {cart.map((c) => (
+          <div key={c.id}>
+            {PRODUCTS.find((p) => p.id === c.id).name} x{c.qty}
+            <button onClick={() => remove(c.id)}>Remove</button>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+------------------------------------------------------------
+22. CRUD LIST (inline edit)
+------------------------------------------------------------
+QUESTION: "A list where you can add, edit inline, and delete items."
+WHAT TO BUILD: input + items with Edit/Save and Delete.
+CONCEPTS TESTED: map with conditional edit mode.
+EXPECTED UI: Edit swaps the label for an input; Save commits.
+HINTS: editingId + editText state.
+REFERENCE SOLUTION: see folder 36_todo_crud/App.jsx (complete).
+
+------------------------------------------------------------
+ HARD
+------------------------------------------------------------
+
+------------------------------------------------------------
+23. PROTECTED ROUTES
+------------------------------------------------------------
+QUESTION: "Dashboard should redirect to /login when not authenticated."
+WHAT TO BUILD: login + protected dashboard.
+CONCEPTS TESTED: React Router, Navigate, conditional rendering.
+EXPECTED UI: visiting /dashboard logged out -> login page.
+HINTS: Protected wrapper: isAuth ? children : <Navigate replace/>.
+REFERENCE SOLUTION: see folder 25_protected_route/App.jsx (complete).
+
+------------------------------------------------------------
+24. AUTH FLOW WITH PERSISTENCE
+------------------------------------------------------------
+QUESTION: "Login, store auth, protect a page, logout. Survive refresh."
+WHAT TO BUILD: full login -> protected page -> logout.
+CONCEPTS TESTED: localStorage, router, lazy state init.
+EXPECTED UI: refresh keeps you logged in; logout clears it.
+HINTS: JSON.stringify/parse in localStorage.
+REFERENCE SOLUTION: see folder 38_auth_flow/App.jsx (complete).
+
+------------------------------------------------------------
+25. MULTI-STEP FORM (wizard)
+------------------------------------------------------------
+QUESTION: "A 3-step form: Step1 name/email, Step2 address, Step3 review."
+WHAT TO BUILD: Next/Back buttons + a summary.
+CONCEPTS TESTED: single form state object, conditional steps.
+EXPECTED UI: Step 1 -> 2 -> 3; Review shows all data.
+HINTS: step index + one form object; disable Next on invalid step.
+REFERENCE SOLUTION:
+  function App() {
+    const [step, setStep] = useState(1);
+    const [form, setForm] = useState({ name: "", email: "", city: "" });
+    const set = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
+    if (step === 3) {
+      return (
+        <div>
+          <h2>Review</h2>
+          <p>Name: {form.name}</p>
+          <p>Email: {form.email}</p>
+          <p>City: {form.city}</p>
+          <button onClick={() => setStep(2)}>Back</button>
+          <button onClick={() => alert("Submitted")}>Submit</button>
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        <h2>Step {step} / 3</h2>
+        {step === 1 && (
+          <>
+            <input name="name" value={form.name} onChange={set} placeholder="Name" />
+            <input name="email" value={form.email} onChange={set} placeholder="Email" />
+          </>
+        )}
+        {step === 2 && (
+          <input name="city" value={form.city} onChange={set} placeholder="City" />
+        )}
+        {step > 1 && <button onClick={() => setStep(step - 1)}>Back</button>}
+        <button onClick={() => setStep(step + 1)}>Next</button>
+      </div>
+    );
+  }
+
+------------------------------------------------------------
+26. SEARCH + PAGINATION COMBINED
+------------------------------------------------------------
+QUESTION: "Filter a list AND paginate the filtered result."
+WHAT TO BUILD: search box + prev/next over the filtered items.
+CONCEPTS TESTED: filter, slice, derived values.
+EXPECTED UI: typing resets to page 1 and pages shrink.
+HINTS: derive filtered first, then slice it. Reset page to 1 in onChange.
+REFERENCE SOLUTION:
+  function App() {
+    const all = Array.from({ length: 60 }, (_, i) => `User ${i + 1}`);
+    const [q, setQ] = useState("");
+    const [page, setPage] = useState(1);
+    const PAGE_SIZE = 5;
+
+    const filtered = all.filter((u) =>
+      u.toLowerCase().includes(q.toLowerCase()));
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
+    const items = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+    const changeQ = (e) => { setQ(e.target.value); setPage(1); };
+
+    return (
+      <div>
+        <input value={q} onChange={changeQ} />
+        <ul>{items.map((i) => <li key={i}>{i}</li>)}</ul>
+        <button disabled={page === 1} onClick={() => setPage(page - 1)}>Prev</button>
+        <span>{page} / {totalPages}</span>
+        <button disabled={page === totalPages} onClick={() => setPage(page + 1)}>Next</button>
+      </div>
+    );
+  }
+
+------------------------------------------------------------
+27. API CRUD (GET / POST / PUT / DELETE)
+------------------------------------------------------------
+QUESTION: "Full CRUD against jsonplaceholder posts."
+WHAT TO BUILD: list + create + edit + delete against an API.
+CONCEPTS TESTED: fetch with methods, optimistic local updates.
+EXPECTED UI: new posts appear; deleted ones disappear.
+HINTS: update local state with the server response (or optimistic).
+REFERENCE SOLUTION: see folder 37_api_crud/App.jsx (complete).
+
+------------------------------------------------------------
+28. DASHBOARD
+------------------------------------------------------------
+QUESTION: "Build a small dashboard: stats cards + a fetch + a search."
+WHAT TO BUILD: cards with counts, fetched list, filter input.
+CONCEPTS TESTED: everything from 40_practical_dashboard.
+EXPECTED UI: loading -> cards + filterable list.
+HINTS: combine 17 + 34 with props.
+REFERENCE SOLUTION: see folder 40_practical_dashboard/App.jsx (complete).
+
+------------------------------------------------------------
+29. REUSABLE MODAL
+------------------------------------------------------------
+QUESTION: "Make a reusable modal component used by multiple buttons."
+WHAT TO BUILD: <Modal open={...} onClose={...}> component.
+CONCEPTS TESTED: props, children, composition.
+EXPECTED UI: two different buttons each open the same modal with different content.
+HINTS: children inside the modal body.
+REFERENCE SOLUTION:
+  function Modal({ open, onClose, children }) {
+    if (!open) return null;
+    return (
+      <div className="overlay" onClick={onClose}>
+        <div className="modal" onClick={(e) => e.stopPropagation()}>
+          {children}
+          <button onClick={onClose}>Close</button>
+        </div>
+      </div>
+    );
+  }
+
+  function App() {
+    const [which, setWhich] = useState(null);   // "info" | "help" | null
+    return (
+      <div>
+        <button onClick={() => setWhich("info")}>Open Info</button>
+        <button onClick={() => setWhich("help")}>Open Help</button>
+        <Modal open={which === "info"} onClose={() => setWhich(null)}>
+          <h2>Info</h2>
+        </Modal>
+        <Modal open={which === "help"} onClose={() => setWhich(null)}>
+          <h2>Help</h2>
+        </Modal>
+      </div>
+    );
+  }
+
+------------------------------------------------------------
+30. CUSTOM HOOK — useFetch
+------------------------------------------------------------
+QUESTION: "Write a useFetch hook and use it to load data."
+WHAT TO BUILD: hook + one consumer.
+CONCEPTS TESTED: custom hooks, useState/useEffect inside a hook.
+EXPECTED UI: loading/error/data, same as 17.
+HINTS: hook returns { data, loading, error }; state lives in the hook.
+REFERENCE SOLUTION:
+  function useFetch(url) {
+    const [data, setData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+      fetch(url)
+        .then((r) => r.json())
+        .then(setData)
+        .catch((e) => setError(e.message))
+        .finally(() => setLoading(false));
+    }, [url]);
+
+    return { data, loading, error };
+  }
+
+  function App() {
+    const { data, loading, error } = useFetch(
+      "https://jsonplaceholder.typicode.com/users");
+    if (loading) return <p>Loading...</p>;
+    if (error) return <p>{error}</p>;
+    return <ul>{data.map((u) => <li key={u.id}>{u.name}</li>)}</ul>;
+  }
+
+------------------------------------------------------------
+31. COMPLEX FORM STATE (useReducer)
+------------------------------------------------------------
+QUESTION: "Manage a registration form with useReducer."
+WHAT TO BUILD: 4 fields + errors via a reducer.
+CONCEPTS TESTED: useReducer, actions.
+EXPECTED UI: same as a normal form, but state updates go through dispatch.
+HINTS: reducer actions: SET_FIELD, SET_ERRORS, RESET.
+REFERENCE SOLUTION:
+  const initial = { values: {}, errors: {} };
+
+  function reducer(state, action) {
+    switch (action.type) {
+      case "SET_FIELD":
+        return { ...state, values: { ...state.values, [action.name]: action.value } };
+      case "SET_ERRORS":
+        return { ...state, errors: action.errors };
+      case "RESET":
+        return initial;
+      default:
+        return state;
+    }
+  }
+
+  function App() {
+    const [state, dispatch] = useReducer(reducer, initial);
+
+    const submit = (e) => {
+      e.preventDefault();
+      const errs = {};
+      if (!state.values.email) errs.email = "Email required";
+      if (!state.values.password) errs.password = "Password required";
+      dispatch({ type: "SET_ERRORS", errors: errs });
+    };
+
+    return (
+      <form onSubmit={submit}>
+        <input name="email" placeholder="Email"
+          onChange={(e) => dispatch({ type: "SET_FIELD", name: "email", value: e.target.value })} />
+        {state.errors.email && <p className="error">{state.errors.email}</p>}
+        <input name="password" type="password" placeholder="Password"
+          onChange={(e) => dispatch({ type: "SET_FIELD", name: "password", value: e.target.value })} />
+        {state.errors.password && <p className="error">{state.errors.password}</p>}
+        <button>Submit</button>
+      </form>
+    );
+  }
+
+------------------------------------------------------------
+32. AUTOCOMPLETE INPUT
+------------------------------------------------------------
+QUESTION: "Typing shows a dropdown of matching suggestions."
+WHAT TO BUILD: input + filtered suggestion list.
+CONCEPTS TESTED: filter, conditional rendering, click-to-fill.
+EXPECTED UI: type "an" -> suggestions; click one fills the input.
+HINTS: show list only when query is non-empty and differs from a selected value.
+REFERENCE SOLUTION:
+  const FRUITS = ["Apple", "Apricot", "Banana", "Mango", "Orange"];
+
+  function App() {
+    const [q, setQ] = useState("");
+    const [selected, setSelected] = useState("");
+    const matches = FRUITS.filter((f) =>
+      f.toLowerCase().includes(q.toLowerCase()));
+
+    return (
+      <div>
+        <input value={q} onChange={(e) => setQ(e.target.value)}
+          placeholder="Type a fruit" />
+        {q !== selected && matches.length > 0 && (
+          <ul>
+            {matches.map((m) => (
+              <li key={m}
+                  onClick={() => { setSelected(m); setQ(m); }}>
+                {m}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  }
+
+------------------------------------------------------------
+33. STAR RATING
+------------------------------------------------------------
+QUESTION: "Click stars to set a 1-5 rating."
+WHAT TO BUILD: 5 stars, hover/selected states.
+CONCEPTS TESTED: arrays, index state, inline styles.
+EXPECTED UI: clicked star and previous ones stay filled.
+HINTS: value state; filled = index <= value; onMouseEnter for hover.
+REFERENCE SOLUTION:
+  function App() {
+    const [rating, setRating] = useState(0);
+    return (
+      <div>
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button key={n}
+            onClick={() => setRating(n)}
+            style={{ fontSize: 28, color: n <= rating ? "#f59e0b" : "#cbd5e1" }}>
+            ★
+          </button>
+        ))}
+        <p>Rating: {rating}</p>
+      </div>
+    );
+  }
+
+------------------------------------------------------------
+34. EXPANDABLE FAQ
+------------------------------------------------------------
+QUESTION: "Click a question to expand its answer; one open at a time."
+WHAT TO BUILD: accordion of Q/A items.
+CONCEPTS TESTED: state (open index), conditional rendering, map.
+EXPECTED UI: clicking a new question closes the previous one.
+HINTS: openId state, not booleans.
+REFERENCE SOLUTION:
+  const FAQ = [
+    { q: "What is React?", a: "A UI library." },
+    { q: "What is JSX?", a: "HTML-like syntax in JS." },
+    { q: "What is a hook?", a: "A function like useState." },
+  ];
+
+  function App() {
+    const [openId, setOpenId] = useState(0);
+    return (
+      <div>
+        {FAQ.map((item, i) => (
+          <div key={item.q}>
+            <button onClick={() => setOpenId(i)}>
+              {item.q} {openId === i ? "▲" : "▼"}
+            </button>
+            {openId === i && <p>{item.a}</p>}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+------------------------------------------------------------
+35. DEBOUNCED SEARCH WITH API
+------------------------------------------------------------
+QUESTION: "Debounce an API search instead of calling on every keystroke."
+WHAT TO BUILD: input -> debounced query -> fetch results.
+CONCEPTS TESTED: debounce + fetch + loading.
+EXPECTED UI: results arrive 500ms after typing stops.
+HINTS: two effects — one debounces, one fetches on the debounced value.
+REFERENCE SOLUTION:
+  function App() {
+    const [query, setQuery] = useState("");
+    const [debounced, setDebounced] = useState("");
+    const [results, setResults] = useState([]);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+      const t = setTimeout(() => setDebounced(query), 500);
+      return () => clearTimeout(t);
+    }, [query]);
+
+    useEffect(() => {
+      if (!debounced) return;
+      setLoading(true);
+      fetch(`https://jsonplaceholder.typicode.com/posts?userId=${debounced.length}`)
+        .then((r) => r.json())
+        .then(setResults)
+        .finally(() => setLoading(false));
+    }, [debounced]);
+
+    return (
+      <div>
+        <input value={query} onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search (debounced)" />
+        {loading && <p>Searching...</p>}
+        <ul>{results.slice(0, 5).map((r) => <li key={r.id}>{r.title}</li>)}</ul>
+      </div>
+    );
+  }
+
+------------------------------------------------------------
+36. TODO WITH localStorage
+------------------------------------------------------------
+QUESTION: "Todo list that survives a page refresh."
+WHAT TO BUILD: add/delete/toggle + persistence.
+CONCEPTS TESTED: localStorage + useState + useEffect.
+EXPECTED UI: refresh keeps your todos.
+HINTS: lazy init from localStorage; save in an effect on todos change.
+REFERENCE SOLUTION: see folder 22_local_storage (pattern) + 36_todo_crud.
+  function App() {
+    const [todos, setTodos] = useState(() =>
+      JSON.parse(localStorage.getItem("todos")) || []);
+
+    useEffect(() => {
+      localStorage.setItem("todos", JSON.stringify(todos));
+    }, [todos]);
+
+    const add = (e) => {
+      e.preventDefault();
+      const text = e.target[0].value;
+      setTodos([...todos, { id: Date.now(), text }]);
+      e.target.reset();
+    };
+
+    return (
+      <div>
+        <form onSubmit={add}>
+          <input placeholder="Todo" />
+          <button>Add</button>
+        </form>
+        <ul>
+          {todos.map((t) => (
+            <li key={t.id}>{t.text}</li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+
+------------------------------------------------------------
+37. SHOPPING CART WITH CONTEXT
+------------------------------------------------------------
+QUESTION: "Move the cart to Context so a header shows the count."
+WHAT TO BUILD: ProductList + CartHeader reading the same cart.
+CONCEPTS TESTED: createContext, Provider, useContext.
+EXPECTED UI: Add in the list updates the count in the header.
+HINTS: cart state lives in the Provider; consumers use useContext.
+REFERENCE SOLUTION: see folder 19_useContext (pattern) + 21 (cart logic).
+
+------------------------------------------------------------
+38. THEME TOGGLE
+------------------------------------------------------------
+QUESTION: "A light/dark theme switch."
+WHAT TO BUILD: a toggle that changes the app background.
+CONCEPTS TESTED: useState (or Context), inline styles/classes.
+EXPECTED UI: whole page flips colors.
+HINTS: theme string in state; className={theme === "dark" ? "container dark" : "container"}.
+REFERENCE SOLUTION: see folder 19_useContext/App.jsx (complete).
+
+------------------------------------------------------------
+39. LOGIN + PERSIST + PROTECT + LOGOUT (full)
+------------------------------------------------------------
+QUESTION: "Complete auth: login persists, dashboard protected, logout works."
+WHAT TO BUILD: everything combined.
+CONCEPTS TESTED: router, protected route, localStorage.
+EXPECTED UI: refresh keeps you logged in; logout returns you to login.
+HINTS: single source of truth for the user; derive auth from it.
+REFERENCE SOLUTION: see folder 38_auth_flow/App.jsx (complete).
+
+------------------------------------------------------------
+40. BUILD A PAGE FROM SCRATCH
+------------------------------------------------------------
+QUESTION: "Build a products page: fetch products, search, add to cart,
+           show cart count and total."
+WHAT TO BUILD: full small app combining many patterns.
+CONCEPTS TESTED: fetch, loading/error, search, cart state, reduce.
+EXPECTED UI: loading -> searchable product list -> cart summary.
+HINTS: reuse patterns 17 + 34 + 21. Build top-down: App owns
+      products and cart; ProductList and Cart are presentational.
+REFERENCE SOLUTION:
+  function App() {
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [q, setQ] = useState("");
+    const [cart, setCart] = useState([]);
+
+    useEffect(() => {
+      fetch("https://fakestoreapi.com/products?limit=10")
+        .then((r) => r.json())
+        .then(setProducts)
+        .finally(() => setLoading(false));
+    }, []);
+
+    const filtered = products.filter((p) =>
+      p.title.toLowerCase().includes(q.toLowerCase()));
+
+    const addToCart = (p) => {
+      const found = cart.find((c) => c.id === p.id);
+      setCart(found
+        ? cart.map((c) => c.id === p.id ? { ...c, qty: c.qty + 1 } : c)
+        : [...cart, { id: p.id, qty: 1 }]);
+    };
+
+    const total = cart.reduce((s, c) => {
+      const p = products.find((p) => p.id === c.id);
+      return s + (p ? p.price * c.qty : 0);
+    }, 0);
+
+    if (loading) return <p>Loading...</p>;
+
+    return (
+      <div>
+        <h1>Cart: {cart.reduce((s, c) => s + c.qty, 0)} items — Rs {total.toFixed(2)}</h1>
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" />
+        {filtered.map((p) => (
+          <div key={p.id}>
+            {p.title}
+            <button onClick={() => addToCart(p)}>Add</button>
+          </div>
+        ))}
+      </div>
+    );
+  }

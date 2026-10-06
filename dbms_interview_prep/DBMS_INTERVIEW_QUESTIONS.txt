@@ -1,0 +1,512 @@
+================================================================
+DBMS INTERVIEW QUESTIONS — COMPLETE COLLECTION
+================================================================
+Organized by likelihood of being asked.
+Each question has: QUESTION, SHORT ANSWER, POSSIBLE FOLLOW-UP.
+================================================================
+
+================================================================
+FIRE VERY LIKELY — Questions asked frequently in interviews
+================================================================
+
+1. What is DBMS?
+ANSWER: DBMS (Database Management System) is software that stores, manages, and retrieves data. It sits between users and the database, handling security, integrity, and concurrent access.
+FOLLOW-UP: "Give examples." → MySQL, PostgreSQL, Oracle, MongoDB.
+
+2. What is the difference between DBMS and RDBMS?
+ANSWER: RDBMS is a type of DBMS that stores data in tables with rows and columns, following relational rules. All RDBMS are DBMS, but not all DBMS are RDBMS (e.g., MongoDB is DBMS but not RDBMS).
+FOLLOW-UP: "Is MySQL an RDBMS?" → Yes.
+
+3. What is a database schema?
+ANSWER: A schema is the structure/design of a database — defining tables, columns, data types, and relationships. It's the blueprint without actual data.
+FOLLOW-UP: "Can schema change?" → Yes, through ALTER statements.
+
+4. What is the difference between schema and instance?
+ANSWER: Schema is the structure (tables, columns, types). Instance is the actual data at a specific moment in time. Schema rarely changes; instance changes constantly.
+FOLLOW-UP: "Give an analogy." → Schema is a building blueprint. Instance is who's inside the building right now.
+
+5. What is a primary key?
+ANSWER: A primary key uniquely identifies each row in a table. It cannot be NULL and must be unique. Only one primary key per table.
+FOLLOW-UP: "Can a primary key be composite?" → Yes, using multiple columns together.
+
+6. What is a candidate key?
+ANSWER: A candidate key is a minimal set of attributes that uniquely identifies a row. A table can have multiple candidate keys. The primary key is one chosen candidate key.
+FOLLOW-UP: "Can a table have multiple candidate keys?" → Yes.
+
+7. What is a foreign key?
+ANSWER: A foreign key is an attribute in one table that references the primary key (or unique key) of another table. It enforces referential integrity.
+FOLLOW-UP: "Can a foreign key be NULL?" → Yes, unless explicitly constrained with NOT NULL.
+
+8. What is normalization?
+ANSWER: Normalization is the process of organizing data to reduce redundancy and avoid insert, update, and delete anomalies. Data is split into related tables.
+FOLLOW-UP: "What problems does it solve?" → Reduces redundancy, prevents anomalies.
+
+9. What is 1NF, 2NF, 3NF?
+ANSWER: 1NF: All values are atomic (no repeating groups). 2NF: In 1NF + no partial dependencies (every non-key depends on full primary key). 3NF: In 2NF + no transitive dependencies (non-key attributes don't depend on each other).
+FOLLOW-UP: "What does 2NF remove?" → Partial dependencies.
+
+10. What is BCNF?
+ANSWER: BCNF is a stricter version of 3NF. For every functional dependency X → Y, X must be a super key. It handles edge cases where 3NF isn't sufficient.
+FOLLOW-UP: "3NF vs BCNF?" → BCNF is stricter — every determinant must be a super key.
+
+11. What is functional dependency?
+ANSWER: Functional dependency means one attribute determines another. If A → B, then for each value of A, there is exactly one value of B.
+FOLLOW-UP: "What is partial dependency?" → When a non-key attribute depends on only part of a composite key.
+
+12. What is a transaction?
+ANSWER: A transaction is a logical unit of work consisting of one or more operations. It either completes fully (commits) or fails fully (rolls back).
+FOLLOW-UP: "Give an example." → Transferring money: debit one account AND credit another. Both must succeed or both fail.
+
+13. What are ACID properties?
+ANSWER: Atomicity (all or nothing), Consistency (valid state transitions), Isolation (concurrent transactions don't interfere), Durability (committed data survives crashes).
+FOLLOW-UP: "Explain atomicity with an example." → In a money transfer, both debit and credit must happen or neither should.
+
+14. What is a dirty read?
+ANSWER: A dirty read occurs when a transaction reads data modified by another transaction that hasn't committed yet. If that other transaction rolls back, the read data was never valid.
+FOLLOW-UP: "At which isolation level?" → Read Uncommitted.
+
+15. What is a non-repeatable read?
+ANSWER: A transaction reads the same row twice and gets different values because another transaction modified it between reads.
+FOLLOW-UP: "How is it different from dirty read?" → Dirty read reads uncommitted data. Non-repeatable read reads committed data that changed.
+
+16. What is a phantom read?
+ANSWER: A transaction runs the same query twice and gets different row counts because another transaction inserted or deleted rows in between.
+FOLLOW-UP: "How is it different from non-repeatable read?" → Non-repeatable: same rows, different values. Phantom: different number of rows.
+
+17. What are the four isolation levels?
+ANSWER: Read Uncommitted (lowest), Read Committed, Repeatable Read, Serializable (highest). Each level provides more isolation but less performance.
+FOLLOW-UP: "Which is the default?" → Read Committed for most databases.
+
+18. What is a deadlock?
+ANSWER: A deadlock occurs when two or more transactions are stuck in a circular wait — each holding a lock the other needs. Neither can proceed.
+FOLLOW-UP: "What are the four conditions?" → Mutual exclusion, hold and wait, no preemption, circular wait.
+
+19. What is an index?
+ANSWER: An index is a data structure that speeds up data retrieval by providing a quick lookup path. Like an index in a book. Tradeoff: faster reads, slower writes.
+FOLLOW-UP: "What's the tradeoff?" → More storage and slower writes for faster reads.
+
+20. Why do databases use B+ trees?
+ANSWER: B+ trees are balanced search trees where all data is at leaf nodes. They support equality and range queries efficiently. Leaf nodes are linked for sequential access.
+FOLLOW-UP: "Why not hash?" → Hash is fast for equality but cannot handle range queries.
+
+21. What is the difference between DELETE and TRUNCATE?
+ANSWER: DELETE removes specific rows (with WHERE clause), is logged row-by-row, can be rolled back, and fires triggers. TRUNCATE removes all rows, is minimally logged, faster, and resets auto-increment.
+FOLLOW-UP: "Can TRUNCATE be rolled back?" → Depends on the database system.
+
+22. What is the difference between WHERE and HAVING?
+ANSWER: WHERE filters rows before grouping. HAVING filters groups after GROUP BY. WHERE cannot use aggregate functions; HAVING can.
+FOLLOW-UP: "Can HAVING be used without GROUP BY?" → In some databases, it treats the entire result as one group.
+
+22b. What is the difference between WHERE and HAVING?
+(Same answer as above — see question 22.)
+
+23. What is the difference between UNION and UNION ALL?
+ANSWER: UNION combines results and removes duplicates. UNION ALL combines results and keeps duplicates. UNION ALL is faster because it skips duplicate checking.
+FOLLOW-UP: "When to use UNION ALL?" → When you know there are no duplicates or don't care about them.
+
+24. What is an INNER JOIN vs LEFT JOIN?
+ANSWER: INNER JOIN returns only rows with matches in both tables. LEFT JOIN returns all rows from the left table plus matching rows from the right (NULL if no match).
+FOLLOW-UP: "When to use LEFT JOIN?" → When you need all records from the left table regardless of matches.
+
+25. What is NULL?
+ANSWER: NULL represents missing, unknown, or not applicable data. It's not zero, not empty string, not false. NULL compared to anything (including itself) returns UNKNOWN.
+FOLLOW-UP: "What does NULL = NULL return?" → UNKNOWN, not TRUE. Use IS NULL instead.
+
+26. What is a view?
+ANSWER: A view is a virtual table defined by a query. It doesn't store data itself but retrieves it from underlying tables when queried. Used for security, simplicity, and abstraction.
+FOLLOW-UP: "View vs materialized view?" → View is computed on-the-fly. Materialized view stores results physically.
+
+27. What is a stored procedure?
+ANSWER: A stored procedure is a precompiled set of SQL statements stored in the database. It can accept parameters and perform operations.
+FOLLOW-UP: "Procedure vs function?" → Function must return a value and can be used in SELECT. Procedure may or may not return values.
+
+28. What is OLTP vs OLAP?
+ANSWER: OLTP handles many fast transactions for day-to-day operations. OLAP handles complex queries over historical data for analytics. OLTP uses normalized schemas; OLAP uses denormalized.
+FOLLOW-UP: "Example?" → Banking is OLTP. Sales reporting dashboard is OLAP.
+
+29. What is SQL vs NoSQL?
+ANSWER: SQL databases use structured tables with fixed schemas and ACID. NoSQL databases offer flexible schemas and horizontal scaling — types include document, key-value, column-family, and graph.
+FOLLOW-UP: "When to use NoSQL?" → Unstructured data, flexible schema, massive horizontal scaling needs.
+
+30. What is CAP theorem?
+ANSWER: In a distributed system, you can guarantee at most two of: Consistency, Availability, and Partition Tolerance. Since partitions are inevitable, you choose between consistency and availability.
+FOLLOW-UP: "Can you really choose any two?" → During normal operation you can have all three. During a partition, you must choose between C and A.
+
+31. What is ACID vs BASE?
+ANSWER: ACID (Atomicity, Consistency, Isolation, Durability) prioritizes consistency for traditional databases. BASE (Basically Available, Soft state, Eventually consistent) prioritizes availability for distributed systems.
+FOLLOW-UP: "Which is better?" → Neither. ACID for banking. BASE for social media feeds.
+
+32. What is replication?
+ANSWER: Replication copies data from one database server to another for redundancy, read scalability, and high availability.
+FOLLOW-UP: "Synchronous vs asynchronous?" → Synchronous: immediate but slower writes. Asynchronous: faster writes but possible lag.
+
+33. What is sharding?
+ANSWER: Sharding splits a large database horizontally across multiple servers. Each shard holds a portion of the data, enabling horizontal scaling.
+FOLLOW-UP: "What's a shard key?" → The column that determines which shard a row belongs to.
+
+34. What is a clustered index?
+ANSWER: A clustered index determines the physical order of data on disk. There can be only one per table because data can be physically sorted one way only.
+FOLLOW-UP: "Clustered vs non-clustered?" → Non-clustered is a separate structure with pointers. Multiple non-clustered per table.
+
+35. What is a B+ tree?
+ANSWER: A B+ tree is a balanced search tree used for database indexing. All data is in leaf nodes. Internal nodes guide search. Leaf nodes are linked for range queries.
+FOLLOW-UP: "B-tree vs B+ tree?" → In B-trees, data is in all nodes. In B+ trees, data is only in leaf nodes, which are linked.
+
+36. What is a composite key?
+ANSWER: A composite key is a primary key made up of two or more columns together that uniquely identify a row.
+FOLLOW-UP: "Example?" → {StudentID, CourseID} in an enrollment table.
+
+37. What is referential integrity?
+ANSWER: Referential integrity ensures that a foreign key value always references a valid, existing record in the referenced table. If the referenced row is deleted, the foreign key constraint determines the action.
+FOLLOW-UP: "What happens when you delete a referenced row?" → Depends on ON DELETE: CASCADE, SET NULL, RESTRICT, etc.
+
+38. What is entity integrity?
+ANSWER: Entity integrity means the primary key cannot be NULL. It ensures every row can be uniquely identified.
+FOLLOW-UP: "How is it different from referential integrity?" → Entity: PK not null. Referential: FK points to valid data.
+
+39. What are the types of NoSQL databases?
+ANSWER: Document (MongoDB), Key-Value (Redis), Column-Family (Cassandra), Graph (Neo4j). Each is optimized for different data models and access patterns.
+FOLLOW-UP: "When to use graph databases?" → When relationships between entities are the primary query focus — like social networks.
+
+40. What is the difference between horizontal and vertical partitioning?
+ANSWER: Horizontal partitioning splits rows across partitions (same columns, different rows). Vertical partitioning splits columns (different columns, same rows). Horizontal is more common.
+FOLLOW-UP: "Partitioning vs sharding?" → Partitioning is within one database. Sharding is across multiple servers.
+
+41. What is a subquery?
+ANSWER: A subquery is a query nested inside another query. It can be in SELECT, WHERE, or FROM clauses.
+FOLLOW-UP: "JOIN vs subquery?" → JOINs are often more readable and performant for multi-table operations.
+
+42. What is an aggregate function?
+ANSWER: A function that operates on a set of values to return a single value — COUNT, SUM, AVG, MIN, MAX.
+FOLLOW-UP: "How does NULL affect aggregates?" → COUNT(column) ignores NULLs. COUNT(*) counts all rows including NULLs.
+
+43. What is serialization in database context?
+ANSWER: Serialization ensures that concurrent transactions produce the same result as some serial (one-at-a-time) execution. It's the standard for correctness.
+FOLLOW-UP: "What is conflict serializability?" → A schedule is conflict serializable if it can be transformed into a serial schedule by swapping non-conflicting operations.
+
+44. What is a schedule in concurrency?
+ANSWER: A schedule is the order in which operations from concurrent transactions are executed.
+FOLLOW-UP: "Serial vs non-serial schedule?" → Serial: one transaction at a time. Non-serial: operations interleaved.
+
+45. What is the difference between shared and exclusive locks?
+ANSWER: Shared lock (read lock) allows multiple transactions to read but not write. Exclusive lock (write lock) allows only one transaction to read and write.
+FOLLOW-UP: "Can two transactions hold shared locks on same data?" → Yes. But exclusive lock is incompatible with any other lock.
+
+46. What is two-phase locking (2PL)?
+ANSWER: A concurrency control protocol where transactions have two phases: growing (acquiring locks) and shrinking (releasing locks). Once releasing starts, no new locks can be acquired. Ensures serializability.
+FOLLOW-UP: "What is strict 2PL?" → All locks held until commit/abort. Prevents cascading rollbacks.
+
+47. What are the four conditions for deadlock?
+ANSWER: 1) Mutual exclusion — resource can't be shared. 2) Hold and wait — holding a resource while waiting for another. 3) No preemption — resources can't be forcibly taken. 4) Circular wait — circular chain of waiting.
+FOLLOW-UP: "How to prevent deadlock?" → Eliminate one condition — like requiring all locks upfront.
+
+48. What is a checkpoint?
+ANSWER: A checkpoint is a point where the database writes all dirty pages to disk and logs the checkpoint. Recovery only needs to process transactions after the checkpoint.
+FOLLOW-UP: "Why is it important?" → Reduces recovery time.
+
+49. What is write-ahead logging (WAL)?
+ANSWER: Before modifying the database, changes are written to a log. If a crash occurs, the log is used to redo committed or undo uncommitted changes.
+FOLLOW-UP: "What is redo vs undo?" → Redo: reapply committed changes. Undo: reverse uncommitted changes.
+
+50. What is a cover index?
+ANSWER: A covering index includes all columns needed by a query, so results can be returned entirely from the index without reading the table.
+FOLLOW-UP: "Benefit?" → Significant performance improvement — avoids table lookups.
+
+51. What is a data warehouse?
+ANSWER: A central repository of historical data optimized for analytical queries and reporting. Data is loaded from multiple sources via ETL processes.
+FOLLOW-UP: "ETL vs ELT?" → ETL: Transform before loading. ELT: Load first, then transform.
+
+52. What is authentication vs authorization?
+ANSWER: Authentication verifies identity (who you are). Authorization determines permissions (what you can do).
+FOLLOW-UP: "What is least privilege?" → Granting only the minimum permissions needed.
+
+53. What is SQL injection?
+ANSWER: An attack where malicious SQL code is inserted through user input fields to manipulate the database. Prevented by using parameterized queries.
+FOLLOW-UP: "What are parameterized queries?" → Queries where user input is treated as data, not executable SQL.
+
+54. What is connection pooling?
+ANSWER: A technique where a pool of database connections is reused rather than creating a new connection for each request. Reduces overhead of establishing connections.
+FOLLOW-UP: "Why is it important?" → Creating connections is expensive — involves authentication, memory allocation, etc.
+
+55. What is a trigger?
+ANSWER: A trigger is a stored procedure that automatically executes in response to specific events (INSERT, UPDATE, DELETE) on a table.
+FOLLOW-UP: "When should triggers be avoided?" → When logic is complex, hard to debug, causes cascading effects, or hurts performance.
+
+56. What is a natural key vs surrogate key?
+ANSWER: Natural key uses real-world data as identifier (SSN, email). Surrogate key is an artificial key generated by the system (auto-increment ID).
+FOLLOW-UP: "Which is preferred?" → Surrogate keys — natural keys can change and may not be unique.
+
+57. What is a foreign key constraint?
+ANSWER: A rule that ensures values in a foreign key column must exist in the referenced table's key column. Enforces referential integrity.
+FOLLOW-UP: "Can a foreign key reference a non-primary key?" → Yes, any unique (candidate) key.
+
+58. What is a materialized view?
+ANSWER: A view that stores results physically. Unlike regular views, it doesn't compute on-the-fly — it's refreshed periodically.
+FOLLOW-UP: "When to use?" → When the underlying query is expensive and slightly stale data is acceptable.
+
+59. What is a join?
+ANSWER: A join combines rows from two or more tables based on a related column.
+FOLLOW-UP: "What types of joins exist?" → INNER, LEFT, RIGHT, FULL OUTER, CROSS, SELF.
+
+60. What is an execution plan?
+ANSWER: The step-by-step strategy the database optimizer chooses to execute a query — which indexes to use, join order, access paths.
+FOLLOW-UP: "Why does it matter?" → Helps understand query performance and optimize slow queries.
+
+================================================================
+YELLOW LIKELY — Important supporting questions
+================================================================
+
+61. What is metadata?
+ANSWER: Data about data. Schema definitions, column names, data types, constraints — all metadata.
+
+62. What is a database administrator (DBA)?
+ANSWER: Person responsible for database installation, configuration, security, monitoring, backups, and performance tuning.
+
+63. What is a relation?
+ANSWER: A relation is a table in the relational model. It has a name, attributes (columns), and tuples (rows).
+
+64. What is degree in relational model?
+ANSWER: Degree is the number of attributes (columns) in a relation.
+
+65. What is cardinality in relational model?
+ANSWER: Cardinality is the number of tuples (rows) in a relation. Note: This is different from cardinality in ER modeling (which describes relationship types).
+
+66. What is a super key?
+ANSWER: Any set of attributes that can uniquely identify a tuple. A table can have many super keys. Candidate keys are minimal super keys.
+
+67. What is an alternate key?
+ANSWER: A candidate key that was not chosen as the primary key. It's still unique but not the main identifier.
+
+68. What is the difference between primary key and unique key?
+ANSWER: Primary key: cannot be NULL, only one per table. Unique key: can allow one NULL (in most databases), multiple unique keys per table.
+
+69. What are constraints in a database?
+ANSWER: Rules that enforce data integrity — NOT NULL, UNIQUE, PRIMARY KEY, FOREIGN KEY, CHECK, DEFAULT.
+
+70. What is a CHECK constraint?
+ANSWER: Validates that values in a column meet a specific condition. Example: Age > 0 AND Age < 150.
+
+71. What is a DEFAULT constraint?
+ANSWER: Provides a default value for a column when no value is specified during INSERT.
+
+72. What is an entity in ER model?
+ANSWER: A real-world object or concept that is represented in the database — like Student, Product, or Order.
+
+73. What is a weak entity?
+ANSWER: An entity that cannot be uniquely identified without its owner entity. It depends on a strong entity and doesn't have its own complete primary key.
+
+74. What are the types of attributes in ER model?
+ANSWER: Simple (atomic), Composite (breakable), Multivalued (multiple values), Derived (computed), Key (uniquely identifies).
+
+75. What is a multivalued attribute?
+ANSWER: An attribute that can have multiple values for a single entity — like phone numbers or skills. Implemented as a separate table in relational model.
+
+76. What is a derived attribute?
+ANSWER: An attribute computed from other attributes — like Age derived from Date of Birth. Not stored, calculated when needed.
+
+77. What is total vs partial participation?
+ANSWER: Total participation: every entity must participate in the relationship. Partial: some entities may not participate.
+
+78. How do you implement many-to-many relationships?
+ANSWER: Using a junction (bridge) table that contains foreign keys from both tables.
+
+79. What is a data anomaly?
+ANSWER: An inconsistency that occurs due to poor database design — insert anomaly (can't add data independently), update anomaly (inconsistent updates), delete anomaly (losing unrelated data).
+
+80. What is partial dependency?
+ANSWER: When a non-key attribute depends on only part of a composite primary key instead of the whole key. Removed in 2NF.
+
+81. What is transitive dependency?
+ANSWER: When a non-key attribute depends on another non-key attribute (A → B → C where A is key). Removed in 3NF.
+
+82. What is a non-trivial functional dependency?
+ANSWER: A → B where B is not a subset of A. The dependent attribute is different from the determinant.
+
+83. What is a trivial functional dependency?
+ANSWER: A → B where B is a subset of A. Always holds true.
+
+84. What is closure of attributes?
+ANSWER: The set of all attributes that can be functionally determined by a given set of attributes using the given functional dependencies.
+
+85. How do you find a candidate key?
+ANSWER: Find attributes that appear only on the left side of functional dependencies (or not at all). Compute their closure. If the closure includes all attributes, it's a candidate key.
+
+86. What is an anti-pattern in database design?
+ANSWER: A common design mistake — like storing comma-separated values in a column, not normalizing, or over-normalizing.
+
+87. What is a surrogate key?
+ANSWER: An artificial key generated by the database (like auto-increment) that has no business meaning. Preferred over natural keys.
+
+88. What is a sparse index?
+ANSWER: An index that has entries only for some search key values. Works when data is physically sorted by the index key.
+
+89. What is a dense index?
+ANSWER: An index that has an entry for every search key value in the table.
+
+90. Why can indexes hurt performance?
+ANSWER: Every index must be updated on INSERT/UPDATE/DELETE. Too many indexes slow writes. Query optimizer may also choose suboptimal indexes.
+
+91. What is a hash index?
+ANSWER: Uses a hash function for O(1) equality lookups. Cannot efficiently handle range queries.
+
+92. What is a non-clustered index?
+ANSWER: A separate structure containing the index key and pointers to the actual data rows. Multiple non-clustered indexes per table.
+
+93. What is a self join?
+ANSWER: Joining a table with itself — useful when comparing rows within the same table.
+
+94. What is a cross join?
+ANSWER: Returns the Cartesian product — every row from the first table combined with every row from the second table.
+
+95. What is a FULL OUTER JOIN?
+ANSWER: Returns all rows from both tables. Where there's no match, NULLs fill the gaps.
+
+96. What is three-valued logic?
+ANSWER: In SQL, comparisons can return TRUE, FALSE, or UNKNOWN (when NULL is involved). This is different from standard two-valued logic.
+
+97. What is a correlated subquery?
+ANSWER: A subquery that references columns from the outer query. It executes once for each row of the outer query.
+
+98. What is a UNION?
+ANSWER: Combines results of two SELECT statements and removes duplicate rows.
+
+99. What is an updatable view?
+ANSWER: A view that allows INSERT, UPDATE, DELETE operations on the underlying table. Must meet certain conditions — simple structure, no aggregates, etc.
+
+100. What is a join dependency?
+ANSWER: A constraint where a table can be decomposed into smaller tables and reconstructed losslessly. Related to 5NF.
+
+101. What is an execution plan?
+ANSWER: The strategy the database uses to execute a query — showing which indexes are used, join order, scan types.
+
+102. What is query optimization?
+ANSWER: The process of selecting the most efficient execution plan for a query. The optimizer considers indexes, join strategies, and statistics.
+
+103. What is a fact table vs dimension table?
+ANSWER: Fact table stores measurable business data (sales amounts, quantities). Dimension table stores descriptive context (product names, dates). Used in data warehouses.
+
+104. What is a star schema?
+ANSWER: A data warehouse schema with a central fact table connected to dimension tables. Simple and denormalized.
+
+105. What is a snowflake schema?
+ANSWER: A data warehouse schema where dimension tables are normalized into sub-dimension tables. More complex than star schema.
+
+106. What is ETL?
+ANSWER: Extract, Transform, Load — the process of pulling data from sources, transforming it, and loading it into a data warehouse.
+
+107. What is incremental backup?
+ANSWER: Backs up only the data that changed since the last backup of any type. Fastest to create but slowest to restore.
+
+108. What is differential backup?
+ANSWER: Backs up data changed since the last full backup. Faster to restore than incremental but slower to create.
+
+109. What is caching in databases?
+ANSWER: Storing frequently accessed data in fast memory (like Redis) to avoid repeated database queries.
+
+110. What is pagination?
+ANSWER: Dividing large result sets into smaller pages for display — using LIMIT/OFFSET or cursor-based approaches.
+
+================================================================
+RED TRICKY / FOLLOW-UP — Questions that catch people off guard
+================================================================
+
+111. Can a primary key contain NULL?
+ANSWER: No. By definition, a primary key cannot contain NULL values.
+
+112. Can a table have multiple primary keys?
+ANSWER: No. A table can have only one primary key (though it can be composite — using multiple columns).
+
+113. Can a foreign key reference a unique key instead of a primary key?
+ANSWER: Yes. A foreign key can reference any candidate key (any column or set of columns with a UNIQUE constraint).
+
+114. What happens when you compare NULL with a value?
+ANSWER: The result is UNKNOWN — not TRUE or FALSE. NULL = 5 returns UNKNOWN. NULL = NULL also returns UNKNOWN.
+
+115. What is the difference between DELETE and TRUNCATE?
+ANSWER: DELETE: row-by-row, logged, can use WHERE, can be rolled back, fires triggers. TRUNCATE: all rows, minimally logged, no WHERE, resets auto-increment, may not fire triggers.
+
+116. What happens when you DROP a table?
+ANSWER: The table structure and all data are permanently removed. Cannot be rolled back (in most databases).
+
+117. Can too many indexes slow down a database?
+ANSWER: Yes. Each index must be maintained during writes. Too many indexes degrade INSERT, UPDATE, and DELETE performance.
+
+118. What is a lost update?
+ANSWER: Two transactions read the same data and both try to update it. One update is overwritten and lost.
+
+119. Why would you intentionally denormalize?
+ANSWER: To improve read performance in read-heavy systems. When joins are too expensive. When analytics queries need pre-aggregated data.
+
+120. What is the difference between 3NF and BCNF?
+ANSWER: In 3NF, a non-key attribute can determine another non-key attribute if the determinant is a candidate key in some relationship. BCNF is stricter — every determinant must be a super key.
+
+121. Can a foreign key be NULL?
+ANSWER: Yes. A NULL foreign key means there's no relationship. It's allowed unless explicitly constrained with NOT NULL.
+
+122. What is a phantom read again?
+ANSWER: A query returns different row counts on repeated execution because another transaction inserted or deleted rows. Prevented only at SERIALIZABLE level.
+
+123. What is starvation in databases?
+ANSWER: A situation where a transaction waits indefinitely because other transactions are always prioritized. Different from deadlock — there's no circular wait.
+
+124. What is cascading rollback?
+ANSWER: When one transaction's failure causes other dependent transactions to also roll back. Prevented by strict 2PL.
+
+125. What is an dirty write?
+ANSWER: When one transaction overwrites data written by another uncommitted transaction. Prevented by most isolation levels.
+
+126. Why do some databases default to Read Committed?
+ANSWER: It provides a good balance — prevents dirty reads while allowing good concurrency. Serializable would be too restrictive for most workloads.
+
+127. What happens if you have no index on a column you're searching?
+ANSWER: The database performs a full table scan — reading every row to find matches. Slow for large tables.
+
+128. What is a table scan vs index scan?
+ANSWER: Table scan reads every row. Index scan uses the index structure to find relevant rows quickly.
+
+129. What is index selectivity?
+ANSWER: The ratio of distinct values to total rows. High selectivity (many unique values) = good index candidate. Low selectivity = index may not help.
+
+130. Can you join a table to itself?
+ANSWER: Yes — it's called a self join. Useful for hierarchical data or comparing rows within the same table.
+
+131. What is a covering query?
+ANSWER: A query that can be answered entirely from an index without accessing the table data.
+
+132. What is an implicit type conversion?
+ANSWER: When the database automatically converts data types during comparison or operations. Can prevent index usage and hurt performance.
+
+133. What is a correlated subquery vs non-correlated subquery?
+ANSWER: Correlated: references outer query, executes per row. Non-correlated: independent, executes once.
+
+134. What is the default isolation level in MySQL?
+ANSWER: Repeatable Read.
+
+135. What is the default isolation level in PostgreSQL?
+ANSWER: Read Committed.
+
+136. What is the difference between COMMIT and SAVEPOINT?
+ANSWER: COMMIT finalizes all changes in a transaction. SAVEPOINT creates a point within a transaction to which you can roll back without affecting the entire transaction.
+
+137. What is a deadlock graph?
+ANSWER: A visual representation of which transactions are waiting for which locks, showing the circular wait pattern.
+
+138. Why is partitioning useful?
+ANSWER: Improves query performance by scanning only relevant partitions. Makes maintenance easier — can backup/repair individual partitions.
+
+139. What is a hot key in sharding?
+ANSWER: A shard key value that receives disproportionate traffic, causing one shard to be overloaded while others are underutilized.
+
+140. What is rebalancing in sharding?
+ANSWER: Redistributing data across shards when new shards are added or data distribution becomes uneven.
+
+================================================================
+END OF QUESTIONS
+================================================================
+
+Total: 140 questions
+- FIRE VERY LIKELY: 60 questions
+- YELLOW LIKELY: 50 questions
+- RED TRICKY/FOLLOW-UP: 30 questions
+
+================================================================

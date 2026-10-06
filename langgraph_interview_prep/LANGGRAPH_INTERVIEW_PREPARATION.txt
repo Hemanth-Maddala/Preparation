@@ -1,0 +1,1337 @@
+================================================================
+LANGGRAPH INTERVIEW PREPARATION
+================================================================
+A focused, interview-first guide. Not a textbook.
+
+How to use:
+  - Read the 35 CONCEPTS (each has a speakable answer).
+  - Read the REASONING PATTERNS section (know the differences).
+  - Memorize the CODE PATTERNS section.
+  - Practice the 30+ CODING QUESTIONS by writing code.
+  - Read the THEORY QUESTIONS ranked by likelihood.
+  - Read the COMMON MISTAKES before any interview.
+
+All code uses the CURRENT LangGraph Python API (v1.x).
+Worked projects: see folders 01_basic_stategraph ... 16_autonomous_goal_agent.
+
+================================================================
+PART 1 - THE 35 CONCEPTS
+================================================================
+
+---------------------------------------------------------------
+1. What is LangGraph?
+---------------------------------------------------------------
+CONCEPT: LangGraph is a Python/JS library for building LLM
+applications as GRAPHS: nodes (units of work) connected by edges
+(control flow), with a shared, typed STATE flowing through them.
+
+Example: an agent = a loop where an LLM node calls tools and
+routes back to itself.
+
+How it works in LangGraph: you define State, write node functions,
+add edges (including conditional edges and cycles), then compile()
+the graph into a runnable object and invoke() it.
+
+Small code pattern:
+    builder = StateGraph(State)
+    builder.add_node("node1", fn)
+    builder.add_edge(START, "node1")
+    builder.add_edge("node1", END)
+    app = builder.compile()
+
+Likely interview question: "Explain LangGraph."
+INTERVIEW ANSWER: LangGraph lets you build LLM applications as
+graphs. State is shared, nodes are functions, and edges define
+control flow, including loops and branching. It supports persistence,
+human-in-the-loop, and tool-calling agents, and you can inspect and
+control every step.
+
+---------------------------------------------------------------
+2. Why LangGraph?
+---------------------------------------------------------------
+CONCEPT: Because LLM apps need control flow, state, and reliability.
+
+Example: a ReAct agent needs a loop (call LLM -> maybe call tool ->
+call LLM again). With plain Python that loop is hidden in code; in
+LangGraph it is visible and controllable.
+
+How it works in LangGraph: the graph makes flow explicit (you can
+draw it), state is typed and inspectable, and you get checkpoints,
+interrupts, and streaming for free.
+
+Small code pattern: the whole library API - add_node, add_edge,
+add_conditional_edges, compile(checkpointer=...), invoke().
+
+Likely interview question: "Why did you use LangGraph?"
+INTERVIEW ANSWER: It gives explicit control flow with cycles and
+branching, typed shared state, built-in persistence and
+human-in-the-loop, and makes the agent's behavior visible and
+testable. Alternatives like a scripted Python loop are harder to
+monitor, pause, or resume.
+
+---------------------------------------------------------------
+3. LangGraph vs LangChain
+---------------------------------------------------------------
+CONCEPT: LangChain is the ecosystem of components (LLM wrappers,
+tools, retrievers, message types). LangGraph is the orchestration
+engine: graphs of nodes and edges. LangChain = building blocks;
+LangGraph = the workflow/agent runtime.
+
+Example: `ChatGoogleGenerativeAI`, `@tool`, `HumanMessage` are
+LangChain. StateGraph, ToolNode, checkpointing are LangGraph.
+
+How it works in LangGraph: LangGraph uses LangChain message types
+and tools inside its nodes.
+
+Small code pattern: `from langchain_core.messages import AIMessage`
+(component) vs `from langgraph.graph import StateGraph` (runtime).
+
+Likely interview question: "LangGraph vs LangChain?"
+INTERVIEW ANSWER: LangChain provides the components - LLMs, tools,
+messages, retrieval. LangGraph provides the execution layer - it
+defines HOW those components are connected into a workflow or agent,
+with state, loops, checkpointing and control flow.
+
+---------------------------------------------------------------
+4. LangGraph vs CrewAI
+---------------------------------------------------------------
+CONCEPT: CrewAI is a higher-level framework for "crews" of role-based
+agents (manager + workers) with a lot of magic. LangGraph is lower
+level: you define the exact graph; you control everything.
+
+Example: CrewAI "task: analyze, agent: analyst". In LangGraph you
+would write nodes and edges yourself.
+
+How it works in LangGraph: you build multi-agent systems as graphs
+of agents/subgraphs with explicit handoffs (Command).
+
+Small code pattern: subgraph-as-node or Command(goto=...) for
+agent handoffs.
+
+Likely interview question: "LangGraph vs CrewAI?"
+INTERVIEW ANSWER: CrewAI hides orchestration behind a high-level
+abstraction, which is fast but less flexible. LangGraph gives you
+explicit control over every node, edge, and state transition, which
+is better for production control, debugging, and custom behavior.
+
+---------------------------------------------------------------
+5. Workflow vs Agent
+---------------------------------------------------------------
+CONCEPT: A workflow is a FIXED graph - the path is known at build
+time (even with branching). An agent is a graph where the MODEL
+decides the path at runtime (which tool, how many steps, when to
+stop).
+
+Example: Project 03 (travel pipeline) is a workflow. Project 16
+(goal agent) is an agent.
+
+How it works in LangGraph: both are StateGraphs. An agent is just a
+workflow with a loop whose routing is decided by the LLM.
+
+Small code pattern: workflow = linear edges; agent =
+conditional edge: if tool_calls -> tools else END.
+
+Likely interview question: "Workflow vs Agent?"
+INTERVIEW ANSWER: Workflow = fixed, predictable path; the logic is in
+the edges. Agent = the LLM chooses the path at runtime by deciding
+actions, so the graph must be flexible - typically a loop with
+conditional routing. Use workflows for stable processes, agents for
+open-ended tasks.
+
+---------------------------------------------------------------
+6. StateGraph
+---------------------------------------------------------------
+CONCEPT: The builder class that turns a State schema + nodes + edges
+into a runnable graph.
+
+Example: `builder = StateGraph(State)`, then add nodes/edges, then
+`app = builder.compile()`.
+
+How it works in LangGraph: StateGraph(State) validates that nodes
+read/write keys defined in State; compile() freezes it.
+
+Small code pattern:
+    builder = StateGraph(State)
+    builder.add_node(...); builder.add_edge(...)
+    app = builder.compile()
+
+Likely interview question: "What is a StateGraph?"
+INTERVIEW ANSWER: It is the class used to build a graph. You give it
+a State schema, register nodes and edges, then compile it into a
+runnable application.
+
+---------------------------------------------------------------
+7. State
+---------------------------------------------------------------
+CONCEPT: A TypedDict (or dataclass) describing all data the graph
+holds. It is the ONLY way nodes communicate.
+
+Example: {"name": str, "greeting": str}.
+
+How it works in LangGraph: every node receives the current state and
+returns a dict of updates which are merged in. Reducers (like
+add_messages) define HOW updates merge for a key.
+
+Small code pattern:
+    class State(TypedDict):
+        name: str
+        messages: Annotated[list, add_messages]
+
+Likely interview question: "What is State?"
+INTERVIEW ANSWER: State is a typed dict shared by all nodes. Each
+node reads it and returns partial updates that the framework merges.
+Reducers control merging; e.g. add_messages appends instead of
+overwriting.
+
+---------------------------------------------------------------
+8. Node
+---------------------------------------------------------------
+CONCEPT: A plain function `fn(state) -> dict of updates`. The unit
+of work.
+
+Example: a node that cleans text and returns {"cleaned": ...}.
+
+How it works in LangGraph: register with add_node(name, fn). It runs
+in a "superstep" and its return value is merged into state.
+
+Small code pattern:
+    def node(state: State):
+        return {"key": process(state)}
+
+Likely interview question: "What is a node?"
+INTERVIEW ANSWER: A node is a normal Python function that receives
+the graph state and returns updates to it. It can run Python, call an
+LLM, or call tools.
+
+---------------------------------------------------------------
+9. Edge
+---------------------------------------------------------------
+CONCEPT: An edge defines which node runs next. Two kinds: static
+(add_edge) and conditional (add_conditional_edges).
+
+Example: START -> "node" -> END.
+
+How it works in LangGraph: add_edge always follows the same path;
+add_conditional_edges runs a routing function to pick the path.
+
+Small code pattern:
+    builder.add_edge("a", "b")
+    builder.add_conditional_edges("a", route_fn, {value: "node"})
+
+Likely interview question: "What is an edge?"
+INTERVIEW ANSWER: An edge is the connection between nodes that
+defines control flow. It can be static or conditional (decided at
+runtime by a function).
+
+---------------------------------------------------------------
+10. START
+---------------------------------------------------------------
+CONCEPT: The special entry-point node. Every run starts here.
+
+Example: `builder.add_edge(START, "first_node")`.
+
+How it works in LangGraph: START is a sentinel (`__start__`); input
+to invoke() is applied as initial state, then flow begins from START.
+
+Small code pattern: `from langgraph.graph import START; add_edge(START, "node")`
+
+Likely interview question: "What is START?"
+INTERVIEW ANSWER: START is the special node where graph execution
+begins. Every graph needs at least one edge from START into its first
+node.
+
+---------------------------------------------------------------
+11. END
+---------------------------------------------------------------
+CONCEPT: The special terminal node. When execution reaches END the
+run stops and invoke() returns the final state.
+
+Example: `builder.add_edge("last_node", END)`.
+
+How it works in LangGraph: END is a sentinel (`__end__`). It can also
+be a target of a conditional edge to stop a loop.
+
+Small code pattern: `from langgraph.graph import END; add_edge("node", END)`
+
+Likely interview question: "What is END?"
+INTERVIEW ANSWER: END is the special node that terminates the run.
+When flow reaches END, invoke() returns the accumulated final state.
+
+---------------------------------------------------------------
+12. compile()
+---------------------------------------------------------------
+CONCEPT: Turns the builder (schema + nodes + edges) into a runnable
+CompiledStateGraph. Optional checkpointer enables persistence.
+
+Example: `app = builder.compile(checkpointer=MemorySaver())`.
+
+How it works in LangGraph: compile validates the graph (routes must
+be reachable, node return types must match state). You cannot invoke
+a non-compiled builder.
+
+Small code pattern: `app = builder.compile()`
+
+Likely interview question: "Why is compile() required?"
+INTERVIEW ANSWER: compile() validates the graph and produces the
+actual runnable object with the chosen checkpointer. Until compiled,
+there is no executable graph.
+
+---------------------------------------------------------------
+13. invoke()
+---------------------------------------------------------------
+CONCEPT: Runs the graph once to completion with input state and
+returns the final state.
+
+Example: `result = app.invoke({"name": "Hemanth"})`.
+
+How it works in LangGraph: input is merged as initial state, nodes
+run per the edges, and the final state is returned. Config carries
+runtime settings like thread_id.
+
+Small code pattern:
+    result = app.invoke({"key": value}, config)
+
+Likely interview question: "What does invoke() do?"
+INTERVIEW ANSWER: It executes the whole graph with given input and
+returns the final state. With a checkpointer and thread_id it can
+resume a conversation.
+
+---------------------------------------------------------------
+14. Conditional edges
+---------------------------------------------------------------
+CONCEPT: Edges whose target is chosen at runtime by a routing
+function that returns a string; the string maps to a node.
+
+Example: classify a request -> route to travel/food/other.
+
+How it works in LangGraph:
+    add_conditional_edges("classify", route_fn, {"travel": "t", "food": "f"})
+The routing function reads state and returns one of the map keys.
+
+Small code pattern:
+    def route(state) -> Literal["t", "f"]:
+        return "t" if state["x"] > 0 else "f"
+    builder.add_conditional_edges("a", route, {"t": "node_t", "f": "node_f"})
+
+Likely interview question: "What are conditional edges?"
+INTERVIEW ANSWER: Edges decided at runtime: a function returns a
+string, and that string picks the next node from a mapping. This is
+how if/else and branching work in LangGraph. (See project 04.)
+
+---------------------------------------------------------------
+15. Loops
+---------------------------------------------------------------
+CONCEPT: Cycles in the graph - a conditional edge pointing back to an
+earlier node. Execution continues until routing sends control to END.
+
+Example: generate -> evaluate -> (improve -> generate) until good.
+
+How it works in LangGraph: graphs are directed, so cycles are allowed.
+Keep a counter in state and check a max limit in the routing function.
+
+Small code pattern:
+    add_conditional_edges("evaluate", route, {"again": "generate", "done": END})
+
+Likely interview question: "How do loops work in LangGraph?"
+INTERVIEW ANSWER: A loop is a conditional edge that returns to an
+earlier node. The routing function is the loop condition; you track
+progress in state and always have a path to END so it terminates.
+(See project 05.)
+
+---------------------------------------------------------------
+16. Parallel execution
+---------------------------------------------------------------
+CONCEPT: Nodes with no dependency run in the same superstep. Fan-out
+from START; fan-in into a join node.
+
+Example: gather weather + hotels + activities, then aggregate.
+
+How it works in LangGraph: multiple edges out of one node run
+branches concurrently; a node runs only when all its predecessors
+finished.
+
+Small code pattern:
+    add_edge(START, "weather"); add_edge(START, "hotels")
+    add_edge("weather", "aggregate"); add_edge("hotels", "aggregate")
+
+Likely interview question: "How do you run nodes in parallel?"
+INTERVIEW ANSWER: Just create multiple edges from one node; LangGraph
+runs independent branches in the same superstep and joins them at the
+next shared node. Results combine through shared state keys.
+(See project 06.)
+
+---------------------------------------------------------------
+17. Tool calling
+---------------------------------------------------------------
+CONCEPT: The LLM emits a structured tool_call request instead of
+text; the system executes the tool and returns the result.
+
+Example: "What is 2+2?" -> calculator tool -> result 4 -> answer.
+
+How it works in LangGraph: tools are defined with @tool, executed by
+ToolNode, and the result returns as a ToolMessage in messages state.
+
+Small code pattern:
+    @tool
+    def calculator(expression: str) -> str: ...
+    builder.add_node("tools", ToolNode([calculator]))
+
+Likely interview question: "What is tool calling?"
+INTERVIEW ANSWER: The model decides it needs external data and emits
+a tool_call; the framework executes that function and feeds the
+result back to the model so it can answer accurately. (See project 07.)
+
+---------------------------------------------------------------
+18. ToolNode
+---------------------------------------------------------------
+CONCEPT: A prebuilt LangGraph node that reads the last AIMessage's
+tool_calls and executes them, appending ToolMessages.
+
+Example: `add_node("tools", ToolNode(tools))`.
+
+How it works in LangGraph: it handles schema validation, execution,
+and error capture automatically.
+
+Small code pattern: `builder.add_node("tools", ToolNode(TOOLS))`
+
+Likely interview question: "What is ToolNode?"
+INTERVIEW ANSWER: It is a ready-made node that takes a list of tools,
+runs whichever ones the LLM requested in its tool_calls, and appends
+the results as ToolMessages.
+
+---------------------------------------------------------------
+19. Messages state
+---------------------------------------------------------------
+CONCEPT: A State key (`messages`) with the add_messages reducer so
+every message is APPENDED to the conversation history instead of
+overwriting.
+
+Example: HumanMessage, then AIMessage, then ToolMessage accumulate.
+
+How it works in LangGraph: `messages: Annotated[list, add_messages]`.
+The reducer handles merging Human/AI/Tool messages correctly.
+
+Small code pattern:
+    class State(TypedDict):
+        messages: Annotated[list, add_messages]
+
+Likely interview question: "What is the messages state?"
+INTERVIEW ANSWER: A list keyed with add_messages so the conversation
+history grows by appending. The LLM always reads the full history,
+which is what makes agents coherent.
+
+---------------------------------------------------------------
+20. ReAct
+---------------------------------------------------------------
+CONCEPT: Reason + Act pattern. The model alternates Reasoning
+(decide what to do) and Acting (call a tool), then Observes the
+result and reasons again.
+
+Example: Project 08: agent decides to call weather -> tool returns
+"Sunny" -> agent answers using that observation.
+
+How it works in LangGraph: a two-node cycle - agent and tools - with
+a conditional edge: if tool_calls -> tools, else -> END.
+
+Small code pattern:
+    builder.add_conditional_edges("agent", should_continue, {"tools": "tools", END: END})
+    builder.add_edge("tools", "agent")
+
+Likely interview question: "What is ReAct?"
+INTERVIEW ANSWER: ReAct is a reasoning pattern: Reason -> Act ->
+Observe -> Repeat. The model thinks about what it needs, calls a
+tool, sees the result, and thinks again until it can answer. In
+LangGraph it is a loop between an agent node and a tools node.
+
+---------------------------------------------------------------
+21. Checkpointing
+---------------------------------------------------------------
+CONCEPT: Automatically saving the FULL graph state after every
+superstep, so execution can be resumed later.
+
+Example: Project 09 remembers the user's name across invokes.
+
+How it works in LangGraph: compile(checkpointer=MemorySaver());
+state is saved per thread_id. On the next invoke of that thread, the
+state is restored.
+
+Small code pattern:
+    app = builder.compile(checkpointer=MemorySaver())
+
+Likely interview question: "What is checkpointing?"
+INTERVIEW ANSWER: LangGraph saves the entire state after every step.
+With a checkpointer and thread_id, later invokes restore that state -
+this powers memory, human-in-the-loop, and fault tolerance.
+
+---------------------------------------------------------------
+22. Memory
+---------------------------------------------------------------
+CONCEPT: The observable effect of carrying state/history across
+turns. Implemented with checkpointing + the add_messages reducer.
+
+Example: Turn 1 "My name is Hemanth", Turn 2 "What is my name?"
+
+How it works in LangGraph: checkpointed state contains the full
+message history; the LLM reads it each turn.
+
+Small code pattern: checkpointer + thread_id + add_messages.
+
+Likely interview question: "How is memory implemented in LangGraph?"
+INTERVIEW ANSWER: Memory = persistence + history. The graph state is
+checkpointed per thread; messages accumulate via add_messages; every
+new turn starts from the restored state, so the model sees the
+conversation. (See project 09.)
+
+---------------------------------------------------------------
+23. thread_id
+---------------------------------------------------------------
+CONCEPT: A key in the invoke config that identifies a conversation /
+execution thread for checkpoint storage.
+
+Example: {"configurable": {"thread_id": "user-123"}}.
+
+How it works in LangGraph: checkpoints are stored/retrieved per
+thread_id; same id = same memory; different id = fresh conversation.
+
+Small code pattern:
+    config = {"configurable": {"thread_id": "conversation-1"}}
+    app.invoke({"messages": [...]}, config)
+
+Likely interview question: "What is thread_id?"
+INTERVIEW ANSWER: It names a conversation in the config. The
+checkpointer saves state under that id, so resuming with the same id
+continues the same conversation.
+
+---------------------------------------------------------------
+24. Human-in-the-loop
+---------------------------------------------------------------
+CONCEPT: A workflow pauses for a human decision (approve, fix input,
+choose) before continuing.
+
+Example: Project 10: a money transfer pauses for approval.
+
+How it works in LangGraph: a node calls interrupt(value); the graph
+pauses and returns. Later invoke(Command(resume=value), config)
+continues from the pause.
+
+Small code pattern:
+    def approval(state) -> Command[Literal["execute", "__end__"]]:
+        decision = interrupt({"question": "approve?"})
+        return Command(goto="execute") if decision == "yes" else Command(goto=END)
+
+Likely interview question: "How do you pause/resume a workflow?"
+INTERVIEW ANSWER: Call interrupt() inside a node; the graph stops and
+returns control with that value exposed. Resume with
+invoke(Command(resume=value), config) on the same thread. Requires a
+checkpointer. (See project 10.)
+
+---------------------------------------------------------------
+25. Interrupts
+---------------------------------------------------------------
+CONCEPT: interrupt() is the LangGraph primitive that pauses graph
+execution at a specific node.
+
+Example: pausing before an expensive/risky action.
+
+How it works in LangGraph: requires a checkpointer (state must be
+saved). Each interrupt has an id; resume can target specific ids via
+Command(resume={id: value}).
+
+Small code pattern: `decision = interrupt({"question": ...})`
+
+Likely interview question: "What is interrupt()?"
+INTERVIEW ANSWER: A function that pauses the graph and returns
+control to the caller, asking for a value. Execution resumes at the
+same point with that value, e.g. human approval.
+
+---------------------------------------------------------------
+26. Resume
+---------------------------------------------------------------
+CONCEPT: Continuing a paused graph, typically with human input.
+
+Example: after approval, the graph executes the transfer.
+
+How it works in LangGraph: invoke(Command(resume="yes"), config)
+continues from the latest checkpoint; interrupt() returns "yes".
+
+Small code pattern:
+    state = app.invoke(Command(resume="yes"), config)
+
+Likely interview question: "How do you resume an interrupted graph?"
+INTERVIEW ANSWER: Call invoke with Command(resume=value) and the same
+thread_id. The value is returned by the interrupt() call and
+execution continues from there.
+
+---------------------------------------------------------------
+27. Subgraphs
+---------------------------------------------------------------
+CONCEPT: A compiled graph used as a node inside another graph.
+Reusable, testable building blocks.
+
+Example: Project 11: research_graph and plan_graph used as nodes in a
+main graph.
+
+How it works in LangGraph: add_node("name", compiled_subgraph).
+State passes via shared keys; a subgraph can have its own keys and
+checkpointer.
+
+Small code pattern:
+    sub = StateGraph(SubState).compile()
+    main.add_node("research", sub)
+
+Likely interview question: "What are subgraphs?"
+INTERVIEW ANSWER: Separate compiled graphs used as nodes. They keep
+large systems modular and reusable. Parent and child share state keys
+to pass data.
+
+---------------------------------------------------------------
+28. Send / map-reduce
+---------------------------------------------------------------
+CONCEPT: Send(node, payload) dynamically launches parallel runs of a
+node with specific input. Used for dynamic fan-out / map-reduce.
+
+Example: Project 12: one Send per city in a list.
+
+How it works in LangGraph: a node returns [Send(...)]; the framework
+runs each in parallel; a reducer (e.g. list concatenation) merges
+results at fan-in.
+
+Small code pattern:
+    def fan_out(state):
+        return [Send("worker", {"item": i}) for i in state["items"]]
+    builder.add_conditional_edges(START, fan_out, ["worker"])
+
+Likely interview question: "What is Send and when do you use it?"
+INTERVIEW ANSWER: Send launches a node with specific input, in
+parallel. Use it when the number of parallel tasks is only known at
+runtime, like processing a dynamic list. A reducer combines the
+results. (See project 12.)
+
+---------------------------------------------------------------
+29. Command
+---------------------------------------------------------------
+CONCEPT: A value a node returns to both UPDATE state and control
+flow (goto) - the current recommended API for dynamic routing and
+agent handoffs.
+
+Example: Project 13: analyze returns Command(goto=..., update=...).
+
+How it works in LangGraph:
+    def analyze(state) -> Command[Literal["a", "b"]]:
+        return Command(goto="a", update={"action": "a"})
+Also Command(resume=...) for interrupts and Command.PARENT for
+subgraph navigation.
+
+Small code pattern:
+    from langgraph.types import Command
+    return Command(goto="next_node", update={"key": "value"})
+
+Likely interview question: "What is Command?"
+INTERVIEW ANSWER: A special return value that lets a node update
+state AND choose the next node at runtime. Use it when a node must
+both change state and route; use conditional edges when only routing
+is needed. (See project 13.)
+
+---------------------------------------------------------------
+30. Plan-and-Execute
+---------------------------------------------------------------
+CONCEPT: A pattern where a planner first makes a full plan (list of
+steps), then an executor runs the steps, optionally re-planning.
+
+Example: Project 14: "Plan a 3-day trip" -> research, activities,
+schedule -> execute each.
+
+How it works in LangGraph: planner writes plan (list) + index into
+state; a loop executes steps until index reaches the end.
+
+Small code pattern: plan in state, loop: execute_step -> check index
+-> execute_step or final.
+
+Likely interview question: "What is Plan-and-Execute?"
+INTERVIEW ANSWER: First create the whole plan as a list of steps,
+then execute them one by one, tracking progress in state. It is good
+for tasks with a clear multi-step structure and can re-plan if a step
+fails. (See project 14.)
+
+---------------------------------------------------------------
+31. Autonomous agents
+---------------------------------------------------------------
+CONCEPT: A system that pursues a goal by choosing its own actions,
+observing results, and re-deciding - within defined tools, state, and
+safety limits.
+
+Example: Project 16: "Find best product under 80000" -> agent decides
+to search, then compare, then answer.
+
+How it works in LangGraph: a loop where the model decides the next
+action (tool call or final answer) each turn. The graph provides
+constraints, not a fixed path.
+
+Small code pattern:
+    decide -> (tool_calls? -> tools -> decide) | (final answer -> END)
+
+Likely interview question: "What is an autonomous agent?"
+INTERVIEW ANSWER: A system that independently pursues a goal: it
+decides what actions to take, observes the results, and re-plans
+until the goal is met. LangGraph implements it as a loop where the
+model picks the next action, bounded by tools and safety limits.
+(See project 16.)
+
+---------------------------------------------------------------
+32. ReAct vs autonomous agents
+---------------------------------------------------------------
+CONCEPT: ReAct is a REASONING PATTERN. An autonomous agent is a
+BROADER SYSTEM that can use a ReAct loop as its engine. They are
+related, not separate technologies.
+
+Example: The project 16 agent runs a ReAct loop (decide -> act ->
+observe) to autonomously reach its goal.
+
+How it works in LangGraph: ReAct gives the "decide next action" loop;
+autonomy = the agent decides based on goal + observations instead of
+a fixed script.
+
+Small code pattern: the same loop; autonomy comes from WHO decides
+(the model), not from new syntax.
+
+Likely interview question: "Is ReAct the same as an autonomous agent?"
+INTERVIEW ANSWER: No. ReAct is a pattern: Reason -> Act -> Observe ->
+Repeat. An autonomous agent is a broader behavior where a system
+pursues a goal by choosing actions and re-planning. A ReAct loop is
+one way to implement that autonomous behavior. So ReAct is a tool an
+autonomous agent can use, not a separate technology.
+
+---------------------------------------------------------------
+33. Planning vs ReAct
+---------------------------------------------------------------
+CONCEPT: ReAct plans ONE step at a time (improvises). Plan-and-
+Execute creates the FULL plan first, then executes it.
+
+Example: "Find the best product" -> ReAct: decide search, then
+decide compare, etc. Plan-and-Execute: plan [search, compare, decide]
+then run the list.
+
+How it works in LangGraph: ReAct = loop with tool_calls. Plan-and-
+Execute = plan list + index loop.
+
+Small code pattern: ReAct = conditional on tool_calls; P&E = while
+index < len(plan): execute_step.
+
+Likely interview question: "ReAct vs Plan-and-Execute?"
+INTERVIEW ANSWER: ReAct decides the next action after each
+observation - great when you must react to new info. Plan-and-
+Execute makes the full plan upfront - great for stable, multi-step
+tasks. They can be combined: plan, then execute with ReAct-like
+flexibility.
+
+---------------------------------------------------------------
+34. How to prevent infinite loops
+---------------------------------------------------------------
+CONCEPT: Every loop needs a termination guarantee: a counter in
+state, a max limit, and a routing path to END.
+
+Example: Project 15/16 cap the agent loop with MAX_ITERATIONS.
+
+How it works in LangGraph: the routing function checks the counter
+FIRST and routes to END when the limit is reached.
+
+Small code pattern:
+    if state["steps"] >= MAX: return END
+    return "tools" if last.tool_calls else END
+
+Likely interview question: "How do you prevent infinite loops?"
+INTERVIEW ANSWER: Track a step counter in state and cap it; check the
+cap in the routing function before continuing; always have a route to
+END. For LLM loops, also treat repeated identical outputs as done.
+
+---------------------------------------------------------------
+35. Error handling in LangGraph
+---------------------------------------------------------------
+CONCEPT: Handle failures per-node or per-run. Node exceptions fail
+the run; tool errors can be captured as messages; checkpoints allow
+retry from a saved state.
+
+Example: a tool that raises -> catch it and return a ToolMessage
+instead of crashing.
+
+How it works in LangGraph: try/except inside nodes or tools; return
+error text in state so the LLM can react; retry with a new thread or
+resume from a checkpoint; validate inputs in the routing function.
+
+Small code pattern:
+    @tool
+    def risky(x): 
+        try: return compute(x)
+        except Exception as e: return f"Error: {e}"
+
+Likely interview question: "How would you handle errors?"
+INTERVIEW ANSWER: Wrap risky work in try/except, surface errors as
+state (e.g. ToolMessage) so the model can recover, add validation
+steps, and use checkpointing to resume or retry instead of starting
+over.
+
+================================================================
+PART 2 - IMPORTANT REASONING PATTERNS
+================================================================
+
+---------------------------------------------------------------
+1. Chain of Thought (CoT)
+---------------------------------------------------------------
+What it means: prompt the model to think step by step before
+answering.
+Basic flow: question -> "let's think step by step" -> reasoning ->
+answer.
+When useful: math, logic, multi-step reasoning.
+In our projects: not implemented as a graph (it is a prompting
+technique; you can use it inside any LLM node).
+Relation to LangGraph: CoT is one step inside a node - it does not
+need graph structure.
+
+---------------------------------------------------------------
+2. Tree of Thoughts (ToT)
+---------------------------------------------------------------
+What it means: explore MULTIPLE reasoning branches in parallel,
+evaluate each, and choose the best path - a tree instead of a single
+chain.
+Basic flow: generate several thoughts -> evaluate -> expand the best.
+When useful: search-like problems where one path may be wrong.
+In our projects: not implemented (an advanced extension).
+Relation to LangGraph: LangGraph CAN express ToT - each branch is a
+node path; evaluate+select is a join with a routing decision.
+CoT vs ToT: CoT is one linear chain; ToT is a tree of candidate
+chains with evaluation and selection.
+
+---------------------------------------------------------------
+3. ReAct (Reason + Act)
+---------------------------------------------------------------
+What it means: alternate thinking with tool use; observe tool
+results, then think again.
+Basic flow: Reason -> Act (tool) -> Observe -> Reason -> ...
+When useful: tasks needing external info (search, math, APIs).
+In our projects: YES - projects 07, 08, 15, 16 (the agent loop).
+Relation to LangGraph: implemented as a two-node cycle with a
+conditional edge on tool_calls.
+
+---------------------------------------------------------------
+4. Plan-and-Execute
+---------------------------------------------------------------
+What it means: create the full plan first, then execute it.
+Basic flow: plan -> execute step 1 -> step 2 -> ... -> final.
+When useful: stable multi-step tasks.
+In our projects: YES - project 14 (planner_executor).
+Relation to LangGraph: plan is data in state; execution is a loop
+over the plan with an index.
+ReAct vs Plan-and-Execute: ReAct improvises one action at a time;
+P&E commits to a plan and executes it (with optional re-planning).
+
+---------------------------------------------------------------
+5. Reflection / iterative refinement
+---------------------------------------------------------------
+What it means: produce output, critique it, improve, repeat.
+Basic flow: generate -> evaluate -> (improve -> generate) until good.
+When useful: code, writing, answers that benefit from self-review.
+In our projects: YES - project 05 (loop_workflow) is exactly this
+shape with a mock evaluator; use an LLM as the evaluator in real
+apps.
+Relation to LangGraph: a cycle with a conditional edge; the
+evaluator can be the same LLM with a critique prompt.
+
+---------------------------------------------------------------
+6. Autonomous / goal-directed agents
+---------------------------------------------------------------
+What it means: the system decides its own actions toward a goal,
+observes, and re-plans until done.
+Basic flow: goal -> decide next action -> act -> observe -> goal
+met? (yes: answer / no: re-decide).
+When useful: open-ended tasks with multiple possible paths.
+In our projects: YES - project 16 (autonomous_goal_agent).
+Relation to LangGraph: a loop where the model picks the next action;
+constraints = tool set + max iterations + state.
+ReAct vs Autonomous Agent: ReAct is a pattern; an autonomous agent
+is the broader goal-pursuing behavior that can use a ReAct loop.
+Do NOT present them as unrelated - one implements the other.
+
+WORKFLOW vs AGENT (recap): workflow = fixed path decided by code;
+agent = path decided at runtime by the model. An autonomous agent is
+the extreme where almost every decision is made by the model inside
+a safe loop.
+
+================================================================
+PART 3 - LANGGRAPH CODE PATTERNS I MUST MEMORIZE
+================================================================
+Short templates. Reproduce these from memory.
+
+1. Basic StateGraph
+    from typing import TypedDict
+    from langgraph.graph import StateGraph, START, END
+    class State(TypedDict):
+        value: str
+    def node(state: State):
+        return {"value": state["value"].upper()}
+    b = StateGraph(State)
+    b.add_node("node", node)
+    b.add_edge(START, "node")
+    b.add_edge("node", END)
+    app = b.compile()
+    print(app.invoke({"value": "hi"}))
+
+2. Multiple nodes (chain)
+    b = StateGraph(State)
+    b.add_node("a", node_a); b.add_node("b", node_b); b.add_node("c", node_c)
+    b.add_edge(START, "a"); b.add_edge("a", "b"); b.add_edge("b", "c"); b.add_edge("c", END)
+
+3. Conditional routing
+    def route(state) -> Literal["x", "y"]:
+        return "x" if state["flag"] else "y"
+    b.add_conditional_edges("decider", route, {"x": "node_x", "y": "node_y"})
+
+4. Loop
+    def more(state) -> Literal["improve", "__end__"]:
+        if state["i"] >= MAX: return "__end__"
+        return "improve"
+    b.add_conditional_edges("evaluate", more, {"improve": "improve_node", "__end__": END})
+    b.add_edge("improve_node", "generate")
+
+5. Parallel workflow
+    b.add_edge(START, "w"); b.add_edge(START, "h"); b.add_edge(START, "a")
+    b.add_edge("w", "join"); b.add_edge("h", "join"); b.add_edge("a", "join")
+    b.add_edge("join", END)
+
+6. Tool calling
+    from langchain_core.tools import tool
+    from langgraph.prebuilt import ToolNode
+    @tool
+    def calculator(expression: str) -> str:
+        return str(eval(expression, {"__builtins__": {}}))
+    b.add_node("agent", agent); b.add_node("tools", ToolNode([calculator]))
+    b.add_edge(START, "agent")
+    b.add_conditional_edges("agent", should_continue, {"tools": "tools", "__end__": END})
+    b.add_edge("tools", "agent")
+
+7. ReAct agent (the memorized core)
+    class State(TypedDict):
+        messages: Annotated[list, add_messages]
+    def agent(state):
+        return {"messages": [llm.invoke(state["messages"])]}
+    def should_continue(state) -> Literal["tools", "__end__"]:
+        if state["messages"][-1].tool_calls: return "tools"
+        return "__end__"
+    b = StateGraph(State)
+    b.add_node("agent", agent); b.add_node("tools", ToolNode(TOOLS))
+    b.add_edge(START, "agent")
+    b.add_conditional_edges("agent", should_continue, {"tools": "tools", "__end__": END})
+    b.add_edge("tools", "agent")
+
+8. Checkpointing
+    from langgraph.checkpoint.memory import MemorySaver
+    app = b.compile(checkpointer=MemorySaver())
+    config = {"configurable": {"thread_id": "c1"}}
+    app.invoke({"messages": [HumanMessage(content="hi")]}, config)
+
+9. Human-in-the-loop
+    from langgraph.types import Command, interrupt
+    def approval(state) -> Command[Literal["execute", "__end__"]]:
+        ok = interrupt({"question": "approve?"})
+        return Command(goto="execute") if ok == "yes" else Command(goto=END)
+    # pause: state = app.invoke(input, config)
+    # resume: state = app.invoke(Command(resume="yes"), config)
+
+10. Subgraph
+    sub = StateGraph(SubState).compile()
+    b.add_node("research", sub)
+
+11. Send / map-reduce
+    from langgraph.types import Send
+    def fan_out(state):
+        return [Send("worker", {"item": i}) for i in state["items"]]
+    b.add_conditional_edges(START, fan_out, ["worker"])
+    b.add_edge("worker", "aggregate"); b.add_edge("aggregate", END)
+
+12. Command (dynamic routing from a node)
+    from langgraph.types import Command
+    def analyze(state) -> Command[Literal["a", "b"]]:
+        return Command(goto="a", update={"action": "a"})
+
+13. Planner-executor
+    plan: list in state + index.
+    planner -> set plan
+    execute_step -> run plan[index], index += 1
+    route: "execute_step" if index < len(plan) else "final"
+
+14. Autonomous agent loop (same as #7 plus guards)
+    # same ReAct loop + MAX_ITERATIONS counter checked first in
+    # should_continue, and goal/observations stored in state.
+    if state["steps"] >= MAX: return "__end__"
+    if last.tool_calls: return "tools"
+    return "__end__"   # final answer produced
+
+================================================================
+PART 4 - LANGGRAPH CODING INTERVIEW QUESTIONS (30+)
+================================================================
+
+EASY
+----
+Q1. Create a basic StateGraph with one node.
+    Problem: graph that uppercases a string.
+    Expected graph: START -> node -> END.
+    Concepts: State, node, compile, invoke.
+    Approach: TypedDict, node fn returning {"value": ...}, two edges.
+    Reference solution: pattern #1.
+
+Q2. Pass state between two nodes.
+    Problem: node A sets a number, node B doubles it.
+    Expected graph: START -> A -> B -> END.
+    Concepts: state sharing, updates.
+    Approach: A returns {"n": 5}; B reads state["n"] and returns {"n": n*2}.
+    Reference solution: pattern #2 (2 nodes).
+
+Q3. Add an edge.
+    Problem: insert a "validate" node between two existing nodes.
+    Concepts: add_edge, chaining.
+    Approach: add_node + add_edge("a","validate") + add_edge("validate","b").
+
+Q4. Add conditional routing.
+    Problem: route even vs odd numbers to different nodes.
+    Expected graph: START -> decide -> (even|odd) -> END.
+    Concepts: add_conditional_edges, routing fn.
+    Approach: route returns "even"/"odd"; map to nodes. Pattern #3.
+
+Q5. Fan-out: run two nodes in parallel then join.
+    Problem: compute length and uppercase of a string in parallel.
+    Expected graph: START -> (len|upper) -> join -> END.
+    Concepts: parallel edges, join.
+    Approach: two edges from START, two edges into join. Pattern #5.
+
+MEDIUM
+------
+Q6. Implement a loop that refines until "good" or max tries.
+    Problem: iterative improvement with a counter.
+    Expected graph: generate -> evaluate -> (improve -> generate) | END.
+    Concepts: cycles, termination.
+    Approach: pattern #4 with MAX counter.
+
+Q7. Add tools to a graph.
+    Problem: an agent that can call a calculator.
+    Concepts: @tool, ToolNode, conditional edge.
+    Approach: pattern #6.
+
+Q8. Create a ReAct agent.
+    Problem: LLM decides when to call a tool.
+    Expected graph: agent -> (tools -> agent) | END.
+    Concepts: tool_calls, messages state, loop.
+    Approach: pattern #7 (memorize this).
+
+Q9. Add checkpointing / memory to an agent.
+    Problem: agent remembers the user's name.
+    Concepts: checkpointer, thread_id.
+    Approach: pattern #8 + add_messages + same thread_id on both turns.
+
+Q10. Multi-turn conversation with a mock LLM.
+    Problem: answer "What is my name?" after being told the name.
+    Concepts: memory, state restore.
+    Approach: checkpointed state holds history; mock reads it.
+
+Q11. Add a loop-safety guard.
+    Problem: agent must stop after 5 iterations.
+    Concepts: counter in state, routing check.
+    Approach: add "steps" key; check in should_continue first.
+
+Q12. Implement parallel aggregation.
+    Problem: 3 lookups then a combined summary.
+    Concepts: fan-out/fan-in, join node.
+    Approach: pattern #5.
+
+Q13. Build a classifier with routing.
+    Problem: topic -> route to specialist nodes.
+    Concepts: routing fn, path map.
+    Approach: pattern #3.
+
+Q14. Tool that fails gracefully.
+    Problem: tool returns an error message instead of crashing.
+    Concepts: try/except in tool, ToolMessage.
+    Approach: catch exception, return str; agent observes and reacts.
+
+HARD
+----
+Q15. Human approval workflow.
+    Problem: transfer pauses for approval before execution.
+    Expected graph: ... -> approval(interrupt) -> execute | END.
+    Concepts: interrupt, Command(resume), checkpointer.
+    Approach: pattern #9.
+
+Q16. Dynamic fan-out with Send (map-reduce).
+    Problem: summarize a dynamic list of documents.
+    Expected graph: fan_out -> worker xN -> aggregate.
+    Concepts: Send, reducer, dynamic parallelism.
+    Approach: pattern #11 + reducer for results.
+
+Q17. Planner-executor.
+    Problem: plan a trip, execute each step.
+    Concepts: planning, index loop, re-planning.
+    Approach: pattern #13.
+
+Q18. Subgraphs.
+    Problem: research subgraph + planning subgraph in a main graph.
+    Concepts: compiled graph as node, state sharing.
+    Approach: pattern #10.
+
+Q19. Autonomous goal-directed agent.
+    Problem: reach a goal by choosing tools at runtime.
+    Concepts: loop, tool selection, goal completion, safety.
+    Approach: pattern #14 (memorize the guards).
+
+Q20. Combine tools + state + routing + memory + safety.
+    Problem: research assistant that remembers, uses tools, and never
+    loops forever. (This is project 15 - reproduce it.)
+    Approach: ReAct loop + counter + checkpointer.
+
+Q21. Command-based routing.
+    Problem: a node chooses the next node and updates state at once.
+    Concepts: Command(goto=..., update=...).
+    Approach: pattern #12.
+
+Q22. Interrupt with reject path.
+    Problem: approve -> execute; reject -> END with status.
+    Concepts: Command branching after interrupt.
+    Approach: pattern #9 with if/else returning different Command.
+
+Q23. Loop over a plan and re-plan on failure.
+    Problem: if a step fails, ask the planner for new steps.
+    Concepts: re-planning, conditional edges.
+    Approach: execute_step -> if fail -> planner (with results so far).
+
+Q24. Parallel map with aggregation reducer.
+    Problem: results must be collected from all workers.
+    Concepts: Annotated[list, lambda a,b: a+b].
+    Approach: reducer on results key.
+
+Q25. Conversation with multiple threads.
+    Problem: two different users must not see each other's history.
+    Concepts: thread_id isolation.
+    Approach: different thread_id per user.
+
+Q26. Graph that routes to END from inside a loop.
+    Problem: stop refining when score >= threshold.
+    Concepts: conditional edge target END.
+    Approach: route returns "__end__".
+
+Q27. Node that uses subgraph + Command.PARENT.
+    Problem: subgraph finishes, parent continues in another branch.
+    Concepts: Command.PARENT, subgraphs.
+    Approach: return Command(goto="parent_node", graph=Command.PARENT).
+
+Q28. Agent that uses two different tools.
+    Problem: search + calculator depending on the question.
+    Concepts: multiple tools in ToolNode.
+    Approach: pass [search, calculator] to ToolNode.
+
+Q29. Streaming-style multi-step output collection.
+    Problem: collect each node's message into state.
+    Concepts: reducers, list keys.
+    Approach: add_messages or list reducer on results.
+
+Q30. Safety: reject invalid input before processing.
+    Problem: negative amount should not reach execute.
+    Concepts: validation node + conditional edge.
+    Approach: validate -> if ok -> proceed else END (or error node).
+
+Q31. Human-in-loop for an autonomous agent.
+    Problem: approval before the final expensive action.
+    Concepts: interrupt inside agent loop.
+    Approach: insert approval node in the loop that calls interrupt().
+
+Q32. Planner that generates Send tasks (map over a plan).
+    Problem: execute all plan steps in parallel.
+    Concepts: Send + planning.
+    Approach: planner -> fan_out returns [Send("execute_step", {"step": s})].
+
+================================================================
+PART 5 - LIKELY THEORY INTERVIEW QUESTIONS (50+)
+================================================================
+Ranking: 3 fire = VERY LIKELY, 2 = LIKELY, 1 = POSSIBLE.
+
+3  Explain LangGraph.
+3  Why did you use LangGraph?
+3  What is a StateGraph?
+3  What is State?
+3  What is a node?
+3  What is an edge?
+3  Conditional edge vs normal edge?
+3  How do loops work in LangGraph?
+3  How does state move between nodes?
+3  What is tool calling?
+3  What is ToolNode?
+3  How does ReAct work?
+3  What is checkpointing?
+3  What is thread_id?
+3  How do interrupts work?
+3  Workflow vs Agent?
+3  ReAct vs autonomous agent? (know this EXACTLY)
+3  How do you prevent infinite loops?
+3  What is the difference between LangGraph and LangChain?
+
+2  What is Command?
+2  What is Send / when do you use map-reduce?
+2  What are subgraphs?
+2  ReAct vs Plan-and-Execute?
+2  How does memory work in LangGraph?
+2  Is state automatically persistent?
+2  State vs memory difference?
+2  How do you resume a paused graph?
+2  Why is a checkpointer required for interrupts?
+2  How would you scale a LangGraph application?
+2  How do you implement tools in LangGraph?
+2  How does a tool result get back to the LLM?
+2  What is the messages state / add_messages?
+2  How do you add memory to an agent?
+2  How would you handle errors in a graph?
+2  What are START and END?
+2  Why is compile() required?
+2  What does invoke() do?
+2  What is Plan-and-Execute?
+2  What is an autonomous agent?
+2  What makes an agent autonomous?
+2  How do you know when a goal is complete?
+2  How do you constrain an autonomous agent?
+
+1  LangGraph vs CrewAI?
+1  What is a routing function?
+1  How do you implement if/else in LangGraph?
+1  Can graphs have cycles?
+1  How do parallel branches combine results?
+1  What is a reducer?
+1  What is a superstep?
+1  How would you do human-in-the-loop in an agent loop?
+1  What is Chain of Thought vs Tree of Thoughts?
+1  What is Reflection / iterative refinement?
+1  How would you retry a failed node?
+1  How do multiple threads work?
+1  What is Command.PARENT used for?
+1  How do you test a LangGraph graph?
+1  How does streaming work in LangGraph?
+1  What happens if a node returns an unknown state key? (Dropped.)
+1  What happens if routing returns an unmapped value? (Error.)
+
+================================================================
+PART 6 - IF THE INTERVIEWER ASKS ME TO WRITE LANGGRAPH CODE
+================================================================
+
+1. "Create a simple two-node LangGraph."
+   Problem: node A + node B, state flows A -> B.
+   Minimum structure: State, 2 fns, 2 add_node, 3 add_edge, compile, invoke.
+   Key APIs: StateGraph, START, END, add_node, add_edge.
+   Testing: do the nodes communicate via state?
+   Common mistakes: forgetting START/END or compile.
+
+2. "Create a classifier with conditional routing."
+   Minimum structure: classify node + route fn + add_conditional_edges.
+   Key APIs: add_conditional_edges, Literal return.
+   Testing: does the route fn return exactly the map keys?
+   Common mistakes: route returns node names but map keys differ.
+
+3. "Create a graph that loops until an answer is good."
+   Minimum structure: generate, evaluate, improve + counter + END route.
+   Key APIs: conditional edge back to a node.
+   Testing: will it always terminate? (counter + limit)
+   Common mistakes: no termination guard.
+
+4. "Create a graph that calls a tool."
+   Minimum structure: @tool, ToolNode, agent + conditional edge.
+   Key APIs: @tool, ToolNode, tool_calls.
+   Testing: does the ToolMessage come back to the agent?
+   Common mistakes: not sending tool result back to the LLM.
+
+5. "Create a simple ReAct agent."
+   Minimum structure: agent node, tools node, cycle, should_continue.
+   Key APIs: add_messages, ToolNode, conditional edge to END.
+   Testing: what stops the loop?
+   Common mistakes: missing the tools->agent edge.
+
+6. "Add memory to the agent."
+   Minimum structure: compile(checkpointer=MemorySaver()), thread_id config.
+   Key APIs: MemorySaver, configurable.thread_id.
+   Testing: run two invokes, same thread - is history kept?
+   Common mistakes: compiling without a checkpointer.
+
+7. "Create a human approval workflow."
+   Minimum structure: interrupt node + Command(resume) + checkpointer.
+   Key APIs: interrupt, Command(resume), Command(goto).
+   Testing: graph pauses; resume continues.
+   Common mistakes: forgetting the checkpointer.
+
+8. "Process multiple tasks in parallel."
+   Minimum structure: fan-out via Send or fixed parallel edges + reducer.
+   Key APIs: Send, add_conditional_edges(fan_out), reducers.
+   Testing: are all results collected?
+   Common mistakes: reducer missing -> writes clobber each other.
+
+9. "Create a planner-executor."
+   Minimum structure: plan list + index + execute loop + final.
+   Key APIs: state lists, conditional loop, LLM call.
+   Testing: does index advance and loop stop?
+   Common mistakes: index not incremented -> infinite loop.
+
+10. "Create a simple autonomous goal-directed agent."
+    Minimum structure: goal loop = ReAct loop + observations in state
+    + max iterations + goal-complete detection (no tool_calls -> final).
+    Key APIs: add_messages, ToolNode, counter, should_continue.
+    Testing: does it stop? can it re-plan?
+    Common mistakes: hard-coding the steps (defeats autonomy).
+
+================================================================
+PART 7 - COMMON MISTAKES (AND HOW TO AVOID THEM)
+================================================================
+
+1. Incorrect State definition
+   - Returning keys not in the TypedDict -> silently dropped.
+   - Avoid: only return keys declared in State.
+
+2. Forgetting compile()
+   - Can't invoke a builder.
+   - Avoid: always `app = builder.compile()` first.
+
+3. Forgetting START / END
+   - No edges from START, or no path to END -> graph errors.
+   - Avoid: every graph needs START->...->END reachable.
+
+4. Incorrect edge routing
+   - Adding an edge to a node that doesn't exist.
+   - Avoid: check node names are exact strings.
+
+5. Incorrect conditional edge mapping
+   - Route fn returns "x" but map has key "y" -> KeyError.
+   - Avoid: route return values MUST be keys in the path map.
+
+6. Infinite loops
+   - Conditional edge keeps returning to the same node.
+   - Avoid: counter in state + max limit + a route to END.
+
+7. Incorrect tool/message handling
+   - Not sending the ToolMessage back to the LLM (missing
+     tools->agent edge) -> agent can't observe.
+   - Avoid: always close the loop tools -> agent.
+
+8. Misunderstanding checkpointing
+   - Expecting persistence without a checkpointer.
+   - Avoid: state persists ONLY if you compile with a checkpointer.
+
+9. Confusing state with memory
+   - State is data; memory is the persistence effect.
+   - Avoid: say "memory = state + checkpointing + history".
+
+10. Confusing workflow with agent
+    - Calling a fixed pipeline an "agent".
+    - Avoid: agent = the MODEL decides the path at runtime.
+
+11. Calling everything an autonomous agent
+    - A single fixed chain is not autonomous.
+    - Avoid: autonomy = runtime decisions by the model.
+
+12. Using outdated LangGraph APIs
+    - Old: `add_conditional_edges(fn, {...})` order, raw strings.
+    - Current: START/END sentinels, Command, Send, MemorySaver,
+      add_messages, ToolNode. Verify against the current docs.
+
+================================================================
+END OF FILE
+================================================================

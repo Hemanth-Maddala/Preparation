@@ -1,0 +1,1120 @@
+================================================================================
+                    OS INTERVIEW QUESTIONS — COMPLETE SET
+================================================================================
+
+Organized into three tiers by likelihood of being asked.
+Each answer is concise, interview-ready (2-5 lines), NO CODE, easy to speak.
+
+================================================================================
+🔥 VERY LIKELY (70+ questions)
+================================================================================
+
+1. What is an operating system?
+Ans: An OS is system software that acts as an intermediary between user programs
+and computer hardware. It manages resources (CPU, memory, I/O) and provides
+services like process management, memory management, file management, and security.
+
+2. What does an OS do?
+Ans: Manages hardware resources, provides abstraction over hardware, handles
+process scheduling, manages memory, controls I/O devices, ensures security, and
+provides file systems. It acts as both a resource manager and an abstraction layer.
+
+3. What is a kernel?
+Ans: The kernel is the core component of the OS that runs in privileged mode and
+has direct access to hardware. It handles process scheduling, memory management,
+system calls, and interrupt handling. The kernel is NOT the entire OS — it's the
+most critical part.
+
+4. Kernel vs OS?
+Ans: OS is the complete system software including the kernel, utilities, system
+libraries, and user interface. The kernel is just one component — the core that
+manages hardware directly. Every OS has a kernel, but the OS is more than just
+the kernel.
+
+5. User mode vs kernel mode?
+Ans: User mode is a restricted mode where applications run with limited privileges
+— they cannot access hardware directly or critical memory. Kernel mode is a
+privileged mode where the OS kernel runs with full access to hardware and all
+resources. System calls switch from user to kernel mode.
+
+6. What is a system call?
+Ans: A system call is the interface between a user program and the kernel. When
+a program needs hardware access (file I/O, network, process creation), it makes
+a system call. The CPU switches from user mode to kernel mode, the kernel
+performs the operation, and returns to user mode.
+
+7. Program vs process?
+Ans: A program is a passive entity — just code stored on disk. A process is an
+active entity — a program in execution with its own memory, registers, and state.
+Multiple processes can run the same program simultaneously, each with separate
+resources.
+
+8. What is a process?
+Ans: A process is a program in execution. It includes the program code, current
+activity (program counter, registers), stack, data section, and heap. Each
+process has a unique Process ID and its own virtual address space.
+
+9. What is PCB?
+Ans: Process Control Block is a data structure the OS maintains for each process.
+It stores: process ID, process state, program counter, CPU registers, scheduling
+info (priority, time quantum), memory management info (page tables, limits),
+accounting info, and I/O status. The PCB is what the OS saves/restores during
+context switching.
+
+10. What are the process states?
+Ans: New → Ready → Running → Waiting/Blocked → Ready → Terminated. New: being
+created. Ready: waiting for CPU. Running: executing on CPU. Waiting: waiting for
+I/O or event. Terminated: finished execution. A process moves from Running to
+Waiting (for I/O), then back to Ready when I/O completes.
+
+11. What is context switching?
+Ans: Context switching is saving the state of the currently running process and
+loading the state of the next process to run. The OS saves registers, program
+counter, and other context of process A into its PCB, then loads process B's
+saved context from B's PCB. B then resumes execution.
+
+12. Why is context switching expensive?
+Ans: It's pure overhead — no useful work happens during it. The CPU saves/restores
+registers, flushes TLB, may flush cache, and the scheduler must determine which
+process runs next. While each switch is microseconds, heavy switching wastes
+significant CPU time that could be used for actual computation.
+
+13. Process vs thread?
+Ans: A process has its own memory space, file descriptors, and resources. A thread
+shares the process's memory and resources but has its own stack, registers, and
+program counter. Processes are isolated from each other; threads within the same
+process can access shared data. Threads are cheaper to create and switch between.
+
+14. Why are threads cheaper than processes?
+Ans: Threads share the process's address space, open files, and resources —
+creating a thread doesn't require duplicating these. Context switching between
+threads is cheaper because they share the same address space (no TLB flush needed
+for same-process threads). Inter-thread communication is direct through shared
+memory.
+
+15. What is multithreading?
+Ans: Multithreading is having multiple threads within a single process executing
+concurrently. Benefits: responsiveness (one thread blocks, others continue),
+resource sharing (threads share memory), economy (cheaper than creating processes),
+and parallelism (on multi-core systems). Used in web servers, databases, and GUIs.
+
+16. Concurrency vs parallelism?
+Ans: Concurrency is managing multiple tasks that make progress during overlapping
+time periods — they can be interleaved on a single core. Parallelism is literally
+executing multiple tasks simultaneously on multiple cores. Concurrency is about
+dealing with many things at once; parallelism is about doing many things at once.
+
+17. What is process scheduling?
+Ans: Process scheduling is the OS deciding which process gets CPU time and for how
+long. The scheduler uses algorithms to allocate CPU among ready processes based on
+criteria like CPU utilization, throughput, turnaround time, waiting time, and
+response time. This enables multitasking and efficient CPU use.
+
+18. What are scheduling algorithms?
+Ans: FCFS (first-come, first-served), SJF (shortest job first), SRTF (shortest
+remaining time first), Priority Scheduling, Round Robin (each gets a time
+quantum), Multilevel Queue, and Multilevel Feedback Queue. Each has tradeoffs
+between fairness, throughput, and response time.
+
+19. What is Round Robin?
+Ans: Each process gets a fixed time quantum (e.g., 10ms). After the quantum
+expires, the process is preempted and moved to the back of the ready queue. This
+gives fair CPU sharing and good response time. If the quantum is too small,
+context switching overhead dominates. If too large, it behaves like FCFS.
+
+20. FCFS vs SJF?
+Ans: FCFS is simplest — processes run in arrival order. It suffers from convoy
+effect (short processes wait behind long ones). SJF is optimal for minimum
+average waiting time — shortest job runs first. Problem: predicting burst time
+is difficult, and long processes can starve.
+
+21. SJF vs SRTF?
+Ans: SJF is non-preemptive — once a process starts, it runs to completion. SRTF
+is preemptive SJF — if a new process arrives with a shorter remaining time, the
+current process is preempted. SRTF has lower average waiting time but more
+context switches.
+
+22. What is starvation?
+Ans: Starvation is when a process waits indefinitely because other processes with
+higher priority or shorter burst times are always chosen. Example: in SJF, a long
+process may never get CPU if short processes keep arriving. Solution: aging —
+gradually increasing the priority of waiting processes.
+
+23. What is aging?
+Ans: Aging is a technique to prevent starvation by gradually increasing the
+priority of processes that have been waiting a long time. Eventually, even the
+lowest-priority process gets high enough priority to be scheduled. Used in
+priority scheduling and other algorithms susceptible to starvation.
+
+24. What is convoy effect?
+Ans: Convoy effect occurs in FCFS when one long CPU-bound process blocks the ready
+queue. All short I/O-bound processes must wait behind it, leading to poor CPU
+utilization (CPU idle during I/O of long process) and high average waiting time.
+Round Robin prevents this.
+
+25. What is priority inversion?
+Ans: Priority inversion is when a high-priority process waits for a resource held
+by a low-priority process, while a medium-priority process preempts the
+low-priority one. The high-priority process effectively waits for the medium one,
+reversing the intended priority order. Solved by priority inheritance.
+
+26. What is IPC?
+Ans: Inter-Process Communication allows processes to exchange data and
+synchronize. Methods include shared memory (fast, both processes access same
+memory region), message passing (sendMessage/receiveMessage), pipes, named pipes,
+message queues, signals, and sockets. Choice depends on whether processes share
+an address space.
+
+27. Shared memory vs message passing?
+Ans: Shared memory is faster — processes directly read/write to a shared region,
+but requires explicit synchronization. Message passing is safer — OS handles
+data transfer, but has overhead from copying data. Shared memory is used for
+closely related processes; message passing for distributed systems.
+
+28. What is a race condition?
+Ans: A race condition occurs when multiple threads/processes access shared data
+concurrently and the result depends on the order of execution. Example: two
+threads incrementing the same counter — the final value depends on interleaving.
+Solved by synchronization (mutex, semaphore).
+
+29. What is a critical section?
+Ans: A critical section is a code segment that accesses shared resources and must
+not be executed by more than one process/thread at a time. Every solution to the
+critical section problem must ensure: mutual exclusion (only one at a time),
+progress (no unnecessary blocking), and bounded waiting (no indefinite
+postponement).
+
+30. What is a mutex?
+Ans: A mutex (mutual exclusion) is a synchronization primitive — a lock that
+ensures only one thread enters a critical section at a time. Thread acquires
+(locks) the mutex before entering, and releases (unlocks) after exiting. If
+another thread tries to acquire a locked mutex, it blocks until the mutex is
+released.
+
+31. What is a semaphore?
+Ans: A semaphore is a synchronization primitive with an integer value. Two
+operations: wait(P) decrements the value (blocks if zero), signal(V) increments
+(wakes a waiting thread). Binary semaphore (0/1) works like mutex. Counting
+semaphore (0 to N) controls access to a resource with multiple instances.
+
+32. Mutex vs semaphore?
+Ans: Mutex is a locking mechanism — one thread owns it and must release it.
+Semaphore is a signaling mechanism — any thread can signal. Mutex ensures mutual
+exclusion; semaphore can also coordinate threads (e.g., producer-consumer).
+Binary semaphore ≈ mutex, but mutex has ownership semantics (only holder can
+release).
+
+33. What is a monitor?
+Ans: A monitor is a high-level synchronization construct — a module containing
+shared data and procedures to operate on it. Only one process can be active
+inside a monitor at a time (automatic mutual exclusion). Uses condition variables
+for synchronization: wait() and signal() on condition variables.
+
+34. What is deadlock?
+Ans: Deadlock is a situation where two or more processes are blocked forever, each
+waiting for a resource held by another. Example: Process A holds Resource 1 and
+waits for Resource 2; Process B holds Resource 2 and waits for Resource 1.
+Neither can proceed.
+
+35. Four conditions for deadlock (Coffman conditions)?
+Ans: (1) Mutual exclusion — at least one resource is non-sharable. (2) Hold and
+wait — process holds a resource while waiting for another. (3) No preemption —
+resources cannot be forcibly taken. (4) Circular wait — a circular chain of
+processes exists where each waits for a resource held by the next. ALL FOUR must
+be present.
+
+36. Deadlock prevention vs avoidance?
+Ans: Prevention ensures at least one Coffman condition cannot hold (e.g., prevent
+hold-and-wait by requiring processes to request all resources at once). Avoidance
+allows all conditions but the OS checks each resource request — only grants if
+the system remains in a safe state (Banker's algorithm). Prevention is simpler
+but restrictive.
+
+37. What is Banker's algorithm?
+Ans: A deadlock avoidance algorithm. Before granting a resource request, the OS
+simulates the allocation and checks if the resulting state is safe (there exists
+a sequence where all processes can complete). Uses Available, Maximum,
+Allocation, and Need matrices. If safe, grant; if unsafe, make the process wait.
+
+38. Deadlock vs starvation vs livelock?
+Ans: Deadlock: processes permanently blocked, waiting for each other. Starvation:
+a process waits indefinitely because others are always chosen (not a circular
+wait — just unfair scheduling). Livelock: processes are active but make no
+progress (e.g., two processes repeatedly releasing and reacquiring the same
+resources). Deadlock = no progress, no activity. Livelock = activity but no
+progress. Starvation = indefinite waiting.
+
+39. What is virtual memory?
+Ans: Virtual memory gives each process the illusion of a large, contiguous address
+space that may exceed physical memory. The OS maps virtual addresses to physical
+addresses using page tables. Pages not in physical memory are stored on disk
+(backing store). This enables running large programs and multiprogramming.
+
+40. Paging vs segmentation?
+Ans: Paging divides memory into fixed-size blocks (pages/frames) — eliminates
+external fragmentation but may cause internal fragmentation. Segmentation divides
+memory into variable-size segments based on logical divisions (code, data,
+stack) — no internal fragmentation but external fragmentation possible. Paging
+is physical; segmentation is logical.
+
+41. Internal vs external fragmentation?
+Ans: Internal fragmentation: memory allocated but unused within a block (e.g.,
+process needs 5KB but gets 8KB block — 3KB wasted inside the block). External
+fragmentation: total free memory is enough but not contiguous (scattered free
+blocks). Paging causes internal; contiguous allocation causes external.
+
+42. What is a page fault?
+Ans: A page fault occurs when a program accesses a page not currently in physical
+memory. The hardware traps to the OS, which finds the page on disk (backing
+store), loads it into a free frame, updates the page table, and restarts the
+instruction. Page faults are expensive because disk access is orders of magnitude
+slower than memory.
+
+43. What is TLB?
+Ans: Translation Lookaside Buffer is a hardware cache for page table entries.
+When translating virtual address to physical, the TLB stores recent
+translations. TLB hit: translation in nanoseconds. TLB miss: must access page
+table (slower). TLB dramatically reduces address translation overhead, making
+paging practical.
+
+44. What is demand paging?
+Ans: Loading pages into memory only when they are actually accessed (on demand),
+rather than loading the entire program at startup. This reduces memory usage
+and startup time. Combined with page replacement, it allows running programs
+larger than physical memory. Pages not needed are never loaded.
+
+45. What is page replacement?
+Ans: When physical memory is full and a new page must be loaded, the OS must
+replace an existing page. Algorithms: FIFO (replace oldest), LRU (replace least
+recently used — best practical), Optimal (theoretical best), Clock/Second Chance
+(approximates LRU efficiently). FIFO can suffer Belady's anomaly.
+
+46. What is Belady's anomaly?
+Ans: Belady's anomaly occurs with FIFO page replacement: increasing the number
+of frames can paradoxically increase page faults. This happens because FIFO
+doesn't consider page usage — a newly loaded page might replace a page that's
+about to be used. LRU and Optimal do NOT suffer from Belady's anomaly.
+
+47. What is thrashing?
+Ans: Thrashing occurs when the system spends more time swapping pages than
+executing instructions — excessive page faults. It happens when total working
+sets of all processes exceed physical memory. Symptoms: low CPU utilization,
+high page fault rate. Solutions: reduce degree of multiprogramming, increase
+memory, use working set model.
+
+48. What is a file system?
+Ans: A file system organizes data on storage devices into files and directories.
+It manages file creation, deletion, naming, access control, and storage
+allocation. It maintains metadata (file attributes, permissions, timestamps)
+and provides a hierarchical directory structure for organization.
+
+49. Contiguous vs linked vs indexed file allocation?
+Ans: Contiguous: file stored in consecutive blocks — fast sequential access but
+external fragmentation. Linked: each block points to next — no external
+fragmentation but slow random access (must traverse chain). Indexed: index block
+stores pointers to all blocks — fast random access but index block overhead.
+
+50. What is an inode?
+Ans: An inode (index node) is a data structure that stores metadata about a file
+— permissions, owner, timestamps, size, and pointers to data blocks. It does NOT
+contain the file name (stored in directory). Inodes allow efficient file access
+and support hard links.
+
+51. Polling vs interrupts?
+Ans: Polling: CPU continuously checks if a device needs attention — wastes CPU
+cycles, simple but inefficient. Interrupts: device sends a signal to CPU when it
+needs attention — CPU responds immediately, efficient but more complex hardware.
+Modern systems use interrupts for most devices.
+
+52. What is DMA?
+Ans: Direct Memory Access allows devices to transfer data directly to/from memory
+without CPU involvement. The CPU programs the DMA controller with source,
+destination, and count, then continues other work. DMA completes the transfer
+and sends an interrupt. Much faster than CPU-driven I/O for large transfers.
+
+53. Interrupts vs DMA?
+Ans: Interrupts notify the CPU when an event occurs — the CPU handles the
+interrupt. DMA offloads data transfer to a separate controller — the CPU is free
+during the transfer. For large data transfers, DMA is far more efficient because
+the CPU doesn't copy each byte.
+
+54. What is a device driver?
+Ans: A device driver is a software module that translates OS commands into
+device-specific operations. It abstracts hardware differences so the OS can
+interact with diverse devices through a uniform interface. Each device type
+(disk, printer, network card) typically needs its own driver.
+
+55. What is protection?
+Ans: Protection refers to mechanisms that control access to resources and prevent
+processes from interfering with each other or the OS. Includes: memory protection
+(address spaces), CPU protection (time limits), I/O protection (device access
+control), enforced through user/kernel mode separation and hardware support.
+
+56. What is security?
+Ans: Security protects the system against unauthorized access, malicious attacks,
+and data breaches. Includes: authentication (verifying identity), authorization
+(controlling access), encryption, auditing. While protection prevents accidental
+interference, security prevents intentional attacks.
+
+57. What are zombie and orphan processes?
+Ans: Zombie: a process that has terminated but its entry remains in the process
+table because the parent hasn't called wait() to collect its exit status. Orphan:
+a process whose parent has terminated — it's adopted by the init process (PID 1)
+and continues running. Zombies waste process table entries; orphans run normally.
+
+58. What is fork and exec?
+Ans: fork creates a child process that's a duplicate of the parent (same code,
+separate memory). exec replaces the current process's code with a new program.
+Together: fork() then exec() is how new programs are launched — fork creates a
+copy, exec replaces it with the desired program.
+
+59. What is a process hierarchy?
+Ans: Processes form a tree structure. When process A forks, B becomes its child.
+Parent can create multiple children. When a child terminates before parent calls
+wait(), it becomes a zombie. When parent terminates first, child becomes orphan
+(adopted by init). Init is the ancestor of all processes.
+
+60. Long-term vs short-term vs medium-term scheduler?
+Ans: Long-term: selects processes from pool to ready queue — controls degree of
+multiprogramming (runs infrequently). Short-term: selects from ready queue to
+run on CPU — makes scheduling decisions (runs very frequently, on every context
+switch). Medium-term: swaps processes in/out of memory to manage load (runs
+occasionally).
+
+61. What are the scheduling criteria?
+Ans: CPU utilization (keep CPU busy), throughput (processes completed per unit
+time), turnaround time (total time from submission to completion), waiting time
+(time spent in ready queue), response time (time from submission to first
+response). Different algorithms optimize different criteria.
+
+62. What is turnaround time?
+Ans: Turnaround time = completion time - arrival time. It's the total time a
+process spends in the system from submission to completion. Includes waiting time
++ execution time + any I/O time. Average turnaround time is a key scheduling
+metric.
+
+63. What is waiting time?
+Ans: Waiting time = turnaround time - burst time (execution time). It's the total
+time a process spends waiting in the ready queue. Minimizing average waiting
+time is a common scheduling goal. SJF minimizes it optimally.
+
+64. What is response time?
+Ans: Response time = time from submission of a request until the first response
+is produced. In interactive systems, this is critical for user experience. Round
+Robin is designed for good response time. Response time is different from
+turnaround time.
+
+65. What is preemptive vs non-preemptive scheduling?
+Ans: Non-preemptive: once a process gets CPU, it keeps it until it terminates or
+blocks for I/O. Simple but poor response time. Preemptive: the OS can forcibly
+take CPU from a running process (at timer interrupt or higher-priority arrival).
+Better response time but more context switches. Round Robin is preemptive; FCFS
+is non-preemptive.
+
+66. What is multilevel queue scheduling?
+Ans: Ready queue is partitioned into separate queues (e.g., system processes,
+interactive processes, batch processes). Each queue has its own scheduling
+algorithm. Scheduling between queues is typically fixed-priority preemptive.
+Simple but inflexible — processes can't move between queues.
+
+67. What is multilevel feedback queue?
+Ans: Like multilevel queue but processes can move between queues. A process that
+uses too much CPU time moves to a lower-priority queue. A process waiting too
+long moves up. This adapts to process behavior and prevents starvation. Most
+complex but most flexible scheduling algorithm.
+
+68. What is a pipe?
+Ans: A pipe is a unidirectional communication channel between two processes. Data
+written by one process is read by the other in FIFO order. Standard pipes are
+anonymous (exist only during process lifetime). Named pipes (FIFOs) persist on
+the filesystem and can be accessed by unrelated processes.
+
+69. What are signals?
+Ans: Signals are software interrupts sent to a process to notify it of events
+(e.g., SIGTERM to terminate, SIGKILL to force terminate, SIGINT for Ctrl+C).
+Signals are asynchronous — a process can be interrupted at any point. Default
+action is usually terminate, but processes can set custom handlers.
+
+70. What is a socket?
+Ans: A socket is an endpoint for network communication. It combines an IP address
+and port number. Sockets enable communication between processes on different
+machines (network IPC). Types: TCP sockets (reliable, connection-oriented) and
+UDP sockets (unreliable, connectionless).
+
+================================================================================
+🟡 LIKELY (50+ questions)
+================================================================================
+
+71. What are the main responsibilities of an OS?
+Ans: Process management (creation, scheduling, termination), memory management
+(allocation, deallocation, virtual memory), file system management (storage,
+directories, access), I/O management (device drivers, interrupts), security
+(authentication, access control), and resource allocation (CPU, memory, I/O
+scheduling).
+
+72. What is system software vs application software?
+Ans: System software provides the platform for applications — OS, device drivers,
+compilers, utilities. Application software performs user tasks — browsers,
+editors, games. System software manages hardware; application software uses
+system services. The OS is the most important system software.
+
+73. What is user space vs kernel space?
+Ans: User space: restricted memory area where application code runs — cannot
+access hardware or critical kernel data. Kernel space: privileged memory area
+where the OS kernel runs — full hardware access. System calls are the bridge
+between them. This separation protects the OS from buggy applications.
+
+74. What is the difference between process and program?
+Ans: Program is passive — executable code on disk. Process is active — a running
+instance with its own memory, registers, and state. Same program can have
+multiple processes. Program is a blueprint; process is the actual execution.
+Process lifecycle: created, runs, terminates.
+
+75. How does a process get created?
+Ans: Via fork() system call — creates a child process as a copy of the parent.
+The child can then exec() to replace its code with a new program. OS allocates
+memory, creates PCB, initializes process table entry, sets up address space, and
+adds the process to the ready queue.
+
+76. What happens when a process terminates?
+Ans: OS reclaims all resources (memory, file descriptors, PCB), removes it from
+process table, and notifies parent (if parent called wait). If parent hasn't
+called wait, process becomes zombie. If parent terminated first, child was
+already orphaned and adopted by init.
+
+77. What is thread-local data?
+Ans: Each thread has its own stack, registers, and program counter — thread-local
+execution context. But threads share the process's heap, code, and data
+segments, plus file descriptors and other resources. Thread-local storage (TLS)
+provides per-thread data that doesn't interfere with other threads.
+
+78. How does context switching work for threads?
+Ans: Thread context switch within the same process is cheaper than process
+context switch — the address space doesn't change, so no TLB flush or memory
+mapping change is needed. Only registers and stack pointer need to be
+saved/restored. This is why multithreading is preferred over multiprocess for
+concurrency.
+
+79. What is the dispatcher?
+Ans: The dispatcher is the module that gives control of the CPU to the process
+selected by the short-term scheduler. It involves: switching context, switching
+to user mode, and jumping to the correct location in the program to resume
+execution. Dispatch latency is the time to stop one process and start another.
+
+80. What is CPU burst vs I/O burst?
+Ans: CPU burst: period where process uses CPU for computation. I/O burst: period
+where process waits for I/O. Alternating pattern. CPU-bound processes have long
+CPU bursts; I/O-bound processes have short CPU bursts. Scheduling algorithms try
+to balance CPU-bound and I/O-bound processes.
+
+81. What is multiprogramming?
+Ans: Multiprogramming keeps multiple processes in memory simultaneously so when
+one process waits for I/O, another can use the CPU. This increases CPU
+utilization. Without multiprogramming, CPU sits idle during I/O waits. The degree
+of multiprogramming is the number of processes in memory.
+
+82. What is multitasking?
+Ans: Multitasking is a form of multiprogramming with time-sharing — multiple
+processes share CPU time by switching rapidly between them. Each process gets a
+time slice. From the user's perspective, multiple applications run
+simultaneously. Enabled by timer interrupts that trigger context switches.
+
+83. What is a batch OS?
+Ans: Processes are collected in groups (batches) and executed without user
+interaction. No direct user interaction during execution. Efficient for
+repetitive tasks but poor response time. Example: early payroll systems. The
+user submits jobs and gets results later.
+
+84. What is a time-sharing OS?
+Ans: CPU time is shared among multiple users/processes by switching rapidly
+between them. Each user gets a small time slice. Provides interactive computing —
+users can interact with programs in real-time. Example: UNIX, modern desktop OS.
+Balances response time with throughput.
+
+85. What is a real-time OS?
+Ans: An OS designed for time-critical applications where responses must occur
+within strict deadlines. Hard real-time: deadlines are absolute (missing them
+causes system failure — e.g., aircraft control). Soft real-time: deadlines are
+important but occasional misses are tolerable (e.g., video streaming). Different
+from general-purpose OS.
+
+86. Hard real-time vs soft real-time?
+Ans: Hard: guarantees response within deadline every time. Failure to meet
+deadline = system failure. Used in medical devices, avionics, anti-lock brakes.
+Soft: attempts to meet deadlines but can tolerate occasional misses. Used in
+multimedia, online systems. Hard real-time requires specialized OS design.
+
+87. What is an embedded OS?
+Ans: An OS designed for embedded systems — devices with limited resources
+(smartphones, routers, IoT devices, automotive systems). Optimized for specific
+hardware, small footprint, low power consumption. Examples: Android (embedded
+Linux), FreeRTOS, VxWorks. Often real-time.
+
+88. What is a distributed OS?
+Ans: An OS that manages a collection of independent computers and makes them
+appear as a single system. Handles resource sharing, communication, and load
+balancing across networked machines. Examples: early LOCUS, Amoeba. Transparent
+to users — they don't know code runs on multiple machines.
+
+89. What is a network OS?
+Ans: An OS that provides networking capabilities — file sharing, printer access,
+communication between machines. Each machine runs its own OS but can access
+shared resources over the network. Examples: Windows Server, Linux with network
+services. Unlike distributed OS, users are aware of separate machines.
+
+90. What is a process state diagram?
+Ans: New → Ready → Running → Terminated. Running → Waiting (for I/O) → Ready
+(I/O complete). Ready ← Running (preemption). New → Ready (admitted). The
+transitions are triggered by: scheduler dispatch, I/O wait, I/O completion,
+timer interrupt (preemption), fork/exit.
+
+91. What happens during a system call?
+Ans: (1) User program invokes system call. (2) CPU switches from user mode to
+kernel mode. (3) Trap instruction executes. (4) Kernel performs the requested
+operation. (5) Kernel returns result to user program. (6) CPU switches back to
+user mode. The mode switch is essential for security.
+
+92. What is a trap?
+Ans: A trap is a software-generated interrupt caused by an error or specific
+condition (like a system call). It transfers control to the OS kernel. Example:
+division by zero generates a trap. System calls are implemented as special trap
+instructions. Traps are synchronous (occur as result of instruction execution).
+
+93. How does shared memory IPC work?
+Ans: Two processes agree on a shared memory region. Both map this region into
+their address space. They can then read/write directly to this region — no
+kernel involvement after setup. Fastest IPC method. But requires explicit
+synchronization (mutex/semaphore) to prevent race conditions.
+
+94. How does message passing IPC work?
+Ans: Processes communicate by sending and receiving messages through the OS. No
+shared memory needed. Operations: send(destination, message) and
+receive(source, message). Can be blocking (sender/receiver waits) or
+non-blocking. Slower than shared memory due to data copying, but simpler and
+safer.
+
+95. What is the producer-consumer problem?
+Ans: Classic synchronization problem. Producer generates data and places it in a
+buffer; Consumer removes data from the buffer. Problem: producer must not add to
+a full buffer; consumer must not remove from an empty buffer; both access the
+buffer concurrently. Solved using semaphores or monitors.
+
+96. What is the readers-writers problem?
+Ans: Multiple readers can read simultaneously, but writers need exclusive access.
+Problem: if a writer is waiting, should new readers be allowed? First
+readers-writers: readers have priority (writers may starve). Second
+readers-writers: writers have priority (readers may starve). Balanced solutions
+exist.
+
+97. What is the dining philosophers problem?
+Ans: Five philosophers sit around a table, each needing two forks to eat. They
+alternate between thinking and eating. Problem: if all grab their left fork
+simultaneously, deadlock occurs. Illustrates deadlock and synchronization
+challenges. Solutions: resource ordering, arbitrator, limiting concurrent
+diners.
+
+98. How does Banker's algorithm work?
+Ans: Maintains Available (free resources), Maximum (max needed by each),
+Allocation (currently held), Need (remaining needed). On request: (1) Check
+request ≤ need. (2) Check request ≤ available. (3) Tentatively allocate. (4)
+Run safety algorithm — check if a safe sequence exists. (5) If safe, grant;
+else, roll back.
+
+99. What is a safe state?
+Ans: A state is safe if the system can allocate resources to each process (up to
+its maximum) and still avoid deadlock. In a safe state, there exists at least
+one sequence in which all processes can complete. Banker's algorithm checks for
+safety before granting requests.
+
+100. What is an unsafe state?
+Ans: An unsafe state doesn't guarantee deadlock but makes it possible. The system
+may still function if processes don't request maximum resources. But the OS
+cannot guarantee deadlock won't occur. Banker's algorithm avoids unsafe states
+to prevent potential deadlock.
+
+101. What is deadlock detection?
+Ans: Allow deadlocks to occur, then detect and recover. Uses a wait-for graph:
+edge from process A to B if A waits for B. Cycle in graph = deadlock. Recovery:
+terminate processes (all or some) or preempt resources. Cheaper than
+prevention/avoidance but may waste resources.
+
+102. What is a page table?
+Ans: A data structure that maps virtual page numbers to physical frame numbers.
+Each process has its own page table. Entry contains: frame number, valid/invalid
+bit, protection bits, modified bit, referenced bit. TLB caches recent page table
+entries for fast lookup.
+
+103. What is a multi-level page table?
+Ans: A page table that is itself paged. Splits the page number into multiple
+levels. Reduces memory needed for page tables — only parts in use need to be
+stored. Most systems use 2-level or 3-level page tables. Trades slightly more
+indirection for much less memory overhead.
+
+104. What is an inverted page table?
+Ans: One entry per physical frame (not per virtual page). Entry stores which
+process and which page occupies that frame. Reduces memory for page tables —
+size proportional to physical memory, not virtual. But lookup is slower — must
+search the table. Used in some architectures.
+
+105. What is contiguous memory allocation?
+Ans: Each process occupies a single contiguous block of memory. Simple but causes
+external fragmentation as processes are loaded and removed. Fixed partitioning:
+memory divided into fixed-size partitions (internal fragmentation). Variable
+partitioning: partitions match process size (external fragmentation).
+
+106. What is the best fit strategy?
+Ans: Allocate the smallest free partition that is large enough for the process.
+Minimizes wasted space within the partition. But creates many tiny unusable free
+blocks (external fragmentation). Requires searching all free blocks. Performance
+degrades with many small free blocks.
+
+107. What is the first fit strategy?
+Ans: Allocate the first free partition that is large enough. Fast — stops
+searching at first match. Tends to distribute processes across memory. May waste
+space at the beginning of partitions. Generally performs well and is simpler than
+best fit.
+
+108. What is the worst fit strategy?
+Ans: Allocate the largest free partition. Leaves the largest remaining free
+block. But the remaining block is usually too small to be useful. Creates more
+external fragmentation than first fit. Rarely used in practice — generally
+performs worst.
+
+109. What happens during a page fault?
+Ans: (1) CPU references virtual address. (2) MMU checks page table — valid bit
+is invalid. (3) Hardware trap to OS (page fault exception). (4) OS finds the
+page on disk. (5) OS finds a free frame (or evicts one via page replacement).
+(6) OS loads the page from disk to frame. (7) Updates page table. (8) Restarts
+the faulting instruction.
+
+110. What is the effective access time?
+Ans: Effective access time = (1 - p) × memory_access_time + p ×
+page_fault_service_time. Where p is the page fault rate. Since page fault
+service time (disk access) is ~10ms vs ~100ns for memory, even a small page
+fault rate dramatically increases average access time.
+
+111. What is LRU replacement?
+Ans: Replace the page that hasn't been used for the longest time. Good
+approximation of optimal replacement. No Belady's anomaly. Implementation: use a
+counter/timestamp for each page, or maintain a stack of page references. Exact
+LRU is expensive to implement in hardware; approximations (Clock algorithm) are
+used.
+
+112. What is the Clock algorithm?
+Ans: An approximation of LRU. Pages arranged in a circular buffer with a "second
+chance" bit. If a page's reference bit is 0, replace it. If 1, give it a second
+chance (set bit to 0, move to next page). Efficient to implement, close to LRU
+performance.
+
+113. What is a file descriptor?
+Ans: A non-negative integer that uniquely identifies an open file within a
+process. Process uses file descriptor for read/write operations. Standard
+descriptors: 0 (stdin), 1 (stdout), 2 (stderr). Each process has its own file
+descriptor table. Created when a file is opened.
+
+114. What is an inode number?
+Ans: A unique identifier for a file's inode on disk. Directories map file names
+to inode numbers. To open a file, the OS looks up the name in the directory, gets
+the inode number, reads the inode, and returns a file descriptor. Inodes contain
+all metadata except the filename.
+
+115. What is a hard link?
+Ans: A hard link is a directory entry that maps a name to an existing inode.
+Multiple hard links point to the same inode. The file exists as long as at least
+one hard link exists. Cannot span filesystems. Cannot link directories (to
+prevent cycles). When last hard link removed, file is deleted.
+
+116. What is a symbolic link?
+Ans: A symbolic (soft) link is a special file that contains the path to another
+file. Unlike hard links, it has its own inode. If the target is deleted, the
+symbolic link becomes dangling (broken). Can span filesystems and link
+directories. More flexible than hard links.
+
+117. What is RAID?
+Ans: Redundant Array of Independent Disks — combines multiple disks for
+performance, reliability, or both. RAID 0: striping (performance, no
+redundancy). RAID 1: mirroring (redundancy). RAID 5: striping with parity.
+RAID 6: double parity. RAID 10: mirroring + striping.
+
+118. What is memory-mapped I/O?
+Ans: I/O devices are mapped to specific memory addresses. Reading/writing these
+addresses communicates with the device. Simplifies device access — same
+instructions as memory. Used in most modern systems. Compared to port-mapped I/O
+which uses special I/O instructions.
+
+119. What is a context switch between processes?
+Ans: Process A is running. Timer interrupt or scheduler decides to switch. (1)
+Save A's registers, PC, and state into A's PCB. (2) Update A's state (Running →
+Ready). (3) Select process B from ready queue. (4) Load B's saved context from
+B's PCB. (5) Update B's state (Ready → Running). (6) Resume B's execution.
+
+120. What is thread synchronization?
+Ans: Threads sharing a process's memory must coordinate access to shared data.
+Without synchronization, race conditions occur. Tools: mutex (lock for mutual
+exclusion), semaphore (signaling), condition variables (wait for conditions),
+monitors (structured synchronization).
+
+================================================================================
+🔴 TRICKY / FOLLOW-UP (50+ questions)
+================================================================================
+
+121. Is Node.js single-threaded from an OS perspective?
+Ans: No. Node.js uses a single thread for JavaScript execution (event loop), but
+internally uses libuv's thread pool for I/O operations and the OS handles
+threads at kernel level. From the OS perspective, Node.js spawns multiple
+threads. The "single-threaded" claim is about the JS event loop, not OS threads.
+
+122. Does multithreading always improve performance?
+Ans: No. If tasks are CPU-bound and not independent, multithreading adds
+synchronization overhead without benefit. On single-core systems, threads just
+context-switch — no parallelism. If threads have high contention for shared
+resources, lock contention degrades performance. Multithreading helps for
+I/O-bound or parallelizable tasks.
+
+123. Can deadlock occur with only one process?
+Ans: No. Deadlock requires at least two processes in a circular wait. A single
+process cannot be in circular wait with itself. However, a single process can
+block forever (infinite loop waiting for an event that never occurs), but that's
+not deadlock — it's just an infinite wait or livelock.
+
+124. Can starvation happen without deadlock?
+Ans: Yes. Starvation and deadlock are independent. Starvation: a process is
+perpetually bypassed by the scheduler (e.g., in SJF, long processes starve).
+The system is running — other processes make progress. Deadlock: no process
+makes progress. Starvation is about unfairness; deadlock is about circular
+dependency.
+
+125. Can a page fault occur even when memory is available?
+Ans: Yes. If the page table entry is marked invalid (page not in memory), a page
+fault occurs regardless of free memory. The page might not have been loaded yet
+(demand paging), was swapped out, or was never accessed before. The OS must load
+it from disk even if free frames exist.
+
+126. Why does TLB improve performance so much?
+Ans: Without TLB, every memory access requires two physical accesses: one for
+the page table, one for the actual data. TLB caches recent translations so most
+accesses need only one memory reference. Since memory access is slow relative to
+CPU, eliminating the extra access per instruction dramatically improves
+performance.
+
+127. Why can too many threads hurt performance?
+Ans: Each thread consumes stack memory, and too many threads exhaust memory.
+Context switching between many threads wastes CPU time. Lock contention increases
+as more threads compete for shared resources. Thread creation overhead adds up.
+The sweet spot depends on workload — typically close to CPU core count for
+CPU-bound tasks.
+
+128. Why is Round Robin with very large quantum similar to FCFS?
+Ans: If the quantum is larger than the longest CPU burst, every process finishes
+within its quantum. No preemption occurs. Processes run in arrival order to
+completion, which is exactly FCFS behavior. The quantum becomes irrelevant when
+it exceeds all burst times.
+
+129. Why can FIFO suffer from Belady's anomaly but LRU cannot?
+Ans: FIFO doesn't consider page usage — it only considers order of loading.
+Adding frames can cause FIFO to evict a useful page that would have been kept
+with fewer frames. LRU considers recency of use — it always evicts the least
+recently used page, which is provably immune to Belady's anomaly.
+
+130. Why does paging eliminate external fragmentation but not internal?
+Ans: Paging uses fixed-size frames — any page can go in any frame, so free
+frames are always usable (no external fragmentation). But the last page of a
+process may not fill a complete frame — the unused space within that frame is
+internal fragmentation. Internal fragmentation = (frame size - process size %
+frame size) for last page.
+
+131. Why does a page fault cost so much?
+Ans: A page fault requires loading a page from disk (hard drive or SSD). Disk
+access takes millions of times longer than memory access (nanoseconds vs
+milliseconds). The process must wait for the disk operation, the OS must find a
+free frame, update page tables, and restart the instruction. Even one page fault
+is expensive.
+
+132. Why are system calls slower than function calls?
+Ans: System calls require: user-to-kernel mode switch (privileged mode
+transition), context save/restore, parameter passing through kernel, actual
+operation execution, and kernel-to-user mode switch. Normal function calls run
+entirely in user mode with no mode switch. The overhead of mode switching and
+kernel processing makes system calls much slower.
+
+133. Why do we need kernel mode?
+Ans: If user programs could access hardware directly, a buggy or malicious
+program could corrupt other programs' memory, crash the system, or access
+sensitive data. Kernel mode restricts hardware access to trusted OS code. The
+CPU enforces this — user mode instructions that access privileged resources
+cause traps.
+
+134. Why can't user programs directly access hardware?
+Ans: Hardware access requires privileged instructions that only execute in kernel
+mode. The CPU checks the mode bit before executing privileged instructions — if
+in user mode, it raises an exception. This prevents programs from interfering
+with each other or corrupting system state. Device access goes through system
+calls.
+
+135. Does an interrupt always mean a context switch?
+Ans: No. Interrupts notify the CPU of events, but a context switch only occurs
+if the scheduler decides to switch processes. An interrupt handler may complete
+and return to the same process. Timer interrupts enable preemption but don't
+automatically cause context switches — the scheduler decides.
+
+136. Is every context switch caused by an interrupt?
+Ans: No. Context switches can be triggered by: timer interrupts (preemption), I/O
+interrupts (process moved to waiting, scheduler picks next), system calls that
+block (voluntary yield), process creation/termination. Voluntary yields (like
+sleep() or yield()) cause context switches without hardware interrupts.
+
+137. Is a thread completely independent from its process?
+Ans: No. Threads share the process's address space, code, data, heap, open files,
+and signals. They're independent only in execution context (stack, registers,
+PC). If one thread crashes (segfault), the entire process crashes. If the
+process terminates, all threads terminate. Threads are not isolated from each
+other.
+
+138. Can two processes share memory?
+Ans: Yes, through shared memory IPC. Two processes can map the same physical
+memory pages into their address spaces. They must synchronize access explicitly
+(mutex/semaphore). Shared memory is the fastest IPC method. Common in
+high-performance computing and database systems.
+
+139. Can two threads have different stacks?
+Ans: Yes. Each thread has its own stack — that's what makes it a thread. The
+stack stores local variables, function call history, and return addresses for
+that thread's execution. Different threads execute different functions and need
+independent call stacks. But they share the heap.
+
+140. What happens when a process terminates while its child is still running?
+Ans: The child becomes an orphan process. Orphans are automatically adopted by
+the init process (PID 1 in Unix). Init cleans up the child when it terminates.
+The child continues running normally — termination of parent doesn't affect child
+unless the child explicitly checks.
+
+141. What is a zombie process?
+Ans: A process that has completed execution (exited) but its entry remains in
+the process table because the parent hasn't called wait() to collect its exit
+status. Zombies consume no resources except a process table entry. If many
+zombies accumulate, they can exhaust the process table. Fixed by having parents
+call wait().
+
+142. How do you prevent zombies?
+Ans: The parent process must call wait() or waitpid() to collect the child's exit
+status after the child terminates. If the parent exits first, the child is
+adopted by init, which always calls wait(). In practice, signal handlers for
+SIGCHLD or properly structured process hierarchies prevent zombie accumulation.
+
+143. What is the difference between a trap and an interrupt?
+Ans: Trap (exception): synchronous — caused by the currently executing
+instruction (e.g., division by zero, system call, page fault). Interrupt:
+asynchronous — caused by external hardware events (e.g., I/O completion, timer).
+Trap goes to the instruction that caused it; interrupt goes to the next
+instruction.
+
+144. What is a deadlock prevention technique that breaks hold-and-wait?
+Ans: Require each process to request ALL resources at once before execution. If
+all resources are available, grant them; otherwise, wait with nothing held. This
+breaks hold-and-wait because processes never hold resources while waiting.
+Downside: low resource utilization and possible starvation.
+
+145. What is the banker's algorithm safety check?
+Ans: The safety algorithm: (1) Initialize Work = Available and Finish[i] = false
+for all processes. (2) Find a process i where Finish[i] = false and Need[i] ≤
+Work. (3) If found, assume it completes: Work = Work + Allocation[i], Finish[i]
+= true. Repeat step 2. (4) If all Finish[i] = true, system is safe. Otherwise,
+unsafe.
+
+146. What is priority inversion and how is it solved?
+Ans: High-priority process P1 waits for resource held by low-priority P3, while
+medium-priority P2 preempts P3. P1 effectively waits for P2. Solution: priority
+inheritance — when P1 waits, P3 temporarily inherits P1's priority to prevent P2
+from preempting it. Used in real-time systems.
+
+147. What is the difference between a semaphore and a mutex?
+Ans: Mutex has ownership — only the thread that acquired it can release it.
+Semaphore has no ownership — any thread can signal (increment). Mutex ensures
+mutual exclusion; semaphore can also coordinate thread ordering
+(producer-consumer). Binary semaphore ≈ mutex but without ownership. Counting
+semaphore has no mutex equivalent.
+
+148. What is a livelock?
+Ans: Processes actively change state but make no progress — they're not blocked
+(like deadlock) but their actions are futile. Example: two people in a hallway
+repeatedly stepping aside for each other in the same direction. In OS: two
+processes repeatedly release and reacquire the same resources. Unlike deadlock,
+they're running but stuck.
+
+149. What happens if the time quantum is extremely small?
+Ans: Too many context switches — the overhead of saving/restoring context,
+flushing caches, and running the scheduler dominates CPU time. Throughput drops
+because less time is spent on actual computation. Each quantum, the process
+barely does any work before being preempted. The quantum should be large
+relative to context switch time.
+
+150. Why is LRU generally better than FIFO for page replacement?
+Ans: LRU considers page usage patterns — pages used recently are likely to be
+used again (temporal locality). FIFO only considers loading order — it may evict
+a frequently used page just because it was loaded early. LRU generally has fewer
+page faults. LRU approximates the optimal algorithm.
+
+151. Why does paging remove external fragmentation?
+Ans: With paging, any free frame can be assigned to any page of any process.
+Pages don't need to be contiguous in physical memory — the page table handles
+the mapping. Since any free frame works, there's no "too small" free block
+problem. External fragmentation = inability to find contiguous space, which
+paging eliminates by design.
+
+152. What is demand paging vs pre-paging?
+Ans: Demand: load pages only when accessed (on page fault). Minimal memory
+usage, but more page faults. Pre-paging: load pages that are likely to be needed
+soon (anticipatory). Fewer page faults but may waste I/O loading pages never
+used. Most systems use demand paging because it's simpler and works well with
+good page replacement.
+
+153. Can you have deadlock without circular wait?
+Ans: No. Circular wait is one of the four necessary conditions for deadlock.
+Without it, there's no cycle in the resource allocation graph, meaning at least
+one process can eventually obtain its needed resources and complete, breaking any
+potential deadlock chain.
+
+154. What is the difference between logical and physical address?
+Ans: Logical (virtual) address: generated by CPU — what the program sees.
+Physical address: actual location in physical memory. The MMU (Memory Management
+Unit) translates logical to physical addresses using page tables or
+segmentation. Different processes can have the same logical address mapping to
+different physical addresses.
+
+155. What is address binding?
+Ans: The process of mapping program addresses to memory addresses. Compile time:
+addresses known at compilation (fixed locations). Load time: addresses resolved
+when loaded into memory. Execution time: addresses resolved during runtime (most
+flexible, used with virtual memory). Late binding enables dynamic loading and
+relocation.
+
+156. What is a thrashing solution?
+Ans: (1) Reduce degree of multiprogramming — run fewer processes. (2) Increase
+physical memory — more frames reduce page faults. (3) Use working set model —
+only keep a process's working set in memory. (4) Page fault frequency control —
+suspend processes with high page fault rates. Goal: ensure each process has
+enough frames for its working set.
+
+157. What is the working set model?
+Ans: The working set W(t, Δ) is the set of pages a process has accessed in the
+last Δ time units. It represents the process's active page set. If total working
+sets of all processes fit in memory, thrashing is avoided. The OS monitors
+working sets and suspends processes whose working sets exceed available memory.
+
+158. What is the difference between a socket and a pipe?
+Ans: Pipe: unidirectional, between related processes (parent-child), anonymous or
+named, local to machine. Socket: bidirectional, between any processes (even
+across networks), uses IP + port, supports distributed communication. Pipes are
+simpler for same-machine IPC; sockets are needed for network communication.
+
+159. Why is the convoy effect bad?
+Ans: In FCFS, a long CPU-bound process at the front blocks all short processes
+behind it. Short I/O-bound processes wait unnecessarily, increasing average
+waiting time dramatically. The CPU may sit idle while waiting for the long
+process's I/O. This creates inefficient scheduling — better algorithms like RR
+or SJF avoid it.
+
+160. What is the difference between blocking and non-blocking system calls?
+Ans: Blocking: the calling process waits until the operation completes (e.g.,
+blocking read waits for data). Non-blocking: the call returns immediately with
+whatever is available (or an error if nothing). Non-blocking allows the process
+to continue but requires polling. Most system calls are blocking by default.
+
+161. What is the difference between a thread and a fiber?
+Ans: A fiber is a user-space lightweight thread — scheduled by the application,
+not the kernel. No kernel involvement means no system call overhead for
+switching, but a blocking fiber blocks all fibers in the thread. Kernel threads
+are preemptively scheduled; fibers are cooperatively scheduled. Fibers are more
+efficient but less robust.
+
+162. What is cooperative vs preemptive multitasking?
+Ans: Cooperative: processes voluntarily yield CPU (old Windows, classic Mac OS).
+A misbehaving process can monopolize CPU. Preemptive: OS forcibly switches
+processes via timer interrupts (Linux, modern Windows). More robust — no single
+process can hog CPU. All modern OS use preemptive multitasking.
+
+163. What is memory protection?
+Ans: Mechanisms preventing processes from accessing memory outside their allocated
+space. Hardware support: base and limit registers, page tables with permission
+bits. Violations trigger traps. Essential for preventing processes from
+corrupting each other or the kernel. Each process has its own virtual address
+space.
+
+164. What is a TLB miss?
+Ans: The requested translation is not in the TLB. The hardware must access the
+page table in memory to find the translation. If the page table entry says the
+page is in memory, the translation is performed and added to TLB. If the page is
+not in memory, a page fault occurs. TLB miss rate is critical for performance.
+
+165. What is copy-on-write?
+Ans: Optimization for process creation (fork). After fork, parent and child share
+the same physical pages. Pages are marked copy-on-write. When either process
+tries to write, a page fault occurs and only then is the page copied. This
+makes fork nearly instant since no copying happens until necessary.
+
+166. What is the difference between a mutex and a spinlock?
+Ans: Mutex: thread sleeps (blocks) when lock is held — context switch, no CPU
+wasted. Spinlock: thread busy-waits (loops) checking the lock — wastes CPU
+cycles but avoids context switch. Mutex is better for long waits; spinlock is
+better for very short waits (less overhead than context switching).
+
+167. What is priority scheduling's advantage and disadvantage?
+Ans: Advantage: important processes get CPU first — natural fit for real-time
+and critical tasks. Disadvantage: starvation — low-priority processes may never
+run. Also: priority inversion problem, and deciding priorities is subjective.
+Solved partially by aging (gradually increasing priority of waiting processes).
+
+168. What is a reentrant function?
+Ans: A function that can be interrupted and safely called again — it doesn't
+modify shared state. Uses only local variables or atomic operations. Important in
+interrupt handlers and multithreaded code. If a function uses global variables
+without protection, it's not reentrant and can cause issues in concurrent
+execution.
+
+169. What is the difference between a symmetric and asymmetric multiprocessing?
+Ans: Symmetric (SMP): all processors are equal, any can run any task, share
+memory. Most common in modern multi-core systems. Asymmetric: one master
+processor schedules and assigns work to slave processors. Simpler but less
+fault-tolerant — master is a single point of failure.
+
+170. What is the difference between a compiled and interpreted OS?
+Ans: Most OS kernels are compiled (C/C++) for performance. Some OS components can
+be interpreted (scripts, configuration). Compiled OS: native machine code, fast
+execution. Interpreted: runs on a virtual machine, portable but slower. Most
+real OS (Linux, Windows) are compiled. The question confuses OS with programming
+language execution.
+
+171. What is a context switch between kernel threads vs user threads?
+Ans: Kernel thread context switch: OS directly manages it, requires kernel mode,
+saves/restores registers. User thread context switch: managed by user-level
+thread library, no kernel involvement, very fast but a blocking user thread
+blocks all threads in the process (if 1:1 mapping not used).
+
+172. What is the difference between internal and external fragmentation with examples?
+Ans: Internal: allocated memory has unused space within allocated block. Example:
+8KB block allocated to a 5KB process — 3KB is wasted inside. External: total
+free memory is sufficient but not contiguous. Example: three free 2KB blocks
+exist but a 5KB process can't use them because they're not adjacent.
+
+173. What is the difference between a page fault and a trap?
+Ans: Page fault is a specific type of trap (exception). Trap is a general term
+for any software-generated interrupt (system calls, division by zero, illegal
+instructions). Page fault is triggered when a page table entry is marked invalid
+during address translation. Not all traps are page faults.
+
+174. What happens if all four deadlock conditions are NOT met?
+Ans: If even ONE condition is not met, deadlock cannot occur. Prevention breaks
+one condition: no mutual exclusion (sharable resources), no hold-and-wait
+(request all at once), no preemption (force release), no circular wait (resource
+ordering). The system may be less efficient but deadlock-free.
+
+175. What is a futex (Fast Userspace Mutex)?
+Ans: A synchronization primitive that combines a userspace spinlock with a kernel
+fallback. Under low contention, it spins in userspace (fast path). Under high
+contention, it falls back to kernel-mediated sleeping (slow path). Used in
+Linux's pthread mutex implementation. Balances spinlock speed with mutex
+blocking.
+
+================================================================================
+                         END OF OS INTERVIEW QUESTIONS
+================================================================================

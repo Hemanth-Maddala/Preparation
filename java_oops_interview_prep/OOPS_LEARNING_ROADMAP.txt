@@ -1,0 +1,159 @@
+====================================================================
+ OOPS LEARNING ROADMAP
+====================================================================
+ Follow in order. Each stage is a dependency for the next.
+ Finish = interview ready for core OOP.
+
+====================================================================
+ STAGE 0 - FOUNDATIONS (folders 01-04)
+====================================================================
+ 01 class_and_object
+     class = blueprint, object = instance, reference variable.
+ 02 instance_variables_methods
+     objects carry their own state; methods act on that state.
+ 03 constructors
+     how objects are born; default vs parameterized; overloading.
+ 04 this_keyword
+     this refers to the current object; this() calls a sibling
+     constructor.
+
+ Success test: write a Student class with 2 fields, a constructor,
+ and a method that prints them. No looking.
+
+====================================================================
+ STAGE 1 - ENCAPSULATION (folder 05)
+====================================================================
+ 05 encapsulation
+     private fields + public methods = controlled access.
+     Why we hide data and validate on the way in.
+
+ Success test: design a BankAccount where balance can never go
+ negative and no one can read balance except through a method.
+
+====================================================================
+ STAGE 2 - INHERITANCE (folders 06-07)
+====================================================================
+ 06 inheritance
+     extends, IS-A relationship, child inherits from parent.
+ 07 super_keyword
+     super.variable, super.method(), super() constructor call.
+
+ Success test: Animal/Dog. Dog uses super(...) and calls a parent
+ method with super.method().
+
+====================================================================
+ STAGE 3 - POLYMORPHISM (folders 08-11)  <-- most asked
+====================================================================
+ 08 method_overloading
+     same name, different parameters = compile-time polymorphism.
+ 09 method_overriding
+     same signature, child replaces parent = runtime behavior.
+ 10 runtime_polymorphism
+     Animal a = new Dog(); -> a.sound() runs Dog.sound().
+     Reference type vs object type. THE interview topic.
+ 11 upcasting_downcasting
+     upcast safe, downcast dangerous, instanceof checks.
+
+ Success test: predict output of Animal a = new Dog() with a
+ two-level hierarchy. Then prove it by running it.
+
+====================================================================
+ STAGE 4 - ABSTRACTION (folders 12-14)
+====================================================================
+ 12 abstract_class
+     cannot instantiate; mix of abstract + concrete members.
+ 13 interface
+     a contract; implements; default and static methods.
+ 14 multiple_interfaces
+     class implements A, B - multiple inheritance of type.
+     The diamond problem at a basic level.
+
+ Success test: explain the difference between abstract class and
+ interface in 3 sentences (that is a classic interview question).
+
+====================================================================
+ STAGE 5 - KEYWORDS AND MODIFIERS (folders 15-18)
+====================================================================
+ 15 access_modifiers
+     private, default, protected, public. The access table.
+ 16 static
+     class-level memory; traps: no instance access, no override.
+ 17 final
+     final variable / method / class; final != immutable.
+ 18 instanceof
+     safe type checking before downcasting.
+
+ Success test: answer "Can a static method access an instance
+ variable?" in 10 seconds. With reason.
+
+====================================================================
+ STAGE 6 - OBJECT RELATIONSHIPS (folders 19-21)
+====================================================================
+ 19 association       teachers have students (uses)
+ 20 aggregation       department has employees (independent lives)
+ 21 composition       car has engine (ownership, lifecycle)
+ 29 composition_vs_inheritance (read here too)
+
+ Success test: draw on paper: association vs aggregation vs
+ composition, one example each, and explain the lifetime
+ difference between 20 and 21.
+
+====================================================================
+ STAGE 7 - THE OBJECT CLASS (folders 22-25)
+====================================================================
+ 22 equals_vs_double_equals   == references vs equals() content
+ 23 hashcode                  equals() + hashCode() contract
+ 24 tostring                  default vs overridden
+ 25 object_class              the root of every class
+
+ Success test: override equals + hashCode for a Point class.
+ Then use it in a HashSet and confirm it works.
+
+====================================================================
+ STAGE 8 - ADVANCED OBJECTS (folders 26-28)
+====================================================================
+ 26 immutable_class       final fields, no setters, defensive copy
+ 27 constructor_chaining  this() and super() execution order
+ 28 initialization_order static -> instance -> constructor order
+
+ Success test: predict the exact output of the initialization
+ order example in folder 28, then run it.
+
+====================================================================
+ STAGE 9 - DESIGN (folders 30-31)
+====================================================================
+ 30 solid_principles       five tiny bad->good examples
+ 31 oop_design_principles  DRY, KISS, YAGNI, cohesion, coupling
+
+ Success test: name all five SOLID letters and give one sentence
+ for each without notes.
+
+====================================================================
+ STAGE 10 - PATTERNS (folders 32-38)
+====================================================================
+ 32 singleton       one instance, thread-safe modern version
+ 33 factory_pattern object creation moved to a factory
+ 34 builder_pattern many parameters -> fluent builder
+ 35 strategy_pattern interchangeable behavior, kills if/else
+ 36 observer_pattern publisher notifies subscribers
+ 37 adapter_pattern incompatible interfaces bridged
+ 38 decorator_pattern wrap to add behavior dynamically
+
+ Success test: implement Strategy from memory (interface + two
+ implementations + a context). This is the most likely pattern
+ question in entry-level interviews.
+
+====================================================================
+ STAGE 11 - JVM & EXTRAS (folders 39-41)
+====================================================================
+ 39 jvm_object_basics       stack reference, heap object, GC
+ 40 oop_exception_cases     checked vs unchecked, custom exception
+ 41 oop_generics_basics     Box<T>, generic methods, wildcards
+
+====================================================================
+ FINAL REVIEW (last 2 days before interview)
+====================================================================
+ 1. OOPS_OUTPUT_PREDICTION.txt  - 40 snippets, predict before answer.
+ 2. OOPS_CODING_PROBLEMS.txt    - write solutions from scratch.
+ 3. OOPS_INTERVIEW_QUESTIONS.txt- read question, answer aloud.
+ 4. OOPS_MOCK_INTERVIEW.txt     - simulate a real interview.

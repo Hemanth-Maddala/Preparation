@@ -1,0 +1,301 @@
+================================================================
+DBMS TRICKY QUESTIONS
+================================================================
+Questions that commonly trip up candidates. Short, accurate answers.
+================================================================
+
+==================================================
+KEYS & CONSTRAINTS
+==================================================
+
+Q1: Can a primary key contain NULL?
+A: No. A primary key is always NOT NULL by definition.
+
+Q2: Can a table have multiple candidate keys?
+A: Yes. A table can have multiple candidate keys. One is chosen as the primary key; the rest are alternate keys.
+
+Q3: Can a table have multiple primary keys?
+A: No. A table can have only one primary key. It can be composite (using multiple columns), but it's still a single primary key.
+
+Q4: Can a foreign key be NULL?
+A: Yes. A NULL foreign key means there is no relationship to the referenced table. Unless explicitly constrained with NOT NULL.
+
+Q5: Can a foreign key reference a unique key instead of a primary key?
+A: Yes. A foreign key can reference any candidate key — any column or set of columns with a UNIQUE constraint.
+
+Q6: What is the difference between primary key and unique key?
+A: Primary key: NOT NULL, one per table. Unique key: may allow one NULL (most databases), multiple per table.
+
+Q7: What is a composite key?
+A: A primary key made up of two or more columns together that uniquely identify a row.
+
+Q8: Can a foreign key reference itself?
+A: Yes. This is called a self-referencing foreign key — used for hierarchical data like employee-manager relationships.
+
+==================================================
+NULL
+==================================================
+
+Q9: What happens when NULL is compared with a value?
+A: The result is UNKNOWN — not TRUE or FALSE. NULL = 5 returns UNKNOWN.
+
+Q10: What does NULL = NULL return?
+A: UNKNOWN. Not TRUE. To check for NULL, use IS NULL or IS NOT NULL.
+
+Q11: Why doesn't NULL = NULL work?
+A: NULL represents unknown data. Comparing two unknowns doesn't guarantee they're the same unknown. SQL uses three-valued logic: TRUE, FALSE, UNKNOWN.
+
+Q12: How does NULL affect COUNT?
+A: COUNT(column) ignores NULLs. COUNT(*) counts all rows including those with NULLs.
+
+Q13: How does NULL affect aggregate functions?
+A: SUM, AVG, MIN, MAX all ignore NULLs. Only COUNT(*) includes NULL rows.
+
+==================================================
+NORMALIZATION
+==================================================
+
+Q14: What is a partial dependency?
+A: When a non-key attribute depends on only part of a composite primary key. Removed in 2NF.
+
+Q15: What is a transitive dependency?
+A: When a non-key attribute depends on another non-key attribute (A → B → C where A is the key). Removed in 3NF.
+
+Q16: What is the difference between 3NF and BCNF?
+A: 3NF allows non-key determinants in some cases. BCNF is stricter — every determinant must be a super key.
+
+Q17: Can you have a table in 3NF but not BCNF?
+A: Yes. When overlapping candidate keys create a dependency where a non-key attribute is a determinant but not a super key.
+
+Q18: Why is normalization needed?
+A: To reduce data redundancy and prevent insert, update, and delete anomalies.
+
+Q19: Why would you denormalize?
+A: To improve read performance in read-heavy systems. When joins are expensive. When analytics need pre-aggregated data.
+
+==================================================
+JOINS
+==================================================
+
+Q20: What is the difference between INNER JOIN and LEFT JOIN?
+A: INNER JOIN returns only matching rows. LEFT JOIN returns all rows from the left table plus matches from the right (NULL if no match).
+
+Q21: What is the difference between WHERE and HAVING?
+A: WHERE filters rows before grouping. HAVING filters groups after GROUP BY. WHERE cannot use aggregate functions.
+
+Q22: What is a cross join?
+A: Returns the Cartesian product — every row from the first table combined with every row from the second table.
+
+Q23: What is a self join?
+A: Joining a table with itself — useful for comparing rows within the same table.
+
+Q24: What is a FULL OUTER JOIN?
+A: Returns all rows from both tables. Where there's no match, NULLs fill the gaps on both sides.
+
+Q25: What is the difference between JOIN and subquery?
+A: JOINs combine rows from multiple tables. Subqueries are nested queries. JOINs are often more readable and performant.
+
+==================================================
+SQL OPERATIONS
+==================================================
+
+Q26: What is the difference between DELETE and TRUNCATE?
+A: DELETE: removes specific rows, logged row-by-row, uses WHERE, can be rolled back, fires triggers. TRUNCATE: removes all rows, minimally logged, no WHERE, resets auto-increment, faster.
+
+Q27: What is the difference between DELETE and DROP?
+A: DELETE removes rows from a table (table structure remains). DROP removes the entire table (structure and data).
+
+Q28: What happens when you TRUNCATE a table?
+A: All rows are removed. The table structure remains. Auto-increment resets. Minimal logging. Faster than DELETE.
+
+Q29: Can TRUNCATE be rolled back?
+A: Depends on the database. In some databases (like MySQL with InnoDB), TRUNCATE within a transaction can be rolled back. In others, it cannot.
+
+Q30: What is the difference between UNION and UNION ALL?
+A: UNION removes duplicates. UNION ALL keeps duplicates. UNION ALL is faster because it skips duplicate checking.
+
+==================================================
+TRANSACTIONS & CONCURRENCY
+==================================================
+
+Q31: What is a dirty read?
+A: Reading data modified by an uncommitted transaction. If that transaction rolls back, the read data was never valid.
+
+Q32: What is a non-repeatable read?
+A: Reading the same row twice and getting different values because another transaction modified it between reads.
+
+Q33: What is a phantom read?
+A: Running the same query twice and getting different row counts because another transaction inserted or deleted rows.
+
+Q34: What is a lost update?
+A: Two transactions read the same data and both update it. One update is overwritten and lost.
+
+Q35: At which isolation level do dirty reads occur?
+A: Read Uncommitted.
+
+Q36: At which isolation level are phantom reads prevented?
+A: Serializable (the highest level).
+
+Q37: What is the default isolation level in most databases?
+A: Read Committed (PostgreSQL, Oracle). Repeatable Read (MySQL).
+
+Q38: What is serializability?
+A: A guarantee that the result of concurrent execution is equivalent to some serial (one-at-a-time) execution.
+
+Q39: What is conflict serializability?
+A: A schedule is conflict serializable if it can be transformed into a serial schedule by swapping adjacent non-conflicting operations.
+
+==================================================
+DEADLOCKS
+==================================================
+
+Q40: What are the four conditions for deadlock?
+A: 1) Mutual exclusion. 2) Hold and wait. 3) No preemption. 4) Circular wait.
+
+Q41: What is the difference between deadlock and starvation?
+A: Deadlock: circular wait, all involved transactions stuck. Starvation: one transaction keeps being postponed indefinitely.
+
+Q42: How do you prevent deadlock?
+A: Eliminate one of the four conditions — like requiring all locks upfront (prevents hold and wait).
+
+Q43: How do you detect deadlock?
+A: Using a wait-for graph. If a cycle exists, deadlock is detected. One transaction is rolled back as a victim.
+
+Q44: What is cascading rollback?
+A: When one transaction's failure causes dependent transactions to also roll back. Prevented by strict 2PL.
+
+==================================================
+INDEXING
+==================================================
+
+Q45: Why do databases use B+ trees?
+A: They support both equality and range queries efficiently. Leaf nodes are linked for sequential access. Balanced height ensures O(log n) lookups.
+
+Q46: Why not use hash indexes for everything?
+A: Hash indexes cannot handle range queries. They're only efficient for equality lookups.
+
+Q47: What is the difference between clustered and non-clustered index?
+A: Clustered index determines physical data ordering (one per table). Non-clustered is a separate structure with pointers (multiple per table).
+
+Q48: Can too many indexes hurt performance?
+A: Yes. Each index must be maintained during writes. Too many indexes slow down INSERT, UPDATE, and DELETE operations.
+
+Q49: What is a covering index?
+A: An index that includes all columns needed by a query. The query can be answered entirely from the index.
+
+Q50: What happens when you have no index on a search column?
+A: The database performs a full table scan — reading every row. Slow for large tables.
+
+==================================================
+DATABASE DESIGN
+==================================================
+
+Q51: What is entity integrity?
+A: The primary key cannot be NULL. Every row can be uniquely identified.
+
+Q52: What is referential integrity?
+A: A foreign key must reference a valid, existing row in the referenced table.
+
+Q53: What is an insert anomaly?
+A: When you cannot add data without the presence of other data. Caused by poor normalization.
+
+Q54: What is an update anomaly?
+A: When updating data in one place but not another leads to inconsistency.
+
+Q55: What is a delete anomaly?
+A: When deleting a row causes unintended loss of unrelated data.
+
+==================================================
+DISTRIBUTED SYSTEMS
+==================================================
+
+Q56: What is the CAP theorem?
+A: A distributed system can guarantee at most two of: Consistency, Availability, Partition Tolerance. Since partitions are inevitable, choose between C and A.
+
+Q57: Can you really choose any two in CAP?
+A: During normal operation, you can have all three. During a partition, you must choose between consistency and availability.
+
+Q58: What is ACID vs BASE?
+A: ACID prioritizes consistency. BASE prioritizes availability. ACID for traditional databases. BASE for distributed systems.
+
+Q59: What is replication?
+A: Copying data from one server to another for redundancy, read scaling, and high availability.
+
+Q60: What is sharding?
+A: Splitting a large database horizontally across multiple servers. Each shard holds a portion of the data.
+
+Q61: What is the difference between replication and sharding?
+A: Replication = same data copied. Sharding = different data distributed.
+
+Q62: What is the difference between partitioning and sharding?
+A: Partitioning is within one database. Sharding is across multiple servers.
+
+Q63: What is replication lag?
+A: The delay between a write on the primary and its appearance on the replica.
+
+Q64: What is a hot key in sharding?
+A: A shard key that receives disproportionate traffic, causing one shard to be overloaded.
+
+==================================================
+VIEWS & PROCEDURES
+==================================================
+
+Q65: What is a view?
+A: A virtual table defined by a query. Doesn't store data — retrieves it when queried.
+
+Q66: What is the difference between a view and a materialized view?
+A: View is computed on-the-fly. Materialized view stores results physically and refreshes periodically.
+
+Q67: What is a stored procedure?
+A: A precompiled set of SQL statements stored in the database. Can accept parameters.
+
+Q68: What is the difference between a procedure and a function?
+A: Function must return a value and can be used in SELECT. Procedure performs actions and returns values through output parameters.
+
+Q69: What is a trigger?
+A: A stored procedure that automatically executes in response to INSERT, UPDATE, or DELETE events.
+
+Q70: When should triggers be avoided?
+A: When logic is complex, hard to debug, causes cascading effects, or hurts performance.
+
+==================================================
+MISCELLANEOUS TRICKY
+==================================================
+
+Q71: What is a schema vs instance?
+A: Schema = structure (blueprint). Instance = current data (state at a moment in time).
+
+Q72: What is metadata?
+A: Data about data — column names, data types, constraints.
+
+Q73: What is three-valued logic?
+A: SQL evaluates comparisons to TRUE, FALSE, or UNKNOWN (when NULL is involved).
+
+Q74: What is a correlated subquery?
+A: A subquery that references columns from the outer query. Executes once per row of the outer query.
+
+Q75: What is an implicit type conversion?
+A: Automatic data type conversion by the database. Can prevent index usage and hurt performance.
+
+Q76: What is a hot path in a database?
+A: The most frequently executed query path. Should be optimized with proper indexes.
+
+Q77: What is a data warehouse?
+A: A central repository of historical data optimized for analytical queries. Data loaded via ETL.
+
+Q78: What is ETL vs ELT?
+A: ETL: Extract, Transform, Load — transform before loading. ELT: Extract, Load, Transform — load first, then transform.
+
+Q79: What is connection pooling?
+A: Reusing database connections rather than creating new ones for each request. Reduces connection overhead.
+
+Q80: What is a star schema vs snowflake schema?
+A: Star: fact table + denormalized dimensions. Snowflake: fact table + normalized dimensions.
+
+==================================================
+END OF TRICKY QUESTIONS
+================================================================
+
+Total: 80 tricky questions
+
+================================================================

@@ -1,0 +1,135 @@
+============================================================
+ HOW TO BUILD A LOGIN PAGE IN AN INTERVIEW
+============================================================
+This is the single most common React coding-round task.
+Full working code: 13_login_page/App.jsx
+
+------------------------------------------------------------
+ STEP 0 — THINK BEFORE YOU TYPE (30 seconds)
+------------------------------------------------------------
+Map the requirements to state:
+  email, password      -> controlled inputs
+  show/hide password   -> boolean toggle
+  errors               -> { email?, password? }
+  loading              -> boolean (disable button, "Logging in...")
+  error                -> string (API/server error)
+  user / success       -> object or boolean
+
+------------------------------------------------------------
+ STEP 1 — COMPONENT + STATE
+------------------------------------------------------------
+function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [show, setShow] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [user, setUser] = useState(null);
+  ...
+
+------------------------------------------------------------
+ STEP 2 — CONTROLLED INPUTS + onChange
+------------------------------------------------------------
+<input
+  value={email}
+  onChange={(e) => setEmail(e.target.value)}
+  placeholder="Email"
+/>
+
+<input
+  type={show ? "text" : "password"}
+  value={password}
+  onChange={(e) => setPassword(e.target.value)}
+  placeholder="Password"
+/>
+<button type="button" onClick={() => setShow(!show)}>
+  {show ? "Hide" : "Show"}
+</button>
+
+------------------------------------------------------------
+ STEP 3 — VALIDATION (before any API call)
+------------------------------------------------------------
+const validate = () => {
+  const errs = {};
+  if (!email) errs.email = "Email is required";
+  if (!password) errs.password = "Password is required";
+  return errs;
+};
+
+------------------------------------------------------------
+ STEP 4 — SUBMIT HANDLER (the full flow)
+------------------------------------------------------------
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  const errs = validate();
+  setErrors(errs);
+  if (Object.keys(errs).length) return;   // stop if invalid
+
+  setLoading(true);
+  setError("");
+  try {
+    const data = await fakeLogin(email, password);   // or fetch()
+    setUser(data);                                    // success
+  } catch (err) {
+    setError(err.message);                            // error
+  } finally {
+    setLoading(false);
+  }
+};
+
+------------------------------------------------------------
+ STEP 5 — RENDER (success branch + form)
+------------------------------------------------------------
+if (user) return <h2>Welcome {user.name}</h2>;
+
+return (
+  <form onSubmit={handleSubmit}>
+    <h2>Login</h2>
+    ...inputs + inline errors...
+    {error && <p className="error">{error}</p>}
+    <button type="submit" disabled={loading}>
+      {loading ? "Logging in..." : "Login"}
+    </button>
+  </form>
+);
+
+------------------------------------------------------------
+ THE 30-SECOND ORDER (memorize this)
+------------------------------------------------------------
+1. Component + state
+2. Controlled inputs
+3. onChange
+4. Validation
+5. Submit handler
+6. Loading
+7. Success / error
+
+------------------------------------------------------------
+ FOLLOW-UP QUESTIONS THE INTERVIEWER MAY ASK
+------------------------------------------------------------
+Q: What if the API fails?
+A: try/catch around the call, setError, render the message, make
+   sure loading is set back to false in a finally block.
+
+Q: How do you prevent multiple submissions?
+A: disabled={loading} on the button. Optionally guard the handler:
+   if (loading) return;
+
+Q: How do you show/hide the password?
+A: type="password" <-> type="text", switched by a boolean.
+
+Q: How do you persist login across refresh?
+A: On success: localStorage.setItem("auth", JSON.stringify(user)).
+   On load: useState(() => JSON.parse(localStorage.getItem("auth"))).
+
+Q: How do you protect the dashboard?
+A: Protected route wrapper:
+   isAuth ? <Dashboard /> : <Navigate to="/login" replace />.
+
+Q: How would this change with a real backend?
+A: fetch("POST /api/login", { headers, body: JSON.stringify(...) });
+   success -> store token (localStorage / cookie / memory);
+   failure -> parse the server error and show it.
+   Real apps add HttpOnly cookies, token refresh, CSRF protection,
+   and logout on expiry — not expected in a coding round.

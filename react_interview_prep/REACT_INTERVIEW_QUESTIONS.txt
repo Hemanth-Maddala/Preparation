@@ -1,0 +1,192 @@
+============================================================
+ REACT INTERVIEW QUESTIONS — quick-fire Q&A
+============================================================
+Answer in 2-3 sentences. Say the relevant code out loud.
+For deeper explanations, read REACT_INTERVIEW_PREPARATION.txt.
+
+1. What is React?
+   A JavaScript library for building UIs from reusable components.
+
+2. Why React?
+   Components, declarative UI, fast updates via Virtual DOM,
+   huge ecosystem.
+
+3. What is JSX?
+   HTML-like syntax inside JS. Not HTML — compiled to
+   React.createElement. Any expression goes inside {}.
+
+4. What is a component?
+   A function that returns JSX — a reusable UI piece.
+   function App() { return <h1/>; }
+
+5. Functional vs class component?
+   Functional uses hooks and is the modern default; class uses
+   render() + this.state (still needed for Error Boundaries).
+
+6. Props vs state?
+   Props are read-only input from the parent; state is mutable
+   data owned by the component.
+
+7. Why shouldn't state be modified directly?
+   React won't detect it, so no re-render and the object React
+   holds gets corrupted. Always use the setter.
+
+8. What causes a re-render?
+   State change, props change, parent re-render, or a consumed
+   Context value change.
+
+9. What is the Virtual DOM?
+   An in-memory JS copy of the DOM; React diffs it and applies
+   minimal patches to the real DOM.
+
+10. What is reconciliation?
+    React's diffing algorithm that updates the real DOM with the
+    minimum number of changes.
+
+11. Why are keys required?
+    So React can track items across renders when lists change.
+
+12. Why not always use index as key?
+    Reordering/filtering shifts indexes, so React updates the wrong
+    items. Use stable unique ids.
+
+13. What is a controlled component?
+    value + onChange driven by React state (state is the source
+    of truth).
+
+14. What is an uncontrolled component?
+    The DOM owns the value; React reads it with a ref.
+
+15. What is useState?
+    A hook that returns [value, setValue]; calling setValue
+    re-renders the component.
+
+16. What is useEffect?
+    A hook for side effects: fetch, timers, subscriptions.
+
+17. When does useEffect run?
+    [] once on mount; [dep] on mount + when dep changes; no array
+    after every render.
+
+18. What does the dependency array do?
+    Tells React which values the effect depends on, controlling
+    when it re-runs.
+
+19. What is cleanup?
+    A function returned by the effect, run before re-run/unmount,
+    to cancel timers and subscriptions.
+
+20. What is useRef?
+    A mutable object that persists across renders without causing
+    renders. Used for DOM refs or persistent values.
+
+21. useRef vs useState?
+    useRef changes do NOT re-render; useState changes do.
+
+22. What is useContext?
+    A hook that reads the value of a Context anywhere below the
+    Provider.
+
+23. When should Context be used?
+    Theme, auth, language — shared app-level data. Not everything;
+    frequent changes re-render all consumers.
+
+24. useState vs useReducer?
+    useReducer centralizes complex update logic into a pure reducer
+    driven by actions.
+
+25. What is a custom hook?
+    A function starting with "use" that reuses stateful logic
+    across components.
+
+26. What is lifting state up?
+    Moving shared state to the closest common parent so children
+    can share it via props.
+
+27. Parent -> child communication?
+    Props.
+
+28. Child -> parent communication?
+    A callback prop that the child calls.
+
+29. Sibling communication?
+    Through the shared parent's state.
+
+30. What is React.memo?
+    A wrapper that skips re-renders when props are unchanged
+    (shallow comparison).
+
+31. What is useMemo?
+    Caches a computed VALUE until its deps change.
+
+32. What is useCallback?
+    Caches a FUNCTION reference until its deps change.
+
+33. useMemo vs useCallback?
+    Value vs function.
+
+34. What causes unnecessary renders?
+    Parent renders, new inline object/function props, context
+    changes, missing memo.
+
+35. How do you optimize React?
+    memo, useMemo, useCallback, good keys, small contexts — and
+    don't over-optimize.
+
+36. How do you fetch API data?
+    useEffect + fetch (or async/await) + setState, with
+    loading/error handling.
+
+37. How do you handle loading/error states?
+    data/loading/error state + early returns.
+
+38. How do you implement login?
+    State -> controlled inputs -> validate -> fake/API call ->
+    success/error -> navigate.
+
+39. How do you implement protected routes?
+    Wrapper component: isAuth ? children : <Navigate to="/login" replace/>.
+
+40. How do you persist login state?
+    localStorage + lazy useState initializer + logout clear.
+
+41. What is localStorage?
+    Key/value string storage that survives refresh, per origin,
+    ~5MB, synchronous.
+
+42. What is React Router?
+    Declarative routing: BrowserRouter + Routes + Route + Link.
+
+43. Link vs useNavigate?
+    Link = anchor for clicks; useNavigate = programmatic navigation.
+
+44. What is debounce?
+    Delaying an action until typing pauses, using setTimeout +
+    clearTimeout cleanup.
+
+45. How do you implement search?
+    Query state + filter with toLowerCase().includes().
+
+46. How do you implement pagination?
+    page state + slice + prev/next buttons.
+
+47. How do you build a reusable component?
+    Props + children, no hard-coded data, stable interface.
+
+48. React vs JavaScript?
+    JS is the language; React is a UI library written in it.
+
+49. React vs Angular?
+    React: flexible library. Angular: opinionated full framework.
+
+50. React vs React Native?
+    Web (DOM) vs native mobile (View/Text); same component + hook
+    model.
+
+51. What is an Error Boundary?
+    A class component that catches render errors in its children
+    via getDerivedStateFromError.
+
+52. What is StrictMode?
+    A dev-only wrapper that double-invokes renders/effects to
+    surface bugs early.

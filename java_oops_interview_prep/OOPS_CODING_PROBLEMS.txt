@@ -1,0 +1,764 @@
+====================================================================
+ OOPS CODING PROBLEMS
+====================================================================
+ RULES:
+ 1. Write the solution from scratch. NO looking at folders.
+ 2. Compile and run with javac Main.java / java Main.
+ 3. Only after your code runs, read the HINT, then the SOLUTION.
+ 4. Retry any problem you could not finish without the solution.
+
+ Each problem targets ONE concept. Use basic Java only.
+
+====================================================================
+ EASY
+====================================================================
+
+PROBLEM 1 - class and object (folder 01)
+ Create a Car class with fields brand and model.
+ In main: create two Car objects with different brands.
+ Print both. No constructors needed - use default values, or add
+ one constructor if you want.
+
+PROBLEM 2 - constructors (folder 03)
+ Create a Book class with title and pages.
+ One no-arg constructor, one parameterized constructor.
+ In main, create one book with each constructor and print details.
+
+PROBLEM 3 - this keyword (folder 04)
+ Create a Person class with a name field.
+ The constructor takes a name parameter. Use this to assign it.
+ Add a method greet() that prints "Hi, I am " + name.
+
+PROBLEM 4 - encapsulation (folder 05)
+ Create a BankAccount with a private double balance.
+ Public methods: deposit(double), withdraw(double), getBalance().
+ deposit and withdraw must refuse negative amounts.
+ withdraw must refuse if balance would go below zero.
+ Test: deposit 100, withdraw 30, try withdraw 1000.
+
+PROBLEM 5 - inheritance (folder 06)
+ Create a Vehicle class (field brand, method start()).
+ Create a Car class that extends Vehicle, adds int doors,
+ and has a method honk().
+ In main, use a Car, call start() and honk().
+
+PROBLEM 6 - method overloading (folder 08)
+ Create a Calculator with:
+   int multiply(int a, int b)
+   int multiply(int a, int b, int c)
+   double multiply(double a, double b)
+ Test all three.
+
+PROBLEM 7 - static (folder 16)
+ Create a Student class with a static int studentCount and an
+ instance int rollNumber. The constructor increments studentCount
+ and sets rollNumber = studentCount.
+ Create 3 students. Print total and each roll number.
+
+PROBLEM 8 - toString (folder 24)
+ Create a Laptop class with brand and price.
+ Override toString() to return "Laptop(brand=..., price=...)".
+ Print a Laptop object directly with println.
+
+====================================================================
+ MEDIUM
+====================================================================
+
+PROBLEM 9 - method overriding + polymorphism (folders 09-10)
+ Create a Shape class with a method area() returning 0.
+ Create Circle (radius) and Rectangle (w, h) overriding area().
+ In main, use Shape references and print each area.
+ (You decide the math - keep it simple.)
+
+PROBLEM 10 - abstract class (folder 12)
+ Create an abstract class Animal with:
+   abstract void makeSound();
+   void eat() { System.out.println("Eating"); }
+ Create Dog and Cat extending it.
+ In main, loop over an Animal[] and call makeSound() + eat().
+
+PROBLEM 11 - interface (folder 13)
+ Create an interface Drawable with void draw().
+ Implement it in Circle and Square.
+ In main, use a Drawable reference and call draw().
+
+PROBLEM 12 - final + immutable (folders 17, 26)
+ Create an immutable class Color with private final int red,
+ green, blue, a constructor, and getters only (no setters).
+ In main, create one and print its values.
+
+PROBLEM 13 - equals + hashCode (folders 22-23)
+ Create a Point class (x, y). Override equals() and hashCode()
+ correctly (use Objects.hash or write the classic 31-prime form).
+ Test: put two equal Points in a HashSet, size must be 1.
+
+PROBLEM 14 - aggregation vs composition (folders 20-21)
+ Create:
+   Engine (no owner needed)
+   Car with Engine (composition - Car creates its own Engine)
+   Department with Employee list (aggregation - employees passed in)
+ In main, demonstrate both relationships in code.
+
+PROBLEM 15 - singleton (folder 32)
+ Write a thread-safe Singleton for a Logger class
+ (private constructor, static getInstance()). Add a log(String)
+ method that prints. Call getInstance() twice and show both
+ references are the same object.
+
+PROBLEM 16 - builder pattern (folder 34)
+ Create a Pizza class with size (required) and topping + extraCheese
+ (optional). Build it with a Builder using fluent calls:
+   new Pizza.Builder("large").topping("mushroom").extraCheese(true).build()
+ Print the pizza.
+
+====================================================================
+ HARD
+====================================================================
+
+PROBLEM 17 - strategy pattern (folder 35)
+ Create PaymentStrategy interface with pay(int amount).
+ Implement CardPayment and UPIPayment (print a line each).
+ Create a ShoppingCart holding a PaymentStrategy.
+ add method setPaymentStrategy(...) and checkout(amount).
+ In main, pay by card, then switch to UPI and pay again.
+
+PROBLEM 18 - observer pattern (folder 36)
+ Create a NewsPublisher with a list of Subscriber (interface).
+ publish(String news) must notify all subscribers.
+ Implement EmailSubscriber and SMSSubscriber.
+ In main, subscribe two subscribers, publish news, then verify
+ both received it.
+
+PROBLEM 19 - custom exception (folder 40)
+ Create a custom checked exception InsufficientFundsException
+ extends Exception.
+ Create a BankAccount whose withdraw() throws it when balance
+ would go negative. In main, try/catch it and print the message.
+
+PROBLEM 20 - generics (folder 41)
+ Create a generic class Box<T> with set(T) and get().
+ Create a static generic method max2(T a, T b, Comparator<T> c)
+ that returns the larger, or write printAll(T[] arr).
+ Test Box<String> and Box<Integer>.
+
+PROBLEM 21 - SOLID: single responsibility (folder 30)
+ Refactor this BAD class into two classes that each have ONE job:
+
+   class BadReport {
+       String generate() { return "report data"; }
+       void printToConsole(String s) { System.out.println(s); }
+       void saveToFile(String s) {
+           // pretend: write s to file
+       }
+   }
+
+ PROBLEM 22 - initialization order (folder 28)
+ Without running it, predict this output, then write the code and
+ verify:
+
+   class A {
+       A() { System.out.println("A"); }
+       { System.out.println("A block"); }
+       static { System.out.println("A static"); }
+   }
+   class B extends A {
+       B() { System.out.println("B"); }
+       { System.out.println("B block"); }
+       static { System.out.println("B static"); }
+   }
+   // main: new B();
+
+====================================================================
+ HINTS (only if stuck)
+====================================================================
+ 1-5  : Start with a class, one field per line, then the main.
+ 6    : Same method name, different parameters. Return type can vary.
+ 7    : static field -> one copy; access with ClassName.field.
+ 9    : Write @Override on each subclass method.
+ 10   : abstract methods have no body: void makeSound();
+ 12   : No setters. All fields assigned in the constructor.
+ 13   : hashCode = 31 * x + y style, or Objects.hash(x, y).
+ 14   : Composition: Car does `engine = new Engine();` inside.
+        Aggregation: Department receives Employee[] in constructor.
+ 15   : private static final Logger INSTANCE with an enum or a
+        holder class - keep it short.
+ 16   : Builder stores the same fields, build() does the copying.
+ 17   : Constructor takes a strategy; setter swaps it later.
+ 18   : publish() loops and calls notify() on every subscriber.
+ 19   : throw new InsufficientFundsException("message");
+ 20   : class Box<T> { T value; void set(T v){...} T get(){...} }
+ 21   : One class for data, one for printing, one for saving.
+ 22   : static blocks run first at class load, parents before
+        children; instance blocks run before constructors.
+
+====================================================================
+ SOLUTIONS
+====================================================================
+ These are reference solutions. Your version may differ - that is
+ fine as long as it compiles, runs, and shows the concept.
+
+SOLUTION 1
+```java
+class Car {
+    String brand;
+    String model;
+}
+public class Main {
+    public static void main(String[] args) {
+        Car c1 = new Car();
+        c1.brand = "Toyota";
+        c1.model = "Camry";
+
+        Car c2 = new Car();
+        c2.brand = "Honda";
+        c2.model = "Civic";
+
+        System.out.println(c1.brand + " " + c1.model);
+        System.out.println(c2.brand + " " + c2.model);
+    }
+}
+```
+
+SOLUTION 2
+```java
+class Book {
+    String title;
+    int pages;
+
+    Book() { title = "Unknown"; pages = 0; }
+
+    Book(String title, int pages) {
+        this.title = title;
+        this.pages = pages;
+    }
+}
+public class Main {
+    public static void main(String[] args) {
+        Book b1 = new Book();
+        Book b2 = new Book("Java", 400);
+        System.out.println(b1.title + " " + b1.pages);
+        System.out.println(b2.title + " " + b2.pages);
+    }
+}
+```
+
+SOLUTION 3
+```java
+class Person {
+    String name;
+
+    Person(String name) { this.name = name; }
+
+    void greet() { System.out.println("Hi, I am " + name); }
+}
+public class Main {
+    public static void main(String[] args) {
+        new Person("Ravi").greet();
+    }
+}
+```
+
+SOLUTION 4
+```java
+class BankAccount {
+    private double balance;
+
+    void deposit(double amount) {
+        if (amount <= 0) { System.out.println("Invalid deposit"); return; }
+        balance += amount;
+    }
+
+    void withdraw(double amount) {
+        if (amount <= 0 || amount > balance) {
+            System.out.println("Withdrawal refused");
+            return;
+        }
+        balance -= amount;
+    }
+
+    double getBalance() { return balance; }
+}
+public class Main {
+    public static void main(String[] args) {
+        BankAccount a = new BankAccount();
+        a.deposit(100);
+        a.withdraw(30);
+        a.withdraw(1000);
+        System.out.println("Balance: " + a.getBalance()); // 70.0
+    }
+}
+```
+
+SOLUTION 5
+```java
+class Vehicle {
+    String brand;
+    void start() { System.out.println("Engine started"); }
+}
+class Car extends Vehicle {
+    int doors;
+    void honk() { System.out.println("Beep beep"); }
+}
+public class Main {
+    public static void main(String[] args) {
+        Car c = new Car();
+        c.brand = "Toyota";
+        c.doors = 4;
+        c.start();
+        c.honk();
+        System.out.println(c.brand + " with " + c.doors + " doors");
+    }
+}
+```
+
+SOLUTION 6
+```java
+class Calculator {
+    int multiply(int a, int b) { return a * b; }
+    int multiply(int a, int b, int c) { return a * b * c; }
+    double multiply(double a, double b) { return a * b; }
+}
+public class Main {
+    public static void main(String[] args) {
+        Calculator c = new Calculator();
+        System.out.println(c.multiply(2, 3));        // 6
+        System.out.println(c.multiply(2, 3, 4));     // 24
+        System.out.println(c.multiply(2.5, 2));      // 5.0
+    }
+}
+```
+
+SOLUTION 7
+```java
+class Student {
+    static int studentCount = 0;
+    int rollNumber;
+
+    Student() {
+        studentCount++;
+        rollNumber = studentCount;
+    }
+}
+public class Main {
+    public static void main(String[] args) {
+        Student s1 = new Student();
+        Student s2 = new Student();
+        Student s3 = new Student();
+        System.out.println("Total students: " + Student.studentCount);
+        System.out.println("s1 roll=" + s1.rollNumber);
+        System.out.println("s2 roll=" + s2.rollNumber);
+        System.out.println("s3 roll=" + s3.rollNumber);
+    }
+}
+```
+Output:
+Total students: 3
+s1 roll=1
+s2 roll=2
+s3 roll=3
+Why: studentCount is shared (static) and incremented by every
+constructor; rollNumber is per-object.
+
+SOLUTION 8
+```java
+class Laptop {
+    String brand;
+    double price;
+
+    Laptop(String brand, double price) {
+        this.brand = brand;
+        this.price = price;
+    }
+
+    public String toString() {
+        return "Laptop(brand=" + brand + ", price=" + price + ")";
+    }
+}
+public class Main {
+    public static void main(String[] args) {
+        System.out.println(new Laptop("Dell", 55000.0));
+    }
+}
+```
+
+SOLUTION 9
+```java
+class Shape {
+    double area() { return 0; }
+}
+class Circle extends Shape {
+    double r;
+    Circle(double r) { this.r = r; }
+    @Override
+    double area() { return 3.14 * r * r; }
+}
+class Rectangle extends Shape {
+    double w, h;
+    Rectangle(double w, double h) { this.w = w; this.h = h; }
+    @Override
+    double area() { return w * h; }
+}
+public class Main {
+    public static void main(String[] args) {
+        Shape[] shapes = { new Circle(2), new Rectangle(3, 4) };
+        for (Shape s : shapes) {
+            System.out.println(s.area());
+        }
+    }
+}
+```
+
+SOLUTION 10
+```java
+abstract class Animal {
+    abstract void makeSound();
+    void eat() { System.out.println("Eating"); }
+}
+class Dog extends Animal {
+    void makeSound() { System.out.println("Bark"); }
+}
+class Cat extends Animal {
+    void makeSound() { System.out.println("Meow"); }
+}
+public class Main {
+    public static void main(String[] args) {
+        Animal[] animals = { new Dog(), new Cat() };
+        for (Animal a : animals) {
+            a.makeSound();
+            a.eat();
+        }
+    }
+}
+```
+
+SOLUTION 11
+```java
+interface Drawable {
+    void draw();
+}
+class Circle implements Drawable {
+    public void draw() { System.out.println("Drawing circle"); }
+}
+class Square implements Drawable {
+    public void draw() { System.out.println("Drawing square"); }
+}
+public class Main {
+    public static void main(String[] args) {
+        Drawable d = new Circle();
+        d.draw();
+        d = new Square();
+        d.draw();
+    }
+}
+```
+
+SOLUTION 12
+```java
+class Color {
+    private final int red;
+    private final int green;
+    private final int blue;
+
+    Color(int red, int green, int blue) {
+        this.red = red;
+        this.green = green;
+        this.blue = blue;
+    }
+
+    int getRed() { return red; }
+    int getGreen() { return green; }
+    int getBlue() { return blue; }
+}
+public class Main {
+    public static void main(String[] args) {
+        Color c = new Color(255, 0, 0);
+        System.out.println(c.getRed() + "," + c.getGreen() + "," + c.getBlue());
+    }
+}
+```
+
+SOLUTION 13
+```java
+import java.util.HashSet;
+import java.util.Set;
+
+class Point {
+    int x, y;
+    Point(int x, int y) { this.x = x; this.y = y; }
+
+    public boolean equals(Object o) {
+        if (!(o instanceof Point)) return false;
+        Point p = (Point) o;
+        return x == p.x && y == p.y;
+    }
+
+    public int hashCode() { return 31 * x + y; }
+}
+public class Main {
+    public static void main(String[] args) {
+        Set<Point> set = new HashSet<>();
+        set.add(new Point(1, 2));
+        set.add(new Point(1, 2));
+        System.out.println(set.size()); // 1
+    }
+}
+```
+
+SOLUTION 14
+```java
+import java.util.Arrays;
+
+class Engine {
+    void start() { System.out.println("Engine starts"); }
+}
+
+class Car {
+    private Engine engine; // composition: Car owns its Engine
+    Car() { engine = new Engine(); }
+    void drive() { engine.start(); }
+}
+
+class Employee {
+    String name;
+    Employee(String name) { this.name = name; }
+}
+
+class Department {
+    private Employee[] employees; // aggregation: passed in from outside
+    Department(Employee[] employees) { this.employees = employees; }
+}
+public class Main {
+    public static void main(String[] args) {
+        Car car = new Car();
+        car.drive(); // Car created its own Engine
+
+        Employee e1 = new Employee("Ravi");
+        Department dept = new Department(new Employee[]{ e1 });
+        System.out.println("Department created with employees");
+    }
+}
+```
+
+SOLUTION 15
+```java
+class Logger {
+    private static final Logger INSTANCE = new Logger();
+
+    private Logger() { }
+
+    static Logger getInstance() { return INSTANCE; }
+
+    void log(String msg) { System.out.println("[LOG] " + msg); }
+}
+public class Main {
+    public static void main(String[] args) {
+        Logger l1 = Logger.getInstance();
+        Logger l2 = Logger.getInstance();
+        System.out.println(l1 == l2); // true
+        l1.log("hello");
+    }
+}
+```
+
+SOLUTION 16
+```java
+class Pizza {
+    private final String size;
+    private final String topping;
+    private final boolean extraCheese;
+
+    private Pizza(Builder b) {
+        size = b.size;
+        topping = b.topping;
+        extraCheese = b.extraCheese;
+    }
+
+    static class Builder {
+        private final String size;          // required
+        private String topping = "none";    // optional
+        private boolean extraCheese = false; // optional
+
+        Builder(String size) { this.size = size; }
+
+        Builder topping(String topping) { this.topping = topping; return this; }
+        Builder extraCheese(boolean b) { extraCheese = b; return this; }
+
+        Pizza build() { return new Pizza(this); }
+    }
+
+    public String toString() {
+        return "Pizza(" + size + ", " + topping + ", cheese=" + extraCheese + ")";
+    }
+}
+public class Main {
+    public static void main(String[] args) {
+        Pizza p = new Pizza.Builder("large")
+                        .topping("mushroom")
+                        .extraCheese(true)
+                        .build();
+        System.out.println(p);
+    }
+}
+```
+
+SOLUTION 17
+```java
+interface PaymentStrategy {
+    void pay(int amount);
+}
+class CardPayment implements PaymentStrategy {
+    public void pay(int amount) { System.out.println("Paid " + amount + " by card"); }
+}
+class UPIPayment implements PaymentStrategy {
+    public void pay(int amount) { System.out.println("Paid " + amount + " by UPI"); }
+}
+class ShoppingCart {
+    private PaymentStrategy strategy;
+
+    void setPaymentStrategy(PaymentStrategy strategy) {
+        this.strategy = strategy;
+    }
+
+    void checkout(int amount) { strategy.pay(amount); }
+}
+public class Main {
+    public static void main(String[] args) {
+        ShoppingCart cart = new ShoppingCart();
+        cart.setPaymentStrategy(new CardPayment());
+        cart.checkout(100);
+        cart.setPaymentStrategy(new UPIPayment());
+        cart.checkout(50);
+    }
+}
+```
+
+SOLUTION 18
+```java
+import java.util.ArrayList;
+import java.util.List;
+
+interface Subscriber {
+    void notify(String news);
+}
+class EmailSubscriber implements Subscriber {
+    public void notify(String news) { System.out.println("Email: " + news); }
+}
+class SMSSubscriber implements Subscriber {
+    public void notify(String news) { System.out.println("SMS: " + news); }
+}
+class NewsPublisher {
+    private List<Subscriber> subs = new ArrayList<>();
+
+    void subscribe(Subscriber s) { subs.add(s); }
+
+    void publish(String news) {
+        for (Subscriber s : subs) {
+            s.notify(news);
+        }
+    }
+}
+public class Main {
+    public static void main(String[] args) {
+        NewsPublisher publisher = new NewsPublisher();
+        publisher.subscribe(new EmailSubscriber());
+        publisher.subscribe(new SMSSubscriber());
+        publisher.publish("Java 22 released");
+    }
+}
+```
+
+SOLUTION 19
+```java
+class InsufficientFundsException extends Exception {
+    InsufficientFundsException(String message) { super(message); }
+}
+
+class BankAccount {
+    private double balance;
+
+    BankAccount(double balance) { this.balance = balance; }
+
+    void withdraw(double amount) throws InsufficientFundsException {
+        if (amount > balance) {
+            throw new InsufficientFundsException("Not enough money");
+        }
+        balance -= amount;
+    }
+}
+public class Main {
+    public static void main(String[] args) {
+        BankAccount a = new BankAccount(50);
+        try {
+            a.withdraw(100);
+        } catch (InsufficientFundsException e) {
+            System.out.println("Caught: " + e.getMessage());
+        }
+    }
+}
+```
+
+SOLUTION 20
+```java
+import java.util.Comparator;
+
+class Box<T> {
+    private T value;
+
+    void set(T value) { this.value = value; }
+    T get() { return value; }
+}
+
+public class Main {
+    static <T> T max2(T a, T b, Comparator<T> c) {
+        return c.compare(a, b) >= 0 ? a : b;
+    }
+
+    public static void main(String[] args) {
+        Box<String> box = new Box<>();
+        box.set("hello");
+        System.out.println(box.get());
+
+        String bigger = max2("apple", "zebra", (x, y) -> x.compareTo(y));
+        System.out.println(bigger); // zebra
+    }
+}
+```
+
+SOLUTION 21
+```java
+class Report {
+    String generate() { return "report data"; }
+}
+class ReportPrinter {
+    void print(String s) { System.out.println(s); }
+}
+class ReportSaver {
+    void save(String s) { System.out.println("saved: " + s); }
+}
+public class Main {
+    public static void main(String[] args) {
+        Report r = new Report();
+        ReportPrinter printer = new ReportPrinter();
+        ReportSaver saver = new ReportSaver();
+        printer.print(r.generate());
+        saver.save(r.generate());
+    }
+}
+```
+
+SOLUTION 22
+```
+A static
+B static
+A block
+A
+B block
+B
+```
+Why: static blocks at class load, parent first. Then, per object:
+parent instance block, parent constructor, then child instance
+block, child constructor.
+
+====================================================================
+ END
+====================================================================

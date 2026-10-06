@@ -1,0 +1,194 @@
+====================================================================
+ OOPS MOCK INTERVIEW
+====================================================================
+ Simulate a real OOP interview. Ideal with a friend, but works
+ alone: read the QUESTION, answer ALOUD, then read the EXPECTED
+ ANSWER and score yourself.
+
+ Setup:
+ - Time yourself: 30 minutes total.
+ - No notes, no IDE autocomplete. You may use a blank editor.
+ - Speak answers in full sentences, as you would to an interviewer.
+
+ Scoring per answer:
+   2 = correct, clear, with a reason.
+   1 = correct idea, weak explanation.
+   0 = wrong or "I don't know".
+
+ Target: 24 / 28 or higher = interview ready.
+
+====================================================================
+ ROUND 1 - WARM-UP (5 minutes, 4 questions)
+====================================================================
+
+Q1. "Explain the difference between a class and an object."
+EXPECTED: A class is a blueprint/template describing fields and
+methods. An object is a concrete instance created from that blueprint
+with `new`, holding its own copy of the data. 2 points if you also
+mention "reference variable points to an object".
+
+Q2. "What is a constructor? What happens if you don't write one?"
+EXPECTED: A special method with the class name and no return type,
+called automatically by `new` to initialize the object. If no
+constructor is written, Java provides a default no-arg one; if ANY
+constructor is written, the default disappears. 2 points for the
+second sentence.
+
+Q3. "What is `this` used for?"
+EXPECTED: It refers to the current object. Two uses: (1) resolve
+shadowing - this.name = name; (2) call a sibling constructor with
+this(...). Bonus point if you add "this(...) must be the first
+statement."
+
+Q4. "What is encapsulation and why is it important?"
+EXPECTED: Hiding the internal state with private fields and exposing
+controlled public methods. It protects data from invalid values
+(validation), hides implementation details, and allows internal
+changes without breaking callers. 2 points if you give a BankAccount
+example.
+
+ROUND 1 SCORE: ____ / 8
+
+====================================================================
+ ROUND 2 - INHERITANCE AND POLYMORPHISM (10 minutes, 6 questions)
+====================================================================
+
+Q5. "What does a child class inherit from its parent?"
+EXPECTED: All non-private fields and methods, plus the IS-A
+relationship and the parent type (which enables polymorphism).
+Private members are inherited in the sense that they exist in the
+object, but cannot be accessed directly by the child.
+
+Q6. "Overloading vs overriding?"
+EXPECTED: Overloading: same method name, different parameters,
+decided at compile time, in the same class. Overriding: same
+signature in a subclass, decided at runtime, child replaces parent
+behavior. 2 points for "compile time vs runtime".
+
+Q7. WRITE THIS ON THE BOARD:
+   class Animal { void sound() { print("Animal"); } }
+   class Dog extends Animal { void sound() { print("Dog"); } }
+   Animal a = new Dog();  a.sound();
+   "What prints and why?"
+EXPECTED: "Dog". Because the reference type is Animal but the object
+type is Dog; at runtime, dynamic method dispatch looks at the actual
+object and calls Dog.sound(). This is runtime polymorphism.
+
+Q8. "Can static methods be overridden?"
+EXPECTED: No. A static method with the same signature in a subclass
+is called method HIDING, not overriding. It is chosen by the
+reference type at compile time, not the object type at runtime.
+
+Q9. "Why is upcasting safe but downcasting dangerous?"
+EXPECTED: Upcasting narrows the view to a parent type, and every
+child IS-A parent, so it always fits. Downcasting assumes the object
+is actually that subtype; if it is not, the cast throws
+ClassCastException at runtime, so you check with instanceof first.
+
+Q10. "Can you have two methods with the same name and parameters but
+different return types?"
+EXPECTED: No. The compiler cannot choose between them by return type
+alone, so it is not allowed. (For overloading, only the parameter
+list matters.)
+
+ROUND 2 SCORE: ____ / 12
+
+====================================================================
+ ROUND 3 - ABSTRACTION AND OBJECT CLASS (8 minutes, 5 questions)
+====================================================================
+
+Q11. "Abstract class vs interface - when would you use each?"
+EXPECTED: Abstract class for shared state and shared concrete code
+(has fields, constructors, concrete methods; one per class).
+Interface for a contract/capability a class can implement multiple
+times over. 2 points if you mention default methods.
+
+Q12. "Can an abstract class have a constructor?"
+EXPECTED: Yes, but it cannot be called directly to instantiate the
+abstract class. It runs via super() when a concrete subclass is
+created. This is a common misconception - 2 points if you say why.
+
+Q13. "Difference between == and equals()?"
+EXPECTED: == compares references (for objects) or values (for
+primitives). equals() compares logical content and must be
+overridden; Object.equals() is just ==.
+
+Q14. "Why must equals() and hashCode() be overridden together?"
+EXPECTED: The contract says equal objects must have equal hashCodes.
+Hash collections bucket objects by hashCode, then check equals. If
+they are inconsistent, equal objects land in different buckets and
+the collection behaves wrongly (e.g. HashSet allows duplicates).
+
+Q15. "How do you make a class immutable?"
+EXPECTED: final class, private final fields, assign all fields in
+the constructor, no setters, and return defensive copies of any
+mutable fields (like arrays or lists).
+
+ROUND 3 SCORE: ____ / 10
+
+====================================================================
+ ROUND 4 - DESIGN (5 minutes, 3 questions)
+====================================================================
+
+Q16. "Name the SOLID principles in one sentence each."
+EXPECTED: S - one class one job. O - open for extension, closed for
+modification. L - subclass must be substitutable for its parent.
+I - many specific interfaces over one fat interface. D - depend on
+abstractions, not concretions.
+
+Q17. "Aggregation vs composition?"
+EXPECTED: Both are HAS-A. Aggregation is weak ownership - the part
+can exist without the whole (Department has Employees). Composition
+is strong ownership with a lifecycle tie - the part dies with the
+whole (Car owns its Engine).
+
+Q18. "What is the Strategy pattern?"
+EXPECTED: Define an interface for a behavior, implement each variant
+in its own class, and let a context hold any of them. It replaces
+large if/else chains and lets behavior change at runtime
+(e.g. PaymentStrategy: card or UPI).
+
+ROUND 4 SCORE: ____ / 6
+
+====================================================================
+ ROUND 5 - LIVE CODING (10 minutes, 1 problem)
+====================================================================
+
+Q19. "Write a small program that demonstrates runtime polymorphism:
+an abstract Shape with an area() method, a Circle and a Rectangle
+subclass, and a loop over a Shape[] that prints each area."
+EXPECTED in your code:
+ - abstract class Shape { abstract double area(); }
+ - Circle extends Shape, Rectangle extends Shape, each overrides area()
+ - Shape[] shapes = { new Circle(2), new Rectangle(3,4) };
+ - for-loop calling s.area() on the Shape reference
+ - correct area math
+ - compiles and runs
+ Score: 4 = all of the above and it runs. 3 = small fix needed.
+ 2 = concept right but not compiling. 0-1 = missed polymorphism.
+
+ROUND 5 SCORE: ____ / 4
+
+====================================================================
+ TOTAL SCORE: ____ / 40
+====================================================================
+ 32-40 : excellent. You can talk about OOP fluently.
+ 24-31 : good. Rework the answers you scored 0-1.
+ below : go back to the folders for your weak answers, redo the
+         learning loop, then re-run this mock interview.
+
+====================================================================
+ INTERVIEW TIPS (read before the real interview)
+====================================================================
+ 1. When asked "what prints?" - say the output, THEN say why.
+    The "why" is worth more than the answer.
+ 2. Draw. Interviewers love a small diagram (Animal -> Dog).
+ 3. If asked to code, write incrementally: class, fields, methods,
+    then main. Talk while you type.
+ 4. Admit uncertainty clearly: "I believe it is X, because Y."
+    Guessing silently is worse.
+ 5. Know the three classic traps cold:
+    - Animal a = new Dog(); a.sound() -> Dog's method.
+    - static methods are hidden, not overridden.
+    - equals() without hashCode() breaks HashSet/HashMap.
+====================================================================

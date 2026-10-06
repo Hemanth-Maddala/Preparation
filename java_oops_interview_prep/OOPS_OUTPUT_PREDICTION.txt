@@ -1,0 +1,994 @@
+====================================================================
+ OOPS OUTPUT PREDICTION
+====================================================================
+ RULES:
+ 1. Read the code and WRITE your predicted output on paper.
+ 2. Do NOT scroll to PART 2 until you have a prediction.
+ 3. Mark each: CORRECT / WRONG / PARTLY.
+ 4. For every WRONG or PARTLY answer, explain to yourself why.
+
+====================================================================
+ PART 1 - QUESTIONS
+====================================================================
+
+QUESTION 1 (Constructor order)
+```java
+class Parent {
+    Parent() { System.out.println("Parent"); }
+}
+class Child extends Parent {
+    Child() { System.out.println("Child"); }
+}
+public class Main {
+    public static void main(String[] args) {
+        new Child();
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 2 (Constructor order with super(...))
+```java
+class Parent {
+    Parent() { System.out.println("Parent()"); }
+    Parent(int x) { System.out.println("Parent(int)"); }
+}
+class Child extends Parent {
+    Child() { super(5); System.out.println("Child()"); }
+}
+public class Main {
+    public static void main(String[] args) {
+        new Child();
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 3 (Inheritance - inherited method)
+```java
+class Animal { void speak() { System.out.println("Animal speaks"); } }
+class Dog extends Animal { }
+public class Main {
+    public static void main(String[] args) {
+        Dog d = new Dog();
+        d.speak();
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 4 (Inheritance - hidden field)
+```java
+class Parent { int x = 10; }
+class Child extends Parent {
+    int x = 20;
+    void show() { System.out.println(x); }
+}
+public class Main {
+    public static void main(String[] args) {
+        new Child().show();
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 5 (Method overloading)
+```java
+class Calc {
+    int add(int a, int b) { return a + b; }
+    int add(int a, int b, int c) { return a + b + c; }
+}
+public class Main {
+    public static void main(String[] args) {
+        Calc c = new Calc();
+        System.out.println(c.add(1, 2));
+        System.out.println(c.add(1, 2, 3));
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 6 (Overloading - widening)
+```java
+class Calc {
+    void show(long x) { System.out.println("long"); }
+    void show(int x)  { System.out.println("int"); }
+}
+public class Main {
+    public static void main(String[] args) {
+        Calc c = new Calc();
+        c.show(5);
+        c.show(5L);
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 7 (Method overriding)
+```java
+class Parent { void who() { System.out.println("Parent"); } }
+class Child extends Parent {
+    @Override
+    void who() { System.out.println("Child"); }
+}
+public class Main {
+    public static void main(String[] args) {
+        Parent p = new Child();
+        p.who();
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 8 (Overriding with super.method())
+```java
+class Parent { void who() { System.out.println("Parent"); } }
+class Child extends Parent {
+    @Override
+    void who() {
+        super.who();
+        System.out.println("Child");
+    }
+}
+public class Main {
+    public static void main(String[] args) {
+        new Child().who();
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 9 (Runtime polymorphism)
+```java
+class Animal { void sound() { System.out.println("Animal"); } }
+class Dog extends Animal {
+    @Override
+    void sound() { System.out.println("Bark"); }
+}
+class Cat extends Animal {
+    @Override
+    void sound() { System.out.println("Meow"); }
+}
+public class Main {
+    public static void main(String[] args) {
+        Animal a = new Dog();
+        a.sound();
+        a = new Cat();
+        a.sound();
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 10 (Runtime polymorphism vs static methods)
+```java
+class Animal {
+    static void who() { System.out.println("Animal static"); }
+    void speak()      { System.out.println("Animal speak"); }
+}
+class Dog extends Animal {
+    static void who() { System.out.println("Dog static"); }
+    @Override
+    void speak()      { System.out.println("Dog speak"); }
+}
+public class Main {
+    public static void main(String[] args) {
+        Animal a = new Dog();
+        a.who();
+        a.speak();
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 11 (Static call on null reference)
+```java
+class Demo {
+    static void show() { System.out.println("static"); }
+}
+public class Main {
+    public static void main(String[] args) {
+        Demo d = null;
+        d.show();
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 12 (Static method hiding)
+```java
+class Parent {
+    static void m() { System.out.println("Parent static"); }
+}
+class Child extends Parent {
+    static void m() { System.out.println("Child static"); }
+}
+public class Main {
+    public static void main(String[] args) {
+        Parent p = new Child();
+        p.m();
+        Child c = new Child();
+        c.m();
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 13 (Static variable shared)
+```java
+class Counter {
+    static int count = 0;
+    Counter() { count++; }
+}
+public class Main {
+    public static void main(String[] args) {
+        new Counter();
+        new Counter();
+        new Counter();
+        System.out.println(Counter.count);
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 14 (Static vs instance variable)
+```java
+class Counter {
+    static int count = 0;
+    int id;
+    Counter() { count++; id = count; }
+}
+public class Main {
+    public static void main(String[] args) {
+        Counter a = new Counter();
+        Counter b = new Counter();
+        System.out.println("a.id=" + a.id + " b.id=" + b.id + " total=" + Counter.count);
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 15 (Initialization blocks)
+```java
+class Demo {
+    Demo() { System.out.println("constructor"); }
+    { System.out.println("instance block"); }
+    static { System.out.println("static block"); }
+}
+public class Main {
+    public static void main(String[] args) {
+        new Demo();
+        new Demo();
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 16 (Initialization order with inheritance)
+```java
+class Parent {
+    Parent() { System.out.println("Parent constructor"); }
+    { System.out.println("Parent instance block"); }
+    static { System.out.println("Parent static"); }
+}
+class Child extends Parent {
+    Child() { System.out.println("Child constructor"); }
+    { System.out.println("Child instance block"); }
+    static { System.out.println("Child static"); }
+}
+public class Main {
+    public static void main(String[] args) {
+        new Child();
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 17 (this() constructor chaining)
+```java
+class Demo {
+    Demo() {
+        this(10);
+        System.out.println("no-arg");
+    }
+    Demo(int x) {
+        System.out.println("param x=" + x);
+    }
+}
+public class Main {
+    public static void main(String[] args) {
+        new Demo();
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 18 (super.variable)
+```java
+class Parent { int x = 10; }
+class Child extends Parent {
+    int x = 20;
+    void show() {
+        System.out.println(x);
+        System.out.println(super.x);
+    }
+}
+public class Main {
+    public static void main(String[] args) {
+        new Child().show();
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 19 (final reference, mutable object)
+```java
+import java.util.*;
+public class Main {
+    public static void main(String[] args) {
+        final List<String> list = new ArrayList<>();
+        list.add("a");
+        list.add("b");
+        System.out.println(list.size());
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 20 (final reference to custom object)
+```java
+class Student {
+    String name;
+    Student(String name) { this.name = name; }
+}
+public class Main {
+    public static void main(String[] args) {
+        final Student s = new Student("A");
+        s.name = "B";
+        System.out.println(s.name);
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 21 (Upcasting - method call)
+```java
+class Animal { void sound() { System.out.println("Animal"); } }
+class Dog extends Animal {
+    @Override
+    void sound() { System.out.println("Bark"); }
+}
+public class Main {
+    public static void main(String[] args) {
+        Animal a = new Dog();
+        a.sound();
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 22 (Upcasting - field access uses reference type)
+```java
+class Parent { int x = 10; }
+class Child extends Parent { int x = 20; }
+public class Main {
+    public static void main(String[] args) {
+        Parent p = new Child();
+        System.out.println(p.x);
+        Child c = (Child) p;
+        System.out.println(c.x);
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 23 (Downcasting with instanceof guard)
+```java
+class Animal { }
+class Dog extends Animal { void bark() { System.out.println("Bark"); } }
+class Cat extends Animal { }
+public class Main {
+    public static void main(String[] args) {
+        Animal a = new Cat();
+        if (a instanceof Dog) {
+            Dog d = (Dog) a;
+            d.bark();
+        } else {
+            System.out.println("Not a Dog");
+        }
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 24 (equals() overridden)
+```java
+class Point {
+    int x, y;
+    Point(int x, int y) { this.x = x; this.y = y; }
+    public boolean equals(Object o) {
+        if (!(o instanceof Point)) return false;
+        Point p = (Point) o;
+        return x == p.x && y == p.y;
+    }
+}
+public class Main {
+    public static void main(String[] args) {
+        Point p1 = new Point(1, 2);
+        Point p2 = new Point(1, 2);
+        System.out.println(p1.equals(p2));
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 25 (equals() not overridden)
+```java
+class Point {
+    int x;
+    Point(int x) { this.x = x; }
+}
+public class Main {
+    public static void main(String[] args) {
+        Point p1 = new Point(5);
+        Point p2 = new Point(5);
+        System.out.println(p1.equals(p2));
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 26 (== vs equals with String)
+```java
+public class Main {
+    public static void main(String[] args) {
+        String s1 = "abc";
+        String s2 = "abc";
+        String s3 = new String("abc");
+        System.out.println(s1 == s2);
+        System.out.println(s1 == s3);
+        System.out.println(s1.equals(s3));
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 27 (== with custom objects)
+```java
+class Student {
+    int id;
+    Student(int id) { this.id = id; }
+}
+public class Main {
+    public static void main(String[] args) {
+        Student a = new Student(1);
+        Student b = a;
+        Student c = new Student(1);
+        System.out.println(a == b);
+        System.out.println(a == c);
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 28 (toString not overridden)
+```java
+class Student {
+    String name;
+    Student(String name) { this.name = name; }
+}
+public class Main {
+    public static void main(String[] args) {
+        System.out.println(new Student("Ravi"));
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 29 (toString overridden)
+```java
+class Student {
+    String name;
+    Student(String name) { this.name = name; }
+    public String toString() { return "Student(name=" + name + ")"; }
+}
+public class Main {
+    public static void main(String[] args) {
+        System.out.println(new Student("Ravi"));
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 30 (Interface default method)
+```java
+interface Greeter {
+    default void greet() { System.out.println("Hello"); }
+}
+class EnglishGreeter implements Greeter { }
+public class Main {
+    public static void main(String[] args) {
+        Greeter g = new EnglishGreeter();
+        g.greet();
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 31 (Interface default method overridden)
+```java
+interface Greeter {
+    default void greet() { System.out.println("Hello"); }
+}
+class FrenchGreeter implements Greeter {
+    public void greet() { System.out.println("Bonjour"); }
+}
+public class Main {
+    public static void main(String[] args) {
+        Greeter g = new FrenchGreeter();
+        g.greet();
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 32 (Diamond - two default methods, explicit override)
+```java
+interface A { default void m() { System.out.println("A"); } }
+interface B { default void m() { System.out.println("B"); } }
+class C implements A, B {
+    public void m() { System.out.println("C"); }
+}
+public class Main {
+    public static void main(String[] args) {
+        new C().m();
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 33 (instanceof)
+```java
+class Animal { }
+class Dog extends Animal { }
+public class Main {
+    public static void main(String[] args) {
+        Animal a = new Dog();
+        System.out.println(a instanceof Dog);
+        System.out.println(a instanceof Animal);
+        System.out.println(a instanceof String);
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 34 (String immutability)
+```java
+public class Main {
+    public static void main(String[] args) {
+        String a = "Java";
+        String b = a;
+        a = a + "OOP";
+        System.out.println(a);
+        System.out.println(b);
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 35 (instanceof with null)
+```java
+public class Main {
+    public static void main(String[] args) {
+        String s = null;
+        System.out.println(s instanceof String);
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 36 (Integer wrapper caching)
+```java
+public class Main {
+    public static void main(String[] args) {
+        Integer a = 100;
+        Integer b = 100;
+        Integer c = 200;
+        Integer d = 200;
+        System.out.println(a == b);
+        System.out.println(c == d);
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 37 (Object alias)
+```java
+class Box {
+    int value;
+    Box(int v) { value = v; }
+}
+public class Main {
+    public static void main(String[] args) {
+        Box b1 = new Box(10);
+        Box b2 = b1;
+        b2.value = 99;
+        System.out.println(b1.value);
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 38 (this.name = name bug - no this)
+```java
+class Student {
+    String name;
+    Student(String name) {
+        name = name;
+        System.out.println(name);
+    }
+}
+public class Main {
+    public static void main(String[] args) {
+        Student s = new Student("Ravi");
+        System.out.println(s.name);
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 39 (Garbage - null reference)
+```java
+class Demo { }
+public class Main {
+    public static void main(String[] args) {
+        Demo d = new Demo();
+        d = null;
+        System.out.println("done");
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 40 (Polymorphic call inside parent constructor - TRAP)
+```java
+class Animal {
+    Animal() { sound(); }
+    void sound() { System.out.println("Animal"); }
+}
+class Dog extends Animal {
+    void sound() { System.out.println("Dog"); }
+}
+public class Main {
+    public static void main(String[] args) {
+        new Dog();
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 41 (equals overridden but hashCode not - HashSet)
+```java
+import java.util.*;
+class Student {
+    String name;
+    Student(String name) { this.name = name; }
+    public boolean equals(Object o) {
+        if (!(o instanceof Student)) return false;
+        return name.equals(((Student) o).name);
+    }
+}
+public class Main {
+    public static void main(String[] args) {
+        Set<Student> set = new HashSet<>();
+        set.add(new Student("a"));
+        set.add(new Student("a"));
+        System.out.println(set.size());
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+QUESTION 42 (Overloading with null - most specific wins)
+```java
+class Demo {
+    void show(String s) { System.out.println("String"); }
+    void show(Object o) { System.out.println("Object"); }
+}
+public class Main {
+    public static void main(String[] args) {
+        Demo d = new Demo();
+        d.show(null);
+    }
+}
+```
+Your prediction: ____________________
+
+--------------------------------------------------------------------
+
+====================================================================
+ PART 2 - ANSWERS
+====================================================================
+ Only read below after you have written predictions for all 42.
+ Cover the answer line, read the explanation, then self-score.
+
+ANSWER 1
+  Parent
+  Child
+Why: super() runs first, so the parent constructor body completes
+before the child constructor body starts.
+
+ANSWER 2
+  Parent(int)
+  Child()
+Why: super(5) explicitly selects the parent's (int) constructor.
+
+ANSWER 3
+  Animal speaks
+Why: Dog inherits speak() because it does not define one.
+
+ANSWER 4
+  20
+Why: fields are NOT polymorphic. Inside Child, `x` refers to Child's
+own field. (Use super.x to reach Parent's.)
+
+ANSWER 5
+  3
+  6
+Why: the compiler picks add(int,int) vs add(int,int,int) by argument
+count at compile time.
+
+ANSWER 6
+  int
+  long
+Why: c.show(5) matches int exactly; c.show(5L) matches long.
+
+ANSWER 7
+  Child
+Why: the object is a Child, so the override runs even though the
+reference type is Parent.
+
+ANSWER 8
+  Parent
+  Child
+Why: super.who() explicitly invokes the parent version first, then
+the child adds its own line.
+
+ANSWER 9
+  Bark
+  Meow
+Why: dynamic method dispatch - the runtime object type decides.
+
+ANSWER 10
+  Animal static
+  Dog speak
+Why: static methods bind at compile time by reference type (hiding);
+instance methods bind at runtime by object type (overriding).
+
+ANSWER 11
+  static
+Why: static methods do not need an object, so null is fine.
+
+ANSWER 12
+  Parent static
+  Child static
+Why: static methods are hidden, not overridden - the reference type
+decides, so p.m() uses Parent even though p points to a Child.
+
+ANSWER 13
+  3
+Why: count is static = one shared copy across all three objects.
+
+ANSWER 14
+  a.id=1 b.id=2 total=2
+Why: count is shared and incremented by each constructor; id is a
+per-object copy.
+
+ANSWER 15
+  static block
+  instance block
+  constructor
+  instance block
+  constructor
+Why: static block runs once at class load; instance block runs
+before the constructor body on EVERY new.
+
+ANSWER 16
+  Parent static
+  Child static
+  Parent instance block
+  Parent constructor
+  Child instance block
+  Child constructor
+Why: parents initialize first, top to bottom. Static blocks run at
+class load, before any object is made.
+
+ANSWER 17
+  param x=10
+  no-arg
+Why: this(10) forwards to the (int) constructor, which runs first;
+the no-arg body runs after.
+
+ANSWER 18
+  20
+  10
+Why: this.x -> Child's 20, super.x -> Parent's 10.
+
+ANSWER 19
+  2
+Why: final blocks reassigning `list`, but the List object itself can
+still be modified. final != immutable.
+
+ANSWER 20
+  B
+Why: same idea - final reference, mutable object. s.name can change.
+
+ANSWER 21
+  Bark
+Why: upcasting to Animal loses nothing for method calls; the object
+is still a Dog, so Dog.sound() runs.
+
+ANSWER 22
+  10
+  20
+Why: fields are resolved by the reference type. p is typed Parent,
+so p.x is 10 even though the object is a Child.
+
+ANSWER 23
+  Not a Dog
+Why: the object is a Cat, so instanceof Dog is false and the cast is
+safely skipped.
+
+ANSWER 24
+  true
+Why: equals() is overridden to compare x and y, and both Points are
+(1,2).
+
+ANSWER 25
+  false
+Why: equals() is NOT overridden, so Object.equals does reference
+comparison - two different objects are never equal.
+
+ANSWER 26
+  true
+  false
+  true
+Why: s1 and s2 share the string-pool literal. s3 is a new object,
+so == is false, but equals() compares the content: true.
+
+ANSWER 27
+  true
+  false
+Why: a and b point to the SAME object. c is a different object.
+
+ANSWER 28
+  Something like: Student@6d03e736
+Why: the default toString() is ClassName@hexHash. Exact hash differs
+per run.
+
+ANSWER 29
+  Student(name=Ravi)
+Why: println() calls toString() automatically, and yours is used.
+
+ANSWER 30
+  Hello
+Why: EnglishGreeter does not define greet(), so it inherits the
+interface default method.
+
+ANSWER 31
+  Bonjour
+Why: the class override wins over the interface default.
+
+ANSWER 32
+  C
+Why: the class MUST override m() to resolve the diamond conflict;
+its own version runs.
+
+ANSWER 33
+  true
+  true
+  false
+Why: a Dog IS-A Dog, a Dog IS-A Animal, but a Dog is never a String.
+
+ANSWER 34
+  JavaOOP
+  Java
+Why: String is immutable - a + b creates a NEW string; b still
+points to the old "Java".
+
+ANSWER 35
+  false
+Why: instanceof returns false for null, no exception.
+
+ANSWER 36
+  true
+  false
+Why: Integer caches -128..127, so a and b are the same cached
+object. 200 is outside the cache, so c and d are two objects.
+
+ANSWER 37
+  99
+Why: b1 and b2 point to the same object; changing b2 changes the
+shared object.
+
+ANSWER 38
+  Ravi
+  null
+Why: `name = name` assigns the parameter to itself (the parameter
+shadows the field). The field s.name is never set -> null. THIS is
+why this.name = name is needed.
+
+ANSWER 39
+  done
+Why: setting a reference to null only drops the reference; the
+program just continues. (GC reclaiming the object happens later,
+invisibly.)
+
+ANSWER 40
+  Dog
+Why: TRAP. The parent constructor calls sound(), and because sound()
+is overridden, the child version runs during the parent constructor
+- before the child is fully built.
+
+ANSWER 41
+  2
+Why: equals() says both students are "the same", but without
+hashCode() they land in different buckets, so equals() is never
+even called. The contract is broken.
+
+ANSWER 42
+  String
+Why: null matches both, but the compiler picks the MOST SPECIFIC
+type: String (child of Object). (Add an Integer overload and this
+stops compiling - ambiguous.)
+
+====================================================================
+ SCORING
+====================================================================
+  35+ correct : you are ready. Move to OOPS_MOCK_INTERVIEW.txt.
+  25-34       : redo the wrong ones - re-read the folder, run the
+                code with javac/java, then retry.
+  below 25    : work through folders 01-28 again with the full
+                learning loop before retrying.
+====================================================================

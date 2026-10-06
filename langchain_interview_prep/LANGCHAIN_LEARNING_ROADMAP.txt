@@ -1,0 +1,73 @@
+================================================================================
+ LANGCHAIN LEARNING ROADMAP
+ (study order for a LangChain interview)
+================================================================================
+
+Rule: do NOT copy code. Read it, run it, close it, rewrite it from memory.
+Each project = 5-10 minutes.
+
+--------------------------------------------------------------------------------
+PHASE 1 - THE MODEL LAYER (understand what a model call is)
+--------------------------------------------------------------------------------
+ 01_basic_model          model + invoke()
+ 02_messages             roles: system / human / ai
+ 03_prompt_template      templates with {variables}
+ 04_structured_output    Pydantic + with_structured_output
+ 06_runnable             invoke / batch / stream
+ 07_lcel                 prompt | model | parser   <-- the single most important pattern
+
+ 05_basic_chain is a natural stop after 07; do both together.
+
+--------------------------------------------------------------------------------
+PHASE 2 - PROGRAMMATIC FLOW (control the flow of data)
+--------------------------------------------------------------------------------
+ 08_parallel             RunnableParallel (run two branches at once)
+ 09_branching            RunnableBranch (conditionally choose a runnable)
+
+--------------------------------------------------------------------------------
+PHASE 3 - RAG (ground the model in your own documents)
+--------------------------------------------------------------------------------
+ 10_document_loader      TextLoader -> Document (page_content + metadata)
+ 11_text_splitter        chunk_size + chunk_overlap
+ 12_embeddings           text -> vector (semantic meaning as numbers)
+ 13_vector_store         FAISS store + similarity_search
+ 14_retriever            vector store != retriever
+ 15_basic_rag            the full 2-step pipeline (memorize this end to end)
+ 16_advanced_rag         3 small patterns: rewrite / filter / rerank
+
+--------------------------------------------------------------------------------
+PHASE 4 - TOOLS AND AGENTS (let the model act)
+--------------------------------------------------------------------------------
+ 17_tools                @tool, schema, bind_tools, tool_calls
+ 18_basic_agent          create_agent (the current agent API)
+ 19_react_agent          the Reason -> Act -> Observe loop
+ 20_structured_agent     create_agent + response_format
+ 28_multi_tool_agent     LLM chooses the right tool
+ 26_sql_agent            agent + SQL tool
+ 27_rag_agent            agent decides when to retrieve
+
+--------------------------------------------------------------------------------
+PHASE 5 - AGENT BEHAVIOUR (state, control, interactivity)
+--------------------------------------------------------------------------------
+ 21_memory               checkpointer + threads (conversation memory)
+ 22_middleware           before/after model hooks (logging example)
+ 23_human_in_the_loop    interrupt + approve + resume
+ 24_streaming            invoke vs stream
+ 25_async                ainvoke / astream / abatch
+
+--------------------------------------------------------------------------------
+PHASE 6 - COORDINATION (many components / many agents)
+--------------------------------------------------------------------------------
+ 29_multi_agent          supervisor -> research -> writer
+ 30_langchain_langgraph  why LangChain + LangGraph together
+
+--------------------------------------------------------------------------------
+FINAL REVIEW
+--------------------------------------------------------------------------------
+ Read LANGCHAIN_INTERVIEW_PREPARATION.txt:
+   - the 27 interview questions with answers
+   - the comparisons (LLM CALL vs CHAIN vs WORKFLOW vs AGENT, etc.)
+   - CODE PATTERNS I MUST MEMORIZE (15 short patterns)
+   - the 30 coding interview questions
+
+ Suggested study pace: 2-3 projects per day, 3 weeks total.

@@ -1,0 +1,1335 @@
+================================================================================
+TRIPARCHITECTAI - INTERVIEW PREPARATION NOTES
+Based ONLY on the actual code in this repository
+================================================================================
+
+REPO MAP (so you can point at files during the interview)
+----------------------------------------------------------
+Travel_client/            -> React Native (Expo) mobile app (the frontend)
+   app/home_screen.tsx    -> enter starting location + destination
+   app/tabs/budget.tsx    -> budget selection
+   app/tabs/travel_dates.tsx -> travel dates
+   app/tabs/people.tsx    -> number of travellers
+   app/tabs/planning.tsx  -> review screen ("Start Planning" button)
+   app/tabs/planning_result.tsx -> calls the AI, shows the final plan
+   app/tabs/hotels.tsx, weather_details.tsx, event_details.tsx,
+   itinerary_details.tsx, maps.tsx -> detail screens
+
+Server/                   -> Node.js + Express + MongoDB backend (deployed)
+   routes/ai.js           -> proxies AI request to the Python backend
+   routes/hotels.js       -> hotel search (Booking API via RapidAPI)
+   routes/hotel_details.js-> hotel facilities + photos
+   routes/userRoute.js    -> signup / login / profile
+   routes/tripRoute.js    -> save / get / delete trip history
+   routes/likedRoute.js   -> save / unsave liked trips
+   app.js                 -> Express app, CORS, nodemailer
+
+travel-ai-backend/        -> Python FastAPI + LangGraph backend (deployed)
+   app.py                 -> creates FastAPI app
+   api/routes.py          -> POST /plan-trip (the only AI endpoint)
+   planner/graph.py       -> the LangGraph StateGraph
+   planner/state.py       -> PlannerState (the shared state)
+   planner/nodes.py       -> the node functions
+   planner/conditions.py  -> conditional edge function (currently not used)
+   planner/nodes_prev.py  -> old commented-out versions (budget/hotel/transport)
+   llm/gemini_client.py   -> Gemini LLM client
+   llm/unsplash_client.py -> Unsplash image API
+   llm/weather.py         -> OpenWeather via RapidAPI
+
+THE REAL EXECUTION FLOW (trace it yourself in the code)
+----------------------------------------------------------
+1. User opens the Expo app -> home_screen.tsx
+2. User types starting location + destination -> presses "Get Plan"
+3. budget.tsx -> travel_dates.tsx -> people.tsx -> planning.tsx (review)
+4. "Start Planning" -> planning_result.tsx runs fetchAllData():
+   - POST https://triparchitectai.onrender.com/api/ai/generate-text
+     with body: { destination_input, starting_location, budget_input,
+                  travel_dates, members, month_input }
+   - The Express server (Server/routes/ai.js) forwards this to
+     https://triparchitectai-python.onrender.com/plan-trip
+   - FastAPI route (api/routes.py): result = await planner.ainvoke(user_input)
+   - LangGraph runs the nodes in order (see graph below)
+   - The full result dict flows back: FastAPI -> Express -> React app
+5. In parallel the app fetches hotels (/api/hotels/search) and saves the
+   trip to the database (/trip/savetrip).
+6. planning_result.tsx renders Highlights, Itinerary, Hotels, Weather, Events.
+
+
+================================================================================
+1. PROJECT INTRODUCTION
+================================================================================
+
+----------------------------------------------
+Q: Tell me about your TripArchitectAI project.
+----------------------------------------------
+30-SECOND ANSWER:
+"TripArchitectAI is a mobile travel-planning app. A user enters their starting
+location, destination, budget, dates and number of people. The app then
+generates a complete trip plan - top highlights, a day-by-day itinerary,
+real weather information, events and festivals, and hotel suggestions. The
+planning logic runs as a LangGraph pipeline in a Python FastAPI backend,
+using Gemini as the brain for generating content."
+
+1-MINUTE ANSWER:
+"It's a React Native mobile app with two backends. The frontend collects the
+trip inputs through a step-by-step flow (home_screen.tsx, budget.tsx,
+travel_dates.tsx, people.tsx). When the user taps 'Start Planning',
+planning_result.tsx calls an Express server, which forwards the request to a
+FastAPI service. FastAPI runs a LangGraph workflow: a 'destination' node asks
+Gemini for the state and top highlights, a 'highlight_images' node fetches
+images from Unsplash, an 'itinerary' node asks Gemini for a day-by-day plan,
+a 'weather' node pulls live weather from OpenWeather and asks Gemini to
+summarize it, and an 'event' node gets top events and images. All results are
+stored in a shared graph state and returned as one JSON response. The app then
+shows highlights, itinerary, hotels, weather and events, and can save the trip
+to MongoDB."
+
+2-MINUTE TECHNICAL ANSWER:
+"The system has three parts. First, the frontend: a React Native app using
+Expo Router, where each planning step is its own screen. Parameters are passed
+between screens via router.push params (planning.tsx shows this pattern).
+
+Second, an Express + MongoDB backend (Server/). Its route ai.js just proxies
+the AI request to the Python service with a 120-second timeout. hotels.js
+geocodes the destination with OpenStreetMap Nominatim, then calls the
+Booking.com API through RapidAPI to list hotels near the destination.
+userRoute.js handles signup/login using bcrypt for password hashing, and
+tripRoute.js / likedRoute.js save and load trips to MongoDB.
+
+Third, the actual AI: a FastAPI backend (travel-ai-backend). The only endpoint
+is POST /plan-trip. It takes a plain dict and calls planner.ainvoke(...) on a
+compiled LangGraph StateGraph (planner/graph.py). The graph defines five
+nodes: destination_node, highlight_images_node, itinerary_node, weather_node,
+and event_node, connected in that order. Each node writes results into the
+shared PlannerState (planner/state.py), and the next node reads from it.
+
+The LLM calls all go through one shared helper, call_gemini_json() in
+llm/gemini_client.py, which uses the google-genai SDK, forces JSON output with
+response_mime_type, and parses the response with json.loads. Images come from
+llm/unsplash_client.py and weather from llm/weather.py using OpenWeather via
+RapidAPI. The final result is one JSON object containing destination_data,
+highlight_images, itinerary, weather, and event, which the React app renders."
+
+----------------------------------------------
+Q: What problem does it solve?
+----------------------------------------------
+"Planning a trip manually means checking dozens of websites - top places to
+visit, weather, events, hotels - and organizing it day by day. TripArchitectAI
+does all of that in one app in about 30 seconds. The user answers five simple
+questions and gets a complete, structured travel plan with images and live
+weather, which they can save and revisit."
+
+----------------------------------------------
+Q: How does it work?
+----------------------------------------------
+"It works as a pipeline. Frontend collects inputs -> Express server forwards
+them -> FastAPI runs a LangGraph workflow where each step is one node ->
+each node uses Gemini (for text) and real APIs (Unsplash for images,
+OpenWeather for weather) -> results are collected in shared state and returned
+as one JSON -> the app displays it."
+
+----------------------------------------------
+Q: Explain the architecture.
+----------------------------------------------
+"Three layers:
+1. Client - React Native/Expo mobile app (Travel_client/).
+2. API gateway + data - Node.js/Express + MongoDB (Server/). It handles
+   authentication, hotels, saved trips, and proxies the AI request.
+3. AI service - Python FastAPI + LangGraph (travel-ai-backend/). Pure AI
+   logic, separated so the LLM pipeline can be built, tested and scaled
+   independently. It's deployed separately on Render."
+
+Why three layers?
+- Separation of concerns: AI logic (Python) is separate from app data/auth
+  (Node) and UI (React Native).
+- The Python service was also deployed separately (two Render URLs).
+
+----------------------------------------------
+Q: What happens when a user gives a travel request?
+----------------------------------------------
+"Trace from planning_result.tsx:
+1. Frontend builds JSON: destination_input, starting_location, budget_input,
+   travel_dates, members, month_input.
+2. POST to /api/ai/generate-text on the Express server.
+3. Express forwards to the FastAPI /plan-trip endpoint.
+4. FastAPI calls planner.ainvoke(user_input) which runs the graph:
+   destination -> highlight_images -> itinerary -> weather -> event.
+5. Each node updates the shared state.
+6. FastAPI returns the full state dict.
+7. Express passes it back to the app.
+8. The app also fetches hotels separately and auto-saves the trip.
+9. planning_result.tsx renders Highlights, Itinerary, Hotels, Weather card,
+   and Seasonal Events."
+
+----------------------------------------------
+Q: What was YOUR contribution?
+----------------------------------------------
+Say this honestly based on your real work. Suggested framing:
+"I built the AI pipeline: the LangGraph graph, the five nodes, the shared
+state, and the Gemini client. I designed the JSON contract between Gemini and
+the nodes, and I added the 'FETCH' image optimization in itinerary_node so we
+only call Unsplash when Gemini does not return a matching image. I also
+integrated the real weather APIs with a fallback path, and connected the
+React Native frontend to the backend through the planning_result screen."
+
+----------------------------------------------
+Q: What was the most challenging part?
+----------------------------------------------
+Good honest answers (all visible in the code):
+1. "Getting Gemini to return valid JSON every time. I solved it by forcing
+   response_mime_type: application/json and adding a try/except in
+   call_gemini_json that returns an error object instead of crashing."
+2. "Matching images to itinerary activities. Gemini's titles didn't always
+   match place names, so images were wrong. I solved it by pre-fetching
+   highlight images, passing them to Gemini, and telling it to reuse the
+   exact URL or use 'FETCH'. Then in the node I only call Unsplash when the
+   value is 'FETCH' (itinerary_node)."
+3. "Weather integration. Sometimes the live API fails, so I added a fallback
+   (Path B in weather_node) that uses Gemini's seasonal knowledge instead."
+
+----------------------------------------------
+Q: What did you learn from this project?
+----------------------------------------------
+Suggestions:
+- "How to orchestrate an LLM workflow properly with LangGraph instead of
+  calling Gemini once with one giant prompt."
+- "That forcing structured output (JSON) from an LLM makes it usable as a
+  backend component."
+- "That separate node functions make the pipeline testable and easy to change
+  (nodes_prev.py shows how I could remove budget/hotel/transport nodes
+  without touching anything else)."
+- "Handling failures: timeouts, fallbacks, and graceful error messages."
+- "Connecting a full stack: React Native -> Express -> FastAPI -> LLM + APIs."
+
+
+================================================================================
+2. TECHNOLOGY QUESTIONS
+================================================================================
+(Only technologies that are actually in the repo.)
+
+----------------------------------------------
+Q: Why did you use React Native (React)?
+----------------------------------------------
+"The frontend is an Expo React Native app (Travel_client/package.json).
+I used it because it lets one codebase run on Android and iOS. It also has
+good libraries for everything I needed: expo-router for file-based navigation,
+AsyncStorage for storing the user id, react-native-maps for the map view,
+and nativewind for styling. The component structure - separate screens for
+budget, dates, people - maps naturally to React's component model."
+
+----------------------------------------------
+Q: Why FastAPI?
+----------------------------------------------
+"FastAPI is async, so it handles concurrent requests well - important because
+the AI workflow makes several network calls (Gemini, Unsplash, weather) while
+awaiting. It's also very simple: app.py is only 5 lines, and the route in
+api/routes.py just awaits planner.ainvoke(user_input). It automatically
+handles JSON request/response, and it's easy to deploy on Render with uvicorn."
+
+----------------------------------------------
+Q: Why Gemini?
+----------------------------------------------
+"Google's Gemini gives structured JSON output directly through the API config
+(response_mime_type: 'application/json'), which made my parsing very reliable.
+It's also fast and cost-effective for a flash-lite model. The code uses the
+official google-genai SDK, which is clean and simple to use."
+
+----------------------------------------------
+Q: Why LangGraph?
+----------------------------------------------
+"I needed a multi-step pipeline where each step uses a different combination
+of the LLM and external APIs, and where the result of one step feeds the next.
+LangGraph gives me that as a graph of nodes with a shared state, with the
+framework handling execution, ordering and state passing for me. I define the
+graph once in planner/graph.py and just invoke it."
+
+----------------------------------------------
+Q: Why not just use a normal Python function?
+----------------------------------------------
+"Honest answer: for THIS workflow, the graph is a straight line, so a few
+sequential function calls would work too. But LangGraph gives me structure:
+each node is a small testable function, data moves through explicit state,
+and I can later add conditional edges, loops, retries and even parallel
+branches without rewriting the whole thing. The commented-out code in
+graph.py shows I already removed budget/hotel/transport nodes cleanly - that
+kind of change is trivial with a graph."
+
+----------------------------------------------
+Q: Why not LangChain Agent?
+----------------------------------------------
+"I used LangGraph (which is from the same team as LangChain) because my flow
+is a fixed pipeline, not an autonomous loop. A LangChain Agent would let an
+LLM repeatedly decide which tool to call, which is more power than I needed
+and harder to control. LangGraph lets me define the exact sequence of steps,
+so the behavior is predictable. My nodes use plain Python and the Gemini SDK
+directly rather than LangChain wrappers."
+
+----------------------------------------------
+Q: Why not CrewAI?
+----------------------------------------------
+"CrewAI is built around multiple role-playing agents collaborating. My system
+does not need multiple AI agents - it's one LLM used inside several fixed
+steps. Adding CrewAI would have been unnecessary complexity. LangGraph gave me
+the state machine I needed without that abstraction."
+
+----------------------------------------------
+Q: Why not OpenAI?
+----------------------------------------------
+"I used Gemini because of its native JSON output mode and cost, and because I
+wanted to learn the Google GenAI stack. The design is model-agnostic: every
+LLM call goes through call_gemini_json() in one file, so switching to OpenAI
+would only mean changing that single function."
+
+----------------------------------------------
+Q: Why did you use external APIs?
+----------------------------------------------
+"An LLM knows about places but not the live world. Weather and images must be
+real: OpenWeather/RapidAPI for live temperature and forecast, Unsplash for
+actual photos of each place, and the Booking.com API through RapidAPI for real
+hotels. External APIs are the 'grounding' - they turn AI text into factual,
+useful data. The code also labels the weather source so the user knows if it's
+live data or seasonal knowledge."
+
+----------------------------------------------
+Q: Why did you use async?
+----------------------------------------------
+"Every node makes slow network calls - Gemini, Unsplash, weather APIs can take
+seconds. With async/await, the server can start handling other requests while
+one request is waiting on the network, instead of blocking a thread. FastAPI
+is async-native, and LangGraph supports async invocation via ainvoke, which is
+exactly what api/routes.py uses: await planner.ainvoke(user_input)."
+
+
+================================================================================
+3. LANGGRAPH QUESTIONS
+================================================================================
+
+----------------------------------------------
+Q: What is LangGraph?
+----------------------------------------------
+"A Python library from the LangChain team for building stateful, multi-step
+AI applications as graphs. You define nodes (functions), connect them with
+edges, share data through a typed state object, and the framework runs the
+graph for you. It supports sequential flows, conditional branching, loops,
+retries and async execution."
+
+----------------------------------------------
+Q: Why did you use LangGraph?
+----------------------------------------------
+"My trip planner has five distinct steps that share data and run in order.
+LangGraph formalizes this: graph.py builds the graph once, and the route just
+calls planner.ainvoke(). It makes the flow visible, testable, and easy to
+modify (I removed nodes by commenting out one line each)."
+
+----------------------------------------------
+Q: What is a StateGraph?
+----------------------------------------------
+"A StateGraph is LangGraph's way to define a graph that carries a shared
+state. You pass it the state type (I pass PlannerState), register nodes, and
+connect them with edges. When you invoke it, it runs the nodes and keeps the
+state updated. In my code: workflow = StateGraph(PlannerState) in graph.py."
+
+----------------------------------------------
+Q: What is the state in your project?
+----------------------------------------------
+"PlannerState in planner/state.py - it's a TypedDict. It has the user input
+fields (destination_input, starting_location, budget_input, travel_dates,
+members, month_input) and the result fields that nodes fill in
+(destination_data, itinerary, weather, event, highlight_images). Each node
+returns a partial dict that LangGraph merges into this state, so the next
+node can read the previous node's output."
+
+----------------------------------------------
+Q: What are your nodes?
+----------------------------------------------
+"Five active nodes (planner/nodes.py):
+1. destination_node
+2. highlight_images_node
+3. itinerary_node
+4. weather_node
+5. event_node
+There is also transport_node defined but NOT connected, and a conditions.py
+file with a conditional function that is also not currently wired in."
+
+----------------------------------------------
+Q: What does each node do?
+----------------------------------------------
+1. destination_node: asks Gemini for the state and 3-5 top highlights of the
+   destination -> returns {destination_data}. (Uses the prompt with
+   'destination_input'.)
+2. highlight_images_node: loops over the highlights from destination_data and
+   calls fetch_image_for_place() (Unsplash) for each -> returns
+   {highlight_images}.
+3. itinerary_node: builds a prompt with travel_dates, members, destination and
+   the already-fetched images. Asks Gemini for a day-by-day itinerary where
+   each activity has title, activity, about, image_url. Gemini must reuse a
+   matching pre-fetched URL or output 'FETCH'. The node then post-processes:
+   for every 'FETCH' it calls Unsplash and fills in the real URL ->
+   returns {itinerary}.
+4. weather_node: takes the first word of destination_input as the city, tries
+   to get live weather via get_current_weather() and get_forecast_weather()
+   (OpenWeather via RapidAPI). If coordinates exist -> Path A (live data
+   prompt); if the API failed -> Path B (seasonal knowledge fallback). In both
+   cases Gemini summarizes it -> returns {weather} with current_weather,
+   five_day_forecast, advice, source, raw_current.
+5. event_node: asks Gemini for the top 3 events/festivals in the destination
+   during the month, then fetches an Unsplash image for each -> returns
+   {event} as a dict of {title: {description, image_url}}.
+
+----------------------------------------------
+Q: What are the edges?
+----------------------------------------------
+"In graph.py:
+   START -> destination
+   destination -> highlight_images
+   highlight_images -> itinerary
+   itinerary -> weather
+   weather -> event
+   event -> END"
+
+----------------------------------------------
+Q: Do you use conditional edges?
+----------------------------------------------
+"Not in the current compiled graph. There IS a conditional function,
+check_weather_needed() in conditions.py, and there was a commented-out
+add_conditional_edges block that could send the flow to 'weather' or 'end'.
+I left it commented out so the weather node always runs, making the current
+behavior deterministic. I can explain the concept though: a conditional edge
+runs a function on the state and returns the name of the next node to go to."
+
+----------------------------------------------
+Q: How does the graph decide which node to execute?
+----------------------------------------------
+"In the current version it's a straight line: LangGraph follows the edges in
+order, from START to END. Each node's returned dict is merged into the state
+automatically, so the next node reads the updated state."
+
+----------------------------------------------
+Q: Where does the graph start? Where does it end?
+----------------------------------------------
+"Starts at the special START node, which immediately goes to destination_node
+(START -> destination). It ends at the special END node after event_node
+(event -> END)."
+
+----------------------------------------------
+Q: How does information move between nodes?
+----------------------------------------------
+"Through the shared PlannerState. Example: destination_node returns
+{'destination_data': {...}}. LangGraph merges that into the state. Then
+highlight_images_node reads state['destination_data']['highlights'] to know
+which places to fetch images for. Nodes never call each other directly; they
+only write to and read from state."
+
+----------------------------------------------
+Q: What happens if one node fails?
+----------------------------------------------
+"By default an exception in a node raises and the whole ainvoke() fails. In my
+code I handle failures inside nodes:
+- weather_node wraps the live API calls in try/except and falls back to
+  seasonal knowledge.
+- call_gemini_json catches JSON parse errors and returns an error dict.
+A node-level failure isn't retried currently; the API would return a 500. In
+production I would add retries and per-node error handling."
+
+----------------------------------------------
+Q: Why is LangGraph better than writing this workflow normally?
+----------------------------------------------
+"For a straight-line flow, honestly, the difference is modest. But the
+benefits I actually used:
+1. State is explicit - every node takes state and returns a partial dict, so
+   data flow is easy to follow and type-check.
+2. Nodes are isolated and reusable - I could comment out budget/hotel/transport
+   nodes without touching their code (see graph.py comments).
+3. It's designed to grow - adding conditional edges, loops or parallel nodes
+   later doesn't change the node code.
+4. Async is built in (ainvoke), which my network-heavy nodes need."
+
+----------------------------------------------
+MY ACTUAL GRAPH - SIMPLE DIAGRAM
+----------------------------------------------
+            START
+              |
+              v
+   [destination_node]     -> Gemini: state + top highlights
+              |
+              v
+   [highlight_images_node] -> Unsplash images for each highlight
+              |
+              v
+   [itinerary_node]       -> Gemini: day-by-day plan (reuses images, 'FETCH')
+              |
+              v
+   [weather_node]         -> OpenWeather (live) -> Gemini summary
+              |              (fallback: Gemini seasonal knowledge)
+              v
+   [event_node]           -> Gemini: top 3 events + Unsplash images
+              |
+              v
+             END
+
+In words: "The user's request enters at START. First we ask Gemini what the
+destination is and its highlights. Then we fetch real images for those
+highlights. Then Gemini builds the itinerary day-by-day, reusing those images
+and asking us to fetch any missing ones. Then we get live weather and let
+Gemini turn it into advice. Finally we ask Gemini for the top events and add
+images. Everything lands in the shared state, which is returned as the final
+JSON."
+
+
+================================================================================
+4. GEMINI / LLM QUESTIONS
+================================================================================
+
+----------------------------------------------
+Q: Which Gemini model did you use?
+----------------------------------------------
+"gemini-flash-lite-latest (llm/gemini_client.py line 12). It's the latest
+version of Google's Flash Lite model."
+
+----------------------------------------------
+Q: Why this model?
+----------------------------------------------
+"Flash Lite is Google's fast, low-cost tier. My tasks are content generation
+(highlights, itinerary, weather summary, events) that don't need heavy
+reasoning, so speed and cost matter more than maximum intelligence. The
+'latest' tag means I always get the newest version without code changes."
+
+----------------------------------------------
+Q: How are you calling Gemini?
+----------------------------------------------
+"With the google-genai SDK. In gemini_client.py I create one client at module
+level:
+   client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+Then every call is:
+   client.models.generate_content(model='gemini-flash-lite-latest',
+       contents=prompt,
+       config={'response_mime_type': 'application/json'})"
+
+----------------------------------------------
+Q: What is gemini_client.py doing?
+----------------------------------------------
+"It centralizes all LLM interaction. It loads the API key from the
+environment, creates the Gemini client, and exposes one async function
+call_gemini_json(prompt) that sends a prompt, requests JSON output, parses the
+response text into a Python dict with json.loads, and returns it. If parsing
+fails it returns {"error": "Invalid JSON", "raw": response.text} instead of
+crashing."
+
+----------------------------------------------
+Q: Why did you create a separate Gemini client?
+----------------------------------------------
+"All five nodes call Gemini. Instead of repeating the SDK setup and JSON
+parsing in every node, they all import call_gemini_json from one file. This is
+the single point where I configure the model, the API key and the output
+format - and the place I'd change to switch models or providers."
+
+----------------------------------------------
+Q: Why are you using generate_content()?
+----------------------------------------------
+"generate_content() is the standard method of the google-genai SDK for
+sending a text prompt and getting a completion. It's the simplest call that
+returns response.text, which I then parse as JSON. I don't need streaming or
+chat history, so the one-shot generate_content is the right tool."
+
+----------------------------------------------
+Q: Why is the function async?
+----------------------------------------------
+"async def call_gemini_json(prompt). Network calls to Gemini can take several
+seconds. Marking it async lets FastAPI await it without blocking the server
+thread, and the nodes can await multiple calls. The SDK call itself is
+synchronous (it blocks on the network internally), but wrapping it in an async
+function lets me await it cleanly in the async LangGraph nodes. (Honest note:
+the actual network call inside is synchronous; a fully non-blocking version
+would use the SDK's async client.)"
+
+----------------------------------------------
+Q: How are you sending the prompt?
+----------------------------------------------
+"Through the contents parameter of generate_content(). Each node builds a
+normal f-string prompt with the relevant state values - for example
+destination_node uses state['destination_input'], and itinerary_node embeds
+the travel dates, members, destination and the list of available images."
+
+----------------------------------------------
+Q: What does Gemini return?
+----------------------------------------------
+"A response object whose .text contains the model's text output. Because I
+set response_mime_type to 'application/json', that text is (almost always) a
+valid JSON string. call_gemini_json parses it into a Python dict/list and
+returns that."
+
+----------------------------------------------
+Q: Why are you expecting JSON?
+----------------------------------------------
+"Because the backend and the React app need structured data, not prose. The
+nodes need dicts like {'state': ..., 'highlights': [...]} so the next node can
+read specific keys. The whole API contract between FastAPI and the frontend is
+JSON (planning_result.tsx reads data_det.itinerary, data_det.weather, etc.).
+Structured output makes the LLM usable as a regular backend component."
+
+----------------------------------------------
+Q: How do you parse the JSON?
+----------------------------------------------
+"json.loads(response.text) in call_gemini_json. That converts the model's
+JSON string into a Python object (dict or list). The nodes then use normal
+Python dict access, e.g. state['destination_data']['highlights']."
+
+----------------------------------------------
+Q: What happens if Gemini returns invalid JSON?
+----------------------------------------------
+"The try/except in call_gemini_json catches json.JSONDecodeError and returns
+{'error': 'Invalid JSON', 'raw': response.text}. That means the calling node
+gets a dict instead of an exception. (Honest note: the current code returns
+the error dict to the next node, so it would bubble up in the response; a more
+robust version would retry with a corrected prompt or a repair step.)"
+
+----------------------------------------------
+Q: How do you handle Gemini/API errors?
+----------------------------------------------
+"At the Gemini level: the JSON parse failure is caught. At the node level,
+weather_node wraps its API calls in try/except and prints the error, then uses
+a fallback. There is no global retry or circuit breaker currently - that would
+be my improvement for production. Frontend also wraps the whole AI call in
+try/catch with an AbortController timeout (30s in planning_result.tsx) and
+shows an error message instead of crashing."
+
+----------------------------------------------
+Q: How do you protect the API key?
+----------------------------------------------
+"The key is stored in a .env file and loaded with python-dotenv
+(load_dotenv() + os.getenv('GEMINI_API_KEY')). The .env file is ignored by
+git (.gitignore contains .env). So the key never appears in the source code
+and is never committed. Same pattern for UNSPLASH_ACCESS_KEY, RAPIDAPI_KEY
+and MONGO_URI."
+
+----------------------------------------------
+Q: Where is the API key stored?
+----------------------------------------------
+"In travel-ai-backend/.env as GEMINI_API_KEY (plus UNSPLASH_ACCESS_KEY,
+RAPIDAPI_KEY, x-rapidapi-host). The Express server has Server/.env with
+RAPIDAPI_KEY, MONGO_URI and email credentials. On Render they are set as
+environment variables instead of .env files."
+
+
+================================================================================
+5. AGENTIC AI QUESTIONS
+================================================================================
+
+----------------------------------------------
+Q: Is TripArchitectAI an AI agent?
+----------------------------------------------
+"Honest answer: it is not an autonomous agent. It is an agentic-looking
+workflow. It uses LangGraph (an agent framework) and a shared state, but the
+flow is fixed and pre-programmed - the LLM never decides what to do next."
+
+----------------------------------------------
+Q: What makes it agentic?
+----------------------------------------------
+"The things that look agentic: it uses an LLM, it runs a multi-step pipeline
+(orchestrated by LangGraph), each step can call tools (Gemini, Unsplash,
+OpenWeather), and it passes state between steps. So it has the scaffolding of
+an agent system, but the 'brain' does not have autonomy."
+
+----------------------------------------------
+Q: Is it a workflow or an agent?
+----------------------------------------------
+"Clearly a workflow. The sequence destination -> images -> itinerary ->
+weather -> event is decided by me in graph.py, not by the LLM. There is no
+loop, no LLM choosing the next action, no dynamic tool selection. In agent
+terminology: it's a deterministic, graph-based workflow, not a ReAct-style
+agent loop."
+
+----------------------------------------------
+Q: What is the role of the LLM?
+----------------------------------------------
+"Gemini is the content generator. It converts structured inputs into
+structured outputs: highlights, itineraries, weather summaries, events. It is
+a component inside nodes, not the controller of the workflow. The graph code
+decides what to do; Gemini only fills in the content."
+
+----------------------------------------------
+Q: Does the LLM make decisions?
+----------------------------------------------
+"Only within a prompt - e.g. choosing which places to include as highlights,
+or whether a pre-fetched image matches an activity (the 'FETCH' rule in
+itinerary_node). It does NOT make workflow decisions like which node to run
+next. The only workflow decision point I wrote (check_weather_needed in
+conditions.py) is currently commented out and not used."
+
+----------------------------------------------
+Q: Does it use tools?
+----------------------------------------------
+"Yes, but in the code sense, not the LLM-tool-calling sense. My node functions
+call external tools directly with the requests library: Unsplash
+(unsplash_client.py) and OpenWeather (weather.py). These are Python function
+calls inside nodes, NOT function-calling/tool-use where Gemini chooses a tool."
+
+----------------------------------------------
+Q: What is tool calling?
+----------------------------------------------
+"Tool calling (function calling) is when the LLM itself decides to invoke a
+tool: it returns a structured request like 'call search_places(query=Ooty)'
+and the application executes it and sends the result back to the model.
+My project does NOT do that - Gemini is asked for text, and the code calls
+APIs itself. If the interviewer asks, say: 'I understand tool calling, but I
+implemented tools as direct function calls in the nodes, which is simpler and
+fine for a fixed workflow.'"
+
+----------------------------------------------
+Q: What is state?
+----------------------------------------------
+"State is the single source of truth that flows through the system. In this
+project it is the PlannerState dict: the user's inputs plus everything the
+nodes produce (destination_data, itinerary, weather, event, highlight_images).
+Each node reads state and returns updates that get merged back. This is
+exactly the concept of state in agentic systems - information accumulated
+across steps."
+
+----------------------------------------------
+Q: What is memory?
+----------------------------------------------
+"Memory means information retained across interactions. My project has two
+kinds: (1) within one planning request, the graph state carries data from one
+node to the next; (2) across requests, MongoDB stores trip history
+(TripHistory schema) and liked trips, and AsyncStorage stores the user id on
+the phone. There is no conversational memory - Gemini gets no chat history; it
+is stateless between calls. Be honest about this."
+
+----------------------------------------------
+Q: What is planning?
+----------------------------------------------
+"In agent terms, planning is the LLM breaking a goal into steps. In my
+project, the 'plan' is the itinerary itself - Gemini plans day-by-day
+activities. But the overall pipeline plan is fixed in code, not generated by
+the LLM. So: the LLM does micro-planning (a day's schedule), while the macro
+pipeline is designed by me."
+
+----------------------------------------------
+Q: Did you use ReAct?
+----------------------------------------------
+"No. ReAct (Reason + Act) is a loop where the model alternates thinking and
+taking actions until a goal is reached. My graph runs each node exactly once
+in a fixed order - there is no reason-act loop. I know the concept but did not
+implement it."
+
+----------------------------------------------
+Q: Did you use Chain of Thought?
+----------------------------------------------
+"No explicit chain-of-thought prompting. Each prompt asks for the answer
+directly with a strict JSON format. Gemini may do internal reasoning, but I
+don't prompt for it and I don't display reasoning steps. (Honest answer.)"
+
+----------------------------------------------
+Q: Did you use Plan-and-Execute?
+----------------------------------------------
+"Closest match, with a caveat. Plan-and-Execute normally means the LLM writes
+a plan first, then executes steps. My graph IS a plan with execute steps
+(nodes), but the plan is hard-coded by me, not generated by the LLM. So I can
+say: 'The architecture is Plan-and-Execute style - each node is an execution
+step - but the plan is static, not LLM-generated.'"
+
+----------------------------------------------
+Q: Did you use Tree of Thoughts?
+----------------------------------------------
+"No. Tree of Thoughts explores multiple reasoning branches and backtracks.
+My pipeline is strictly sequential with no branching or search."
+
+----------------------------------------------
+Q: Is this a single-agent or multi-agent system?
+----------------------------------------------
+"Neither in the strict sense - there are no agents, just a workflow with one
+LLM. If forced: it is effectively a single 'agent' (one Gemini model) running
+multiple steps. There are no multiple LLM agents with different roles, so no
+multi-agent system."
+
+KEY PHRASE TO MEMORIZE:
+"I want to be precise: TripArchitectAI is a LangGraph-based multi-step
+workflow, not an autonomous agent. The LLM generates content and follows a
+fixed pipeline; tools are called by the code, and state flows through the
+graph. The architecture is agentic-style, but autonomy is not implemented."
+
+
+================================================================================
+6. API / BACKEND QUESTIONS
+================================================================================
+
+----------------------------------------------
+Q: What API endpoints did you create?
+----------------------------------------------
+Python (FastAPI, travel-ai-backend/api/routes.py):
+- GET /            -> {"status": "ok"} (health check)
+- POST /plan-trip  -> the AI planning endpoint
+
+Node.js (Express, Server/):
+- POST /api/ai/generate-text      -> proxy to the Python backend
+- GET  /api/hotels/search         -> hotels near a place
+- GET  /api/hoteldetails/hotelfacilities
+- GET  /api/hoteldetails/hotelpics
+- POST /user/useraccount, /user/userlogin, /user/userdetails,
+       /user/updateprofile, /user/verifyforupdate
+- POST /trip/savetrip, GET /trip/gettrip/:userId,
+       GET /trip/getSingleTrip/:tripId, DELETE /trip/deleteTrip/:tripId
+- POST /like/saveliked, GET /like/getliked/:userId,
+       GET /like/getSingleTrip/:saveId, DELETE /like/unsaveTrip/:tripId
+- POST /send-email (Nodemailer)
+
+----------------------------------------------
+Q: What happens when the frontend calls the backend?
+----------------------------------------------
+"planning_result.tsx does fetch(BASE_URL + '/api/ai/generate-text') with a
+JSON body. The Express server receives it, checks it's non-empty, forwards it
+via axios to the FastAPI /plan-trip with a 120s timeout, and sends FastAPI's
+response back to the app. This proxy pattern keeps the AI service URL hidden
+from the app and lets me add auth/validation in one place."
+
+----------------------------------------------
+Q: How does FastAPI communicate with the LangGraph workflow?
+----------------------------------------------
+"api/routes.py imports build_planner_graph() from planner.graph and builds it
+once at import time: planner = build_planner_graph(). The route then calls
+await planner.ainvoke(user_input) - LangGraph's async invoke - and returns the
+result dict directly as the JSON response. So FastAPI is only a thin HTTP
+wrapper around the compiled graph."
+
+----------------------------------------------
+Q: What request does the backend receive?
+----------------------------------------------
+"A JSON dict with keys: destination_input (string), starting_location
+(string), budget_input (number), travel_dates (string, e.g. the serialized
+date object), members (number), month_input (string, optional). These keys map
+exactly to PlannerState fields."
+
+----------------------------------------------
+Q: What response does it return?
+----------------------------------------------
+"The full final state as one JSON object: the input fields plus
+destination_data, highlight_images, itinerary, weather, and event. Each is the
+dict/list produced by the corresponding node. The React app reads
+data_det.highlight_images, data_det.itinerary, data_det.weather,
+data_det.event, data_det.destination_data."
+
+----------------------------------------------
+Q: Why use async?
+----------------------------------------------
+"Because every planning request triggers multiple slow network calls
+(Gemini + Unsplash + weather). async/await lets FastAPI handle many concurrent
+planning requests without blocking a thread per request. The route is async
+and LangGraph is invoked with await planner.ainvoke(...)."
+
+----------------------------------------------
+Q: How do you handle errors?
+----------------------------------------------
+"Honest answer, layer by layer:
+- Node level: try/except around weather APIs; JSON parse try/except in the
+  Gemini client.
+- Express level: ai.js has try/catch returning a 500 with the error details;
+  hotels.js returns 500 'Failed to fetch hotels'; user routes return
+  structured {success:false, msg} responses with proper status codes.
+- FastAPI level: no custom exception handlers currently - unhandled node
+  errors would become a 500. That's a known limitation I'd improve.
+- Frontend: try/catch around each fetch, AbortController timeouts (30s AI,
+  15s hotels), and fallback UI text ('We are finding the best stays...')."
+
+----------------------------------------------
+Q: How do you validate input?
+----------------------------------------------
+"Honest answer: minimally. FastAPI declares user_input: dict - no Pydantic
+model, no field validation, so missing keys would be handled by the nodes
+(state.get(...) with defaults where used). On the Express side, ai.js checks
+the body is non-empty (400 otherwise), and hotel/search checks place is
+required. The frontend validates before navigating (home_screen.tsx shows
+toast if starting location or destination is empty). Using Pydantic models for
+/plan-trip would be my production improvement."
+
+----------------------------------------------
+Q: How is CORS handled?
+----------------------------------------------
+"CORS is configured on the Express server with the cors package:
+origin '*', methods GET/POST/PUT/DELETE, credentials true (app.js). It's set
+to '*' mainly because the app is a mobile app. Note: the FastAPI service does
+not configure CORS itself - it only receives server-to-server requests from
+Express. (If I added a web frontend calling FastAPI directly, I'd add
+CORSMiddleware to FastAPI.)"
+
+----------------------------------------------
+Q: What happens if an external API fails?
+----------------------------------------------
+"Depends which one:
+- Gemini fails -> the node raises -> request fails (500). The JSON-parse case
+  returns an error dict instead.
+- OpenWeather fails -> weather_node catches it and falls back to Gemini's
+  seasonal knowledge (Path B), so weather still returns.
+- Unsplash fails -> fetch_image_for_place returns image_url: None, and the UI
+  shows a default image.
+- Hotels fail -> the app catches it and shows 'We are finding the best stays'
+  instead of a hotel list, but the rest of the plan still shows.
+So most failures degrade gracefully instead of killing the whole request."
+
+
+================================================================================
+7. FRONTEND QUESTIONS
+================================================================================
+
+----------------------------------------------
+Q: How does React communicate with FastAPI?
+----------------------------------------------
+"Indirectly. The React app never talks to FastAPI directly. It calls the
+Express server (BASE_URL = https://triparchitectai.onrender.com), and the
+Express route /api/ai/generate-text forwards the same JSON to the Python
+service via axios. It's a simple fetch POST with Content-Type
+application/json."
+
+----------------------------------------------
+Q: How do you send the user's request?
+----------------------------------------------
+"In planning_result.tsx, inside the useEffect, fetchAllData() builds the body:
+{
+  destination_input: destination,
+  starting_location: startingLocation || 'Delhi',
+  budget_input: Number(budget),
+  travel_dates: travelDates,
+  members: Number(people),
+  month_input: getMonth(new Date(parsedDates.startDate))
+}
+and POSTs it with fetch(). The trip details were gathered earlier in
+home_screen.tsx -> budget.tsx -> travel_dates.tsx -> people.tsx and passed
+through screens with expo-router params."
+
+----------------------------------------------
+Q: How do you receive the response?
+----------------------------------------------
+"const response = await fetch(...); const data_det = await response.json();
+Then setPlanData(data_det), setWeather(data_det?.weather),
+setEvent(data_det?.event). The component re-renders with the data, and the
+screen conditionally renders sections: {planData?.highlight_images && <Highlights .../>},
+{planData?.itinerary && <Itinerary .../>}."
+
+----------------------------------------------
+Q: How do you manage loading state?
+----------------------------------------------
+"With useState. setIsLoading(true) at the start of fetchAllData and
+setIsLoading(false) in the finally block. While isLoading is true, the screen
+returns a full-screen ImageBackground with a LottieView animation and
+'Planning Your Trip...' text (planning_result.tsx). planning.tsx also has a
+fake loading phase with setTimeout timers before showing the summary."
+
+----------------------------------------------
+Q: How do you handle errors?
+----------------------------------------------
+"Three ways:
+1. try/catch around each fetch with console.log of the error.
+2. AbortController + setTimeout for timeouts (30s for AI, 15s for hotels) -
+   if aborted, an AbortError is caught and it throws 'AI service timed out'.
+3. Graceful UI fallbacks - empty states show messages like 'We are finding the
+   best stays for you...' instead of breaking. The AI call, hotels and save
+   are each in their own try/catch, so one failing doesn't stop the others."
+
+----------------------------------------------
+Q: Which components are important?
+----------------------------------------------
+"- home_screen.tsx: input collection (starting location + destination) and
+  popular destination cards.
+- planning.tsx: review screen, shows the selected options.
+- planning_result.tsx: the core - calls all APIs, manages loading, renders
+  Highlights, Itinerary, Hotels, Weather and Events, plus save/unsave heart.
+- highlights.tsx and itinerary.tsx: reusable presentational components.
+- itinerary_details.tsx: day-tab UI for the full itinerary.
+- hotels.tsx / weather_details.tsx / event_details.tsx: detail screens."
+
+----------------------------------------------
+Q: How is the generated itinerary displayed?
+----------------------------------------------
+"planning_result.tsx passes planData.itinerary to the Itinerary component,
+which shows a teaser card. Tapping the arrow opens itinerary_details.tsx,
+which parses the itinerary param with JSON.parse, renders day tabs
+('Day 1', 'Day 2'...), and for each activity shows a Morning/Afternoon/Evening
+badge (getTimeOfDay helper), the title, activity text, about text, and the
+image from image_url. A summary card counts the activities per day."
+
+----------------------------------------------
+Q: Other frontend facts you may be asked
+----------------------------------------------
+- Navigation: expo-router with file-based routing; Stack screens declared in
+  _layout.tsx; params passed with router.push({pathname, params}).
+- Styling: NativeWind (Tailwind classes like 'text-teal-900') plus inline
+  styles; custom fonts loaded with expo-font (Lobster, DancingScript).
+- Animations: lottie-react-native (chatbot, checklist, loading).
+- Storage: AsyncStorage for userId.
+- Maps: react-native-maps with Markers, Polyline, and expo-location geocoding
+  (maps.tsx).
+- Data passed between screens is often JSON.stringify'd in params and
+  JSON.parse'd on the other side (itinerary, hotelsData, weather, events).
+
+
+================================================================================
+8. PYTHON QUESTIONS FROM MY CODE
+================================================================================
+For each: What could the interviewer ask? -> Simple answer.
+
+----------------------------------------------
+async / await
+----------------------------------------------
+Q: What does async def do? Why is your node async?
+A: An async function returns a coroutine that can be paused at await points
+without blocking the thread. My nodes (async def destination_node, etc.) are
+async because they await slow network calls like call_gemini_json(prompt). The
+route awaits planner.ainvoke(...). This lets the server handle other requests
+while waiting. (Be ready for: the Gemini SDK call inside call_gemini_json is
+synchronous; only LangGraph and FastAPI are truly async.)
+
+----------------------------------------------
+decorators
+----------------------------------------------
+Q: Where do you use decorators?
+A: @router.get('/') and @router.post('/plan-trip') in api/routes.py, and
+@router.post/get/delete in the Express... (no, that's Node). In Python, the
+FastAPI router decorators register a function as a handler for a URL+method.
+That's the only decorator usage in the Python backend. Also note
+{timestamps: true} in Mongoose schemas is Node, not Python.
+
+----------------------------------------------
+functions
+----------------------------------------------
+Q: Explain the function signatures.
+A: Every node is a plain async function: async def weather_node(state:
+PlannerState): ... It takes the state dict and returns a partial dict that
+LangGraph merges into the state. Helper functions like fetch_image_for_place
+and get_current_weather wrap specific APIs, keeping nodes readable.
+
+----------------------------------------------
+dictionaries
+----------------------------------------------
+Q: Why do you use dicts everywhere?
+A: Because everything is JSON-shaped. State is a dict (TypedDict), Gemini
+returns a parsed JSON dict, nodes return partial dicts, and the final response
+is a dict serialized to JSON. Nodes read values like
+state['destination_data']['highlights'] and use .get() with defaults
+(e.g. state.get('starting_location')) for optional fields.
+
+----------------------------------------------
+JSON
+----------------------------------------------
+Q: How do you work with JSON?
+A: json.loads() parses Gemini's response text into Python objects in
+gemini_client.py; json.dumps() is used to embed weather data inside prompts in
+weather_node (e.g. json.dumps(current_raw)). The FastAPI route returns a dict
+that FastAPI serializes to JSON automatically.
+
+----------------------------------------------
+exception handling
+----------------------------------------------
+Q: Show me error handling.
+A: weather_node wraps the OpenWeather calls in try/except and prints
+'API Fetch Error', then chooses the seasonal-knowledge fallback path.
+call_gemini_json wraps json.loads(response.text) in try/except and returns
+{"error": "Invalid JSON", "raw": response.text}. Honest: the except in
+gemini_client is a bare except - I'd catch json.JSONDecodeError specifically
+in production.
+
+----------------------------------------------
+environment variables
+----------------------------------------------
+Q: How do you keep secrets out of code?
+A: os.getenv('GEMINI_API_KEY') reads from the environment. python-dotenv's
+load_dotenv() loads travel-ai-backend/.env at startup. The .env file is git
+ignored, so keys are never committed. On Render the same variables are set as
+server environment variables.
+
+----------------------------------------------
+type hints
+----------------------------------------------
+Q: Why do you use type hints?
+A: For readability and to define the state contract: PlannerState is a
+TypedDict that declares exactly which keys exist and their types. Function
+params are annotated too (place: str, prompt: str). This documents the code
+and would enable static checking with mypy. (Honest: hints are not enforced at
+runtime - they're documentation.)
+
+----------------------------------------------
+Pydantic
+----------------------------------------------
+Q: Do you use Pydantic?
+A: Directly? Not in the Python backend - PlannerState is a TypedDict from
+typing, not a Pydantic model, and the route takes user_input: dict. However,
+FastAPI itself uses Pydantic internally for request handling. For production I
+would define a Pydantic request model to validate /plan-trip inputs.
+
+----------------------------------------------
+APIs
+----------------------------------------------
+Q: How do you call external APIs?
+A: With the requests library: requests.get(URL, params=..., headers=...).json()
+in unsplash_client.py and weather.py. The Gemini call uses the google-genai
+SDK instead of raw HTTP.
+
+----------------------------------------------
+classes
+----------------------------------------------
+Q: Do you use classes?
+A: Not much - the Python code is function-based (nodes, helpers, client
+wrapper). The Express schemas use Mongoose classes (new mongoose.Schema(...)),
+and the FastAPI app object is a class instance: app = FastAPI(). I can explain
+that for this pipeline, plain functions were the clearest design.
+
+Other Python bits you might be asked:
+- f-strings: prompts are built with f-strings embedding state values.
+- .get() with default: state.get('month_input', 'the current season').
+- list slicing/loops: for place in highlights, events_list[:3].
+- Optional/Union typing: Optional[Dict], Optional[str] in state.py.
+
+
+================================================================================
+9. WHY / DESIGN QUESTIONS
+================================================================================
+
+Q: Why did you separate the LLM code into another file?
+A: Because all five nodes need Gemini, and each node would otherwise repeat
+the SDK setup and JSON parsing. gemini_client.py is the single wrapper - one
+place to change the model, key or provider. It's the DRY principle in action.
+
+Q: Why did you separate nodes?
+A: So each step of the pipeline is a small, focused, testable function with a
+clear input (state) and output (partial state). It also meant I could disable
+features by commenting out a node registration in graph.py - the commented-out
+budget/hotel/transport nodes prove this.
+
+Q: Why use a graph instead of one large function?
+A: One large function would mix Gemini prompts, image fetching and weather
+logic into one giant blob. The graph makes the flow visible (START -> ...
+-> END), keeps each concern in its own file/function, and gives me an upgrade
+path to conditional edges and parallel nodes. That said, for a straight-line
+flow a loop of functions would work - the graph structure is the main
+organizational win.
+
+Q: Why use JSON output?
+A: Because the entire stack consumes structured data: nodes need specific keys,
+the response is serialized to JSON for the API, and the React app reads
+data_det.itinerary etc. JSON is the contract between Gemini, FastAPI and the
+frontend.
+
+Q: Why use external APIs?
+A: An LLM cannot give live weather or real photos. OpenWeather gives facts,
+Unsplash gives images, Booking.com gives real hotels. This grounds the AI
+output in reality and makes the plan actually useful.
+
+Q: Why use environment variables?
+A: Secrets (API keys, DB URI) must never be in the source code. .env files +
+os.getenv keep them out of git (.gitignore) and allow different values on my
+machine vs. Render. It also means the same code runs anywhere.
+
+Q: Why not hard-code the travel information?
+A: Because then the app would only work for the cities I hard-coded and the
+data would go stale. The whole point is generating plans for any destination
+the user types, with live weather and real images.
+
+Q: Why not make everything one LLM prompt?
+A: A single prompt would have to do everything at once - and images and
+weather can't come from the LLM anyway. Also, one giant prompt is harder to
+debug and easier to get wrong (e.g., image mismatch). Breaking it into nodes
+means each LLM call is small and focused, and the code (not the LLM) handles
+the API calls. I could mention: I DID split image-fetching out of the
+itinerary prompt and into nodes to fix wrong images - that's why the flow
+exists.
+
+Q: How would you improve the architecture?
+A: Suggested improvements (interview-ready):
+1. Add a Pydantic model to validate /plan-trip input.
+2. Add retries with exponential backoff for Gemini and the external APIs.
+3. Enable the conditional edge (weather is optional for some destinations).
+4. Cache Gemini results per destination to cut cost and latency.
+5. Replace the sync SDK call inside call_gemini_json with the SDK's async
+   client so the event loop is truly non-blocking.
+6. Add observability - logging of each node's timing and a trace id.
+7. Move the AI request to WebSocket/streaming for real-time progress.
+8. Use JWT tokens instead of raw user ids for authentication.
+
+
+================================================================================
+10. DEBUGGING / SCENARIO QUESTIONS
+================================================================================
+
+Q: What if Gemini is unavailable?
+A: The node raising the error would fail the whole ainvoke -> 500 from
+FastAPI -> Express forwards the error -> the React app's catch shows the
+request failed (with the AbortController timeout as a second layer). Today
+there is no fallback LLM. The improvement is retries + a fallback model. I can
+point out that weather has a graceful fallback, but Gemini does not - I'd add
+one.
+
+Q: What if Gemini returns incorrect JSON?
+A: call_gemini_json catches the parse error and returns {'error': 'Invalid
+JSON', 'raw': ...}. The node that receives it would then try to use a dict
+that may not have the expected keys. Improvement: a repair step that asks
+Gemini to fix the JSON, or re-running the prompt. (Be honest about the current
+limitation.)
+
+Q: What if the API returns no data?
+A: Examples in my code: Unsplash returns image_url: None when there are no
+results; hotels returns an empty array and the UI shows 'We are finding the
+best stays...'; weather falls back to seasonal knowledge. So 'no data' usually
+degrades to a placeholder rather than crashing.
+
+Q: What if the user gives invalid input?
+A: The frontend guards first (empty starting location/destination -> toast;
+days === 0 blocks submit). The backend has minimal validation today - a
+missing key could cause a KeyError in a node (some nodes use state.get(...),
+some use state['destination_input'] directly). Improvement: Pydantic validation
+plus per-node defaults. Be honest.
+
+Q: What if the LLM hallucinates a location/hotel?
+A: This is a real limitation. The LLM chooses highlights and activities, so
+names can be made up. Mitigations I could add: validate place names against
+the geocoding API or Google Places, only allow the LLM to choose from a
+pre-verified list, and show a disclaimer. Hotels, however, come from the real
+Booking.com API - they are NOT hallucinated. Weather comes from real APIs too.
+
+Q: What if the application becomes slow?
+A: The slowness is mostly sequential network calls in the graph (Gemini,
+Unsplash per highlight, weather). Improvements: parallelize independent nodes
+(LangGraph can run branches in parallel), cache destination results, upgrade
+from flash-lite to a faster model if needed, and use streaming so the UI
+updates progressively instead of a blank loading screen.
+
+Q: What if 1000 users use it simultaneously?
+A: Honest answer: it would not currently handle that well. Each request
+spawns many external API calls, and the FastAPI service and Express server on
+Render are single-instance. Improvements: horizontal scaling (multiple
+instances + load balancer), caching, rate limiting, queues (background jobs),
+and connection pooling. LangGraph with async helps concurrency, but it's not a
+substitute for scaling infrastructure.
+
+Q: What would you change before deploying this to production?
+A: (Choose 3-5)
+- Add authentication (JWT) and validate the /plan-trip input with Pydantic.
+- Add retries, timeouts and error handling for every external API, and a
+  fallback LLM.
+- Cache Gemini/Unsplash responses.
+- Add logging, monitoring and alerts.
+- Configure proper CORS and rate limiting on both servers.
+- Add tests (unit tests for nodes, integration tests for the graph).
+- Store secrets in a proper secret manager and rotate them.
+- Stream or parallelize to improve latency.
+- Paginate hotels and handle empty states better.
+
+
+================================================================================
+11. MOST IMPORTANT INTERVIEW QUESTIONS
+================================================================================
+
+TOP 30 QUESTIONS I MUST BE READY FOR
+
+🔥 VERY LIKELY (learn these perfectly)
+1.  Tell me about your TripArchitectAI project. (30s + 1min versions)
+2.  What problem does it solve?
+3.  How does it work? / Walk me through the flow end to end.
+4.  Explain your architecture (3 layers).
+5.  What was YOUR contribution specifically?
+6.  What was the most challenging part / hardest bug?
+7.  What is LangGraph and why did you use it?
+8.  What is a node / edge / state in your graph?
+9.  Walk me through YOUR graph (5 nodes, START -> ... -> END).
+10. Which Gemini model and how do you call it?
+11. How do you get JSON from Gemini and what if it's invalid?
+12. What happens when a user gives a travel request?
+13. What would you improve / what are the limitations?
+14. How do you handle errors (API down, LLM fails)?
+
+🟡 LIKELY
+15. Is this an AI agent? Agentic AI questions (workflow vs agent).
+16. Why LangGraph instead of a normal function / LangChain Agent / CrewAI?
+17. Why FastAPI? Why async?
+18. What are your API endpoints? What does /plan-trip do?
+19. Why external APIs (Unsplash, OpenWeather, Booking)?
+20. How do you protect the API key? Where is it stored?
+21. How does React communicate with the backend?
+22. How do you manage loading state and errors in the frontend?
+23. What if the LLM hallucinates a location?
+24. What if 1000 users use it simultaneously?
+25. Python: async/await, json, dict, try/except, os.getenv - explain each.
+
+🟢 POSSIBLE
+26. Why did you make the LLM call a separate async function?
+27. How does information move between nodes? (shared state)
+28. Do you use conditional edges? (currently commented out - explain)
+29. What is state vs memory? Does your app have memory?
+30. What did you learn / what would you do differently?
+
+
+================================================================================
+12. FINAL REVISION - ONE PAGE CHEAT SHEET
+================================================================================
+
+Project:      TripArchitectAI - AI travel planner mobile app.
+Problem:      Manual trip planning = many websites; app gives a full plan
+              in ~30 seconds from 5 inputs.
+Tech stack:   React Native (Expo), Node.js + Express + MongoDB, Python
+              FastAPI, LangGraph, Gemini (google-genai), requests.
+Architecture: 3 layers - Mobile app -> Express gateway + DB -> FastAPI AI.
+Frontend:     Expo Router screens: home_screen -> budget -> travel_dates ->
+              people -> planning -> planning_result. Calls Express which
+              proxies to FastAPI.
+Backend:      POST /plan-trip -> await planner.ainvoke(user_input) ->
+              returns full state as JSON.
+LLM:          Gemini via call_gemini_json() in gemini_client.py.
+Model:        gemini-flash-lite-latest, JSON forced via response_mime_type.
+LangGraph:    StateGraph(PlannerState); 5 nodes; edges START->destination->
+              highlight_images->itinerary->weather->event->END.
+Nodes:        destination (Gemini highlights), highlight_images (Unsplash),
+              itinerary (Gemini day-plan + FETCH image logic), weather
+              (OpenWeather live / seasonal fallback), event (Gemini + images).
+State:        PlannerState (TypedDict) - inputs + destination_data,
+              highlight_images, itinerary, weather, event.
+APIs:         Gemini, Unsplash, OpenWeather (RapidAPI), Booking (RapidAPI),
+              OpenStreetMap Nominatim (geocode).
+Main challenge: Reliable structured JSON + correct image matching; solved
+              with response_mime_type + pre-fetched images + 'FETCH' rule.
+Main solution: Graph workflow, each node one concern, shared typed state.
+Main limitation: Fixed workflow (no autonomy/loops/retries), no input
+              validation, no auth on AI API, no caching/scaling.
+Future improvement: Pydantic validation, retries/fallbacks, caching,
+              parallel nodes, streaming, JWT auth, tests, monitoring.
+
+----------------------------------------------------------------------------
+"IF THE INTERVIEWER ASKS ME TO EXPLAIN THE PROJECT" - MEMORIZE THIS
+----------------------------------------------------------------------------
+"TripArchitectAI is a travel planning app that I built end to end. A user
+enters their starting location, destination, budget, dates, and how many
+people are travelling. The app then generates a complete trip plan: top
+highlights with real photos, a day-by-day itinerary, live weather with
+packing advice, local events and festivals, and hotel suggestions - and it
+saves the trip to the user's history.
+
+The frontend is a React Native app built with Expo. It collects the inputs
+across a few screens and then calls an Express backend, which forwards the
+request to a separate Python FastAPI service. The AI itself is a LangGraph
+workflow - a graph with five nodes and a shared state. The first node asks
+Gemini for the destination's state and top highlights. The second node
+fetches real images for each highlight from Unsplash. The third node asks
+Gemini to build the day-by-day itinerary, reusing those images, and only
+calls Unsplash for activities that don't have a matching image. The fourth
+node pulls live weather from OpenWeather and has Gemini summarize it - with a
+fallback to Gemini's seasonal knowledge if the API fails. The fifth node gets
+the top events and adds images. Every node reads and writes to the shared
+state, and at the end the whole result is returned as one JSON object, which
+the app renders as highlights, itinerary, hotels, weather and events.
+
+The most interesting challenge was getting the LLM to work reliably as a
+backend component - forcing it to return valid JSON, and fixing wrong images
+by pre-fetching them and passing them to Gemini with a 'FETCH' rule. The main
+thing I learned is how to orchestrate LLM calls as a structured workflow
+instead of one giant prompt. If I kept working on it, I'd add validation,
+retries, caching, and scaling, so it behaves like a production service."
+
+----------------------------------------------------------------------------
+EXTRA MEMORY ANCHORS
+----------------------------------------------------------------------------
+- Deployment URLs: Express = triparchitectai.onrender.com,
+  Python = triparchitectai-python.onrender.com.
+- Keys in .env: GEMINI_API_KEY, UNSPLASH_ACCESS_KEY, RAPIDAPI_KEY,
+  x-rapidapi-host, MONGO_URI.
+- 5 nodes = 1 destination, 2 images, 3 itinerary, 4 weather, 5 events.
+- 3 layers = React Native / Express+Mongo / FastAPI+LangGraph.
+- The response keys the app reads: highlight_images, itinerary, weather,
+  event, destination_data.
+- One honest line you can use anywhere: "This is a workflow, not an
+  autonomous agent - and I can explain the difference."

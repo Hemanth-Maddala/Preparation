@@ -1,0 +1,374 @@
+================================================================
+DBMS SCENARIO-BASED INTERVIEW QUESTIONS
+================================================================
+30 scenarios to test real understanding.
+Each: SCENARIO → THINK ABOUT → ANSWER → FOLLOW-UP
+================================================================
+
+==================================================
+SCENARIO 1: Duplicate Customer Data
+==================================================
+
+SCENARIO: "You have duplicate customer records in your database. What would you do?"
+
+THINK ABOUT: Identify duplicates, decide which to keep, merge data, prevent future duplicates.
+
+ANSWER: First, identify duplicates using grouping on key attributes like email or name+DOB. Determine which record is most complete/correct. Merge data from duplicates into the best record. Delete redundant records. Add a UNIQUE constraint on the key attribute (e.g., email) to prevent future duplicates.
+
+FOLLOW-UP: "What if the duplicates have different information?" → You'd need business rules to decide which data to keep — most recent, most complete, or manually review.
+
+==================================================
+SCENARIO 2: Slow Query Performance
+==================================================
+
+SCENARIO: "A table with millions of rows is very slow to query. What would you check?"
+
+THINK ABOUT: Indexes, query structure, table design, statistics.
+
+ANSWER: Check if proper indexes exist on filtered/joined columns. Analyze the execution plan to see if full table scans are happening. Check if indexes are being used (implicit type conversions can prevent index usage). Look at query structure — avoid SELECT *, use proper WHERE clauses. Check if statistics are up to date. Consider partitioning for very large tables.
+
+FOLLOW-UP: "What if adding an index doesn't help?" → Check if the index is being used. Check for implicit type conversions. Consider query rewriting or partitioning.
+
+==================================================
+SCENARIO 3: Large Scale Performance
+==================================================
+
+SCENARIO: "Your application has millions of rows. How would you improve performance?"
+
+THINK ABOUT: Indexing, caching, partitioning, replication, denormalization, query optimization.
+
+ANSWER: Add proper indexes on frequently queried columns. Implement caching (Redis) for frequently accessed data. Consider partitioning for large tables. Use read replicas for read-heavy workloads. Optimize queries — avoid N+1, use JOINs wisely. Consider denormalization for read-heavy tables. Use connection pooling.
+
+FOLLOW-UP: "What if you need both read and write performance?" → Use read replicas for reads. Optimize write path. Consider whether denormalization is worth the write overhead.
+
+==================================================
+SCENARIO 4: Stale Data
+==================================================
+
+SCENARIO: "Users are seeing stale data. What could be happening?"
+
+THINK ABOUT: Caching, replication lag, isolation levels, stale views.
+
+ANSWER: Check if there's a caching layer serving old data. Check replication lag if using read replicas. Verify the isolation level — Read Committed may show different data between reads. Check if a materialized view needs refreshing. Check if the application is caching query results too aggressively.
+
+FOLLOW-UP: "How would you fix replication lag?" → Increase replication resources, optimize queries on replica, consider synchronous replication for critical data.
+
+==================================================
+SCENARIO 5: Concurrent Updates
+==================================================
+
+SCENARIO: "Two transactions try to update the same row simultaneously. What problems can occur?"
+
+THINK ABOUT: Lost updates, dirty reads, concurrency control, isolation levels.
+
+ANSWER: Lost update — one update overwrites the other. Dirty read — one transaction reads uncommitted changes from the other. Solution: use appropriate isolation levels (Repeatable Read or Serializable). Use pessimistic locking (SELECT FOR UPDATE) or optimistic locking (version column).
+
+FOLLOW-UP: "What's the difference between pessimistic and optimistic locking?" → Pessimistic: lock the row before updating. Optimistic: check if the row changed since you read it, fail if it did.
+
+==================================================
+SCENARIO 6: Write-Heavy Database
+==================================================
+
+SCENARIO: "Your database has too many writes. Would you add indexes?"
+
+THINK ABOUT: Index overhead, write performance, indexing strategy.
+
+ANSWER: Be careful. Indexes improve reads but slow down writes because each index must be maintained. For write-heavy workloads, minimize unnecessary indexes. Use indexes only on columns that are frequently queried. Consider write-optimized structures.
+
+FOLLOW-UP: "What's the alternative to indexing for write-heavy systems?" → Consider partitioning, sharding, or using a write-optimized store (like a log or queue) with async processing.
+
+==================================================
+SCENARIO 7: High Availability
+==================================================
+
+SCENARIO: "You need high availability for your database. What strategies would you consider?"
+
+THINK ABOUT: Replication, failover, redundancy, backup, monitoring.
+
+ANSWER: Use database replication (primary + replicas). Implement automatic failover. Use multiple availability zones/regions. Regular backups with tested recovery procedures. Monitor for failures. Consider synchronous replication for critical data. Use load balancing for read traffic.
+
+FOLLOW-UP: "What about during failover?" → There may be brief downtime or data loss depending on sync vs async replication. Test failover regularly.
+
+==================================================
+SCENARIO 8: Database Too Large for One Machine
+==================================================
+
+SCENARIO: "Your database is too large for one machine. What options do you have?"
+
+THINK ABOUT: Sharding, partitioning, vertical scaling, read replicas.
+
+ANSWER: First try vertical scaling (bigger machine). Then consider partitioning within the database. If still insufficient, shard across multiple servers. Use a good shard key. Consider read replicas for read-heavy workloads. Evaluate if all data needs to be in one database.
+
+FOLLOW-UP: "How do you choose a shard key?" → Choose a key with high cardinality, even distribution, and that aligns with common query patterns. Avoid keys that create hotspots.
+
+==================================================
+SCENARIO 9: Data Inconsistency
+==================================================
+
+SCENARIO: "You notice inconsistent data across tables. What could cause this?"
+
+THINK ABOUT: Missing constraints, lack of normalization, missing foreign keys, application bugs.
+
+ANSWER: Check for missing foreign key constraints — data may reference non-existent records. Check for lack of normalization — redundant data may have been updated in one place but not another. Check application code for bugs that bypass constraints. Review transactions — partial commits may have left data in an inconsistent state.
+
+FOLLOW-UP: "How would you fix it?" → Add missing constraints. Run data cleanup scripts. Normalize affected tables. Fix application bugs.
+
+==================================================
+SCENARIO 10: Choosing SQL vs NoSQL
+==================================================
+
+SCENARIO: "You're starting a new project. When would you choose NoSQL over SQL?"
+
+THINK ABOUT: Data structure, schema flexibility, scaling needs, consistency requirements.
+
+ANSWER: Choose NoSQL when: data is unstructured or semi-structured (documents, logs). Schema changes frequently. You need massive horizontal scaling. Eventual consistency is acceptable (social media feeds, analytics). Choose SQL when: data is structured and relational. You need ACID guarantees. Complex queries and joins are needed.
+
+FOLLOW-UP: "What if your needs change from SQL to NoSQL?" → Consider polyglot persistence — use both. Or design with abstraction layers to make migration easier.
+
+==================================================
+SCENARIO 11: Designing a Primary Key
+==================================================
+
+SCENARIO: "You're designing a new table. How do you choose a primary key?"
+
+THINK ABOUT: Natural vs surrogate, uniqueness, immutability, performance.
+
+ANSWER: Prefer surrogate keys (auto-increment ID or UUID) for stability — natural keys can change. If using natural keys, ensure they're truly unique and immutable. Consider performance — integer keys are faster than string keys for indexing. For distributed systems, consider UUIDs to avoid coordination.
+
+FOLLOW-UP: "Auto-increment vs UUID?" → Auto-increment: sequential, fast, but problematic in distributed systems. UUID: globally unique, no coordination, but larger and less cache-friendly.
+
+==================================================
+SCENARIO 12: N+1 Query Problem
+==================================================
+
+SCENARIO: "Your application has the N+1 query problem. What is it and how do you fix it?"
+
+THINK ABOUT: Database round trips, JOINs, eager loading, batch queries.
+
+ANSWER: N+1 problem: fetching a list of N items, then making N separate queries for related data — total N+1 queries instead of 1. Fix: use JOINs to fetch everything in one query. Use eager loading/batch fetching. Use IN clauses with batched IDs.
+
+FOLLOW-UP: "What about GraphQL N+1?" → Use DataLoader pattern to batch and deduplicate queries.
+
+==================================================
+SCENARIO 13: Data Migration
+==================================================
+
+SCENARIO: "You need to migrate a large table to a new schema without downtime. How?"
+
+THINK ABOUT: Phased migration, dual writes, backfill, rollback plan.
+
+ANSWER: Use a phased approach: 1) Add new columns/tables alongside old ones. 2) Write to both old and new schema (dual write). 3) Backfill historical data. 4) Switch reads to new schema. 5) Stop writing to old schema. 6) Remove old schema. Always have a rollback plan.
+
+FOLLOW-UP: "What if the migration fails halfway?" → Roll back to old schema. The dual-write phase ensures old schema stays populated.
+
+==================================================
+SCENARIO 14: Handling Soft Deletes
+==================================================
+
+SCENARIO: "Instead of actually deleting rows, you want to soft-delete them. How would you implement this?"
+
+THINK ABOUT: Deleted flag, query filtering, performance, storage.
+
+ANSWER: Add an `is_deleted` column (or `deleted_at` timestamp). Set it to true/null instead of actually deleting. Filter out soft-deleted rows in queries using WHERE is_deleted = false. Add a composite index on (is_deleted, ...) for performance.
+
+FOLLOW-UP: "What are the downsides?" → Table grows indefinitely. Queries need to always filter deleted rows. Indexes become larger. Consider periodic archiving.
+
+==================================================
+SCENARIO 15: Designing an E-Commerce Database
+==================================================
+
+SCENARIO: "Design a simple e-commerce database. What tables would you create?"
+
+THINK ABOUT: Entities, relationships, keys, normalization.
+
+ANSWER: Core tables: Users (id, name, email), Products (id, name, price, stock), Orders (id, user_id, total, status), OrderItems (id, order_id, product_id, quantity, price), Categories (id, name). Relationships: Users 1:N Orders. Orders M:N Products through OrderItems. Products N:1 Categories.
+
+FOLLOW-UP: "Where would normalization matter?" → Product info shouldn't be duplicated in OrderItems — store snapshot price at time of order but reference product for current info.
+
+==================================================
+SCENARIO 16: Designing a Banking Database
+==================================================
+
+SCENARIO: "Design a banking transaction system. What are the key considerations?"
+
+THINK ABOUT: ACID, isolation, audit trail, concurrency, data integrity.
+
+ANSWER: Tables: Accounts (id, user_id, balance), Transactions (id, from_account, to_account, amount, timestamp, type). Key considerations: ACID compliance is critical — money transfers must be atomic. Use high isolation level (Serializable or Repeatable Read). Maintain an audit trail. Implement proper locking for concurrent transfers.
+
+FOLLOW-UP: "How do you prevent double-spending?" → Use SELECT FOR UPDATE to lock the account row before deducting balance. Ensure the balance check and deduction are in the same transaction.
+
+==================================================
+SCENARIO 17: Designing a Social Media Feed
+==================================================
+
+SCENARIO: "Design a database for a social media feed. What tables and considerations?"
+
+THINK ABOUT: Users, posts, relationships, feed generation, scalability.
+
+ANSWER: Tables: Users (id, name), Posts (id, user_id, content, created_at), Follows (follower_id, following_id), Likes (user_id, post_id), Comments (id, post_id, user_id, content). Key consideration: Fan-out — when a user posts, all followers need to see it. Consider fan-out on write (push to followers' feeds) or fan-out on read (pull from followed users).
+
+FOLLOW-UP: "Fan-out on write vs read?" → Write: precompute feeds (fast reads, slow writes). Read: compute on-demand (fast writes, slow reads for users with many follows).
+
+==================================================
+SCENARIO 18: Designing a Hospital Database
+==================================================
+
+SCENARIO: "Design a database for a hospital system."
+
+THINK ABOUT: Patients, doctors, appointments, medical records, departments.
+
+ANSWER: Tables: Patients (id, name, dob, insurance), Doctors (id, name, department_id, specialization), Departments (id, name), Appointments (id, patient_id, doctor_id, date, time, status), MedicalRecords (id, patient_id, doctor_id, diagnosis, treatment, date), Prescriptions (id, record_id, medicine, dosage). Relationships: Doctors N:1 Departments. Appointments reference Patients and Doctors.
+
+FOLLOW-UP: "Key considerations?" → HIPAA compliance (data security), audit trails for medical records, availability of critical data.
+
+==================================================
+SCENARIO 19: Designing a Food Ordering Database
+==================================================
+
+SCENARIO: "Design a database for a food ordering app like Uber Eats."
+
+THINK ABOUT: Users, restaurants, menu items, orders, delivery, payments.
+
+ANSWER: Tables: Users (id, name, address), Restaurants (id, name, location), MenuItems (id, restaurant_id, name, price, category), Orders (id, user_id, restaurant_id, total, status, delivery_address), OrderItems (id, order_id, menu_item_id, quantity, price), Deliveries (id, order_id, driver_id, status, estimated_time), Payments (id, order_id, amount, method, status).
+
+FOLLOW-UP: "Status tracking?" → Order has statuses: placed, confirmed, preparing, ready, picked up, delivered. Each status change is logged.
+
+==================================================
+SCENARIO 20: Designing a Social Media Database
+==================================================
+
+SCENARIO: "How would you handle a like button that needs to be both fast and consistent?"
+
+THINK ABOUT: Write amplification, counters, eventual consistency, denormalization.
+
+ANSWER: Use a Likes table (user_id, post_id). Maintain a like_count counter on the Posts table. When a like happens, increment the counter. Use atomic operations for the counter. For consistency, the counter can be occasionally recalculated from the Likes table.
+
+FOLLOW-UP: "What if the counter gets out of sync?" → Periodically rebuild counters from the Likes table. Use database transactions to keep them in sync.
+
+==================================================
+SCENARIO 21: Database Recovery
+==================================================
+
+SCENARIO: "Your database server crashes. How do you recover?"
+
+THINK ABOUT: Backups, WAL, checkpoints, recovery process.
+
+ANSWER: Check the Write-Ahead Log (WAL) for uncommitted and committed transactions since the last checkpoint. Redo committed transactions that weren't flushed to disk. Undo uncommitted transactions. Restore from the most recent backup if needed. Apply WAL from that point.
+
+FOLLOW-UP: "What's the difference between point-in-time recovery and full recovery?" → Point-in-time: restore to a specific moment using WAL. Full recovery: restore from backup + WAL.
+
+==================================================
+SCENARIO 22: Choosing an Isolation Level
+==================================================
+
+SCENARIO: "You're building an e-commerce system. Which isolation level would you choose?"
+
+THINK ABOUT: Consistency needs, performance, concurrency.
+
+ANSWER: Read Committed for most operations — prevents dirty reads while allowing good concurrency. Use Repeatable Read or Serializable for critical financial operations (payments, inventory updates). The choice balances consistency needs against performance.
+
+FOLLOW-UP: "What about inventory management?" → Use Repeatable Read or pessimistic locking to prevent overselling — two users shouldn't buy the last item simultaneously.
+
+==================================================
+SCENARIO 23: Data Partitioning Strategy
+==================================================
+
+SCENARIO: "You have a table with 500 million rows. How would you partition it?"
+
+THINK ABOUT: Partition type, partition key, maintenance, query patterns.
+
+ANSWER: Consider range partitioning by date (monthly/quarterly) if queries are time-based. Use hash partitioning for even distribution if queries are random. Choose a partition key that aligns with common query patterns. Ensure partitions are roughly equal in size. Plan for partition maintenance (archiving old partitions).
+
+FOLLOW-UP: "What if queries span multiple partitions?" → The database handles this transparently, but it may be slower than single-partition queries. Design partitions to minimize cross-partition queries.
+
+==================================================
+SCENARIO 24: Implementing Soft Deletes at Scale
+==================================================
+
+SCENARIO: "Your table has 100 million rows and 40% are soft-deleted. How do you handle this?"
+
+THINK ABOUT: Performance, storage, archiving, query optimization.
+
+ANSWER: The soft-deleted rows are hurting performance — larger indexes, slower scans. Options: 1) Move soft-deleted rows to an archive table. 2) Partition by deletion status. 3) Use a separate deleted flag index. 4) Periodically physically delete old soft-deleted rows. 5) Consider if soft delete is actually needed.
+
+FOLLOW-UP: "When is soft delete not worth it?" → When the table is huge, deletions are rare, and the overhead of maintaining deleted rows outweighs the audit benefit.
+
+==================================================
+SCENARIO 25: Database Design for Multi-Tenancy
+==================================================
+
+SCENARIO: "You need to support multiple tenants in one database. How?"
+
+THINK ABOUT: Isolation, performance, security, schema design.
+
+ANSWER: Three approaches: 1) Shared database, shared schema — add tenant_id to all tables. Simplest but least isolated. 2) Shared database, separate schemas — each tenant gets their own schema. Better isolation. 3) Separate databases — highest isolation but most expensive.
+
+FOLLOW-UP: "Which is most common?" → Shared schema with tenant_id — most cost-effective. Use row-level security and proper indexing on tenant_id.
+
+==================================================
+SCENARIO 26: Cache Invalidation
+==================================================
+
+SCENARIO: "You're caching database query results. When should you invalidate the cache?"
+
+THINK ABOUT: Cache invalidation strategies, stale data, write-through vs write-behind.
+
+ANSWER: Invalidate when: the underlying data changes (on write). Time-based expiration (TTL) for data that changes infrequently. Event-based invalidation (publish/subscribe). Write-through: update cache and database simultaneously. Write-behind: update cache first, async update database.
+
+FOLLOW-UP: "What's the hardest part of caching?" → Cache invalidation — knowing when cached data is stale. "There are only two hard things in CS: cache invalidation and naming things."
+
+==================================================
+SCENARIO 27: Designing a Chat Application Database
+==================================================
+
+SCENARIO: "Design a database for a messaging/chat application."
+
+THINK ABOUT: Messages, conversations, users, real-time delivery, storage.
+
+ANSWER: Tables: Users (id, name, status), Conversations (id, type: group/direct), ConversationMembers (conversation_id, user_id), Messages (id, conversation_id, sender_id, content, timestamp, read_status). Key considerations: Messages grow fast — consider time-based partitioning. Index on (conversation_id, timestamp) for fast message retrieval. Real-time delivery handled by application layer, not database.
+
+FOLLOW-UP: "How to handle message ordering?" → Use timestamps or sequence numbers. Ensure ordering within a conversation, not globally.
+
+==================================================
+SCENARIO 28: Database Sharding Strategy
+==================================================
+
+SCENARIO: "You need to shard a user database. How do you choose a shard key?"
+
+THINK ABOUT: Distribution, query patterns, growth, hotspot prevention.
+
+ANSWER: Choose a shard key that: 1) Has high cardinality (many unique values). 2) Distributes evenly across shards. 3) Aligns with most common query patterns. 4) Doesn't create hotspots. Good candidates: user_id (if queries are user-centric), geographic region (if queries are region-based).
+
+FOLLOW-UP: "What if you chose wrong and need to re-shard?" → Very expensive operation — involves data migration. Choose carefully upfront. Some databases support resharding with varying levels of difficulty.
+
+==================================================
+SCENARIO 29: Handling NULL in Application Logic
+==================================================
+
+SCENARIO: "Your application is treating NULL as false in conditions. What problems can occur?"
+
+THINK ABOUT: Three-valued logic, NULL comparisons, unexpected behavior.
+
+ANSWER: NULL is not FALSE — it's UNKNOWN. If a column is NULL, WHERE column = 'value' returns UNKNOWN (not TRUE), so the row is excluded. WHERE NOT column = 'value' also excludes NULL rows. Use IS NULL / IS NOT NULL explicitly. Many application bugs come from misunderstanding NULL semantics.
+
+FOLLOW-UP: "How do you handle NULLs in aggregates?" → COUNT(column) ignores NULLs. Use COALESCE to provide default values. Use NULLS FIRST/NULLS LAST in ORDER BY.
+
+==================================================
+SCENARIO 30: Database Performance Profiling
+==================================================
+
+SCENARIO: "Your application is slow. How do you diagnose if it's a database issue?"
+
+THINK ABOUT: Query logs, slow query logs, execution plans, connection pooling, monitoring.
+
+ANSWER: 1) Check slow query logs. 2) Monitor database metrics (connections, query time, locks). 3) Analyze execution plans for slow queries. 4) Check for connection pool exhaustion. 5) Look for lock contention or deadlocks. 6) Check if the issue is database-specific or application-wide. 7) Profile application code to isolate database calls.
+
+FOLLOW-UP: "What if the database is fine but the app is slow?" → The issue might be in the application layer — ORM inefficiency, N+1 queries, lack of connection pooling, or network latency.
+
+==================================================
+END OF SCENARIOS
+================================================================
+
+Total: 30 scenarios
+
+================================================================

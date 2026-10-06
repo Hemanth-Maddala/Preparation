@@ -1,0 +1,933 @@
+================================================================================
+ LANGCHAIN INTERVIEW PREPARATION
+ (questions + answers + patterns + coding drills)
+================================================================================
+
+HOW TO USE THIS FILE
+  1. Read PART 1 slowly. Say the SIMPLE ANSWER out loud before reading it.
+  2. Memorize PART 3 patterns - they are all small enough to write in 5 minutes.
+  3. In PART 4, write each reference solution from memory on paper, then compare.
+  4. Do not memorize full paragraphs. Memorize the CORE LINE of each pattern.
+
+All examples reference files in this workspace (e.g. 15_basic_rag/main.py).
+
+================================================================================
+ PART 1 - 27 INTERVIEW QUESTIONS
+================================================================================
+
+--------------------------------------------------------------------------------
+ 1. What is LangChain?
+--------------------------------------------------------------------------------
+QUESTION: What is LangChain?
+
+SIMPLE ANSWER:
+A framework for building LLM applications. It gives you uniform components -
+models, prompts, parsers, tools, retrievers, agents - and lets you compose them
+into chains (LCEL) and graphs. It wraps many providers (Gemini, OpenAI, ...)
+behind one interface.
+
+EXAMPLE FROM OUR CODE:
+ChatGoogleGenerativeAI is one model behind the same interface that OpenAI and
+Anthropic also use (01_basic_model/main.py). Components compose with `|` (07_lcel).
+
+--------------------------------------------------------------------------------
+ 2. Why LangChain?
+--------------------------------------------------------------------------------
+QUESTION: Why use LangChain instead of calling the Gemini SDK directly?
+
+SIMPLE ANSWER:
+Three reasons. 1) Provider-agnostic interface - switch models without rewriting
+code. 2) Composability - prompts, parsers, tools, and agents combine with `|`.
+3) Ecosystem - loaders, vector stores, RAG, agents, LangGraph, middleware are
+ready-made instead of hand-built.
+
+EXAMPLE FROM OUR CODE:
+The same prompt|model|parser chain works no matter which ChatModel you use
+(07_lcel/main.py). RAG takes 8 lines with TextLoader + FAISS + retriever
+(15_basic_rag/main.py).
+
+--------------------------------------------------------------------------------
+ 3. Model
+--------------------------------------------------------------------------------
+QUESTION: How do you call a chat model in LangChain?
+
+SIMPLE ANSWER:
+Create a ChatModel (e.g. ChatGoogleGenerativeAI), then call invoke(). It returns
+an AIMessage; the text is in .content. Every model supports invoke, batch, stream
+(and async versions).
+
+EXAMPLE FROM OUR CODE:
+model = ChatGoogleGenerativeAI(model="gemini-3.5-flash", api_key=key)
+response = model.invoke("hello")   # response.content = the answer
+(01_basic_model/main.py)
+
+--------------------------------------------------------------------------------
+ 4. Messages
+--------------------------------------------------------------------------------
+QUESTION: How does LangChain represent a conversation?
+
+SIMPLE ANSWER:
+As a list of message objects, each with a role: SystemMessage (behaviour),
+HumanMessage (user), AIMessage (model), and ToolMessage (tool results). You pass
+the whole list to the model; order = conversation order.
+
+EXAMPLE FROM OUR CODE:
+messages = [SystemMessage(...), HumanMessage(...)]
+response = model.invoke(messages)         # an AIMessage
+(02_messages/main.py)
+
+--------------------------------------------------------------------------------
+ 5. Prompt templates
+--------------------------------------------------------------------------------
+QUESTION: What is a prompt template and why use one?
+
+SIMPLE ANSWER:
+A reusable prompt with {variables}. ChatPromptTemplate.from_messages([...]) builds
+it; prompt.invoke({"x": ...}) fills variables and returns messages. It replaces
+manual string concatenation.
+
+EXAMPLE FROM OUR CODE:
+prompt = ChatPromptTemplate.from_messages([("human", "What is {topic}?")])
+messages = prompt.invoke({"topic": "RAG"})
+(03_prompt_template/main.py)
+
+--------------------------------------------------------------------------------
+ 6. Structured output
+--------------------------------------------------------------------------------
+QUESTION: How do you get structured output from a model?
+
+SIMPLE ANSWER:
+Define a Pydantic class, then model.with_structured_output(Schema). invoke()
+returns a validated instance of that class instead of free text. For agents, pass
+response_format=Schema to create_agent.
+
+EXAMPLE FROM OUR CODE:
+class Person(BaseModel): name: str; age: int
+person = model.with_structured_output(Person).invoke("Alice is 30.")
+(04_structured_output/main.py, 20_structured_agent/main.py)
+
+--------------------------------------------------------------------------------
+ 7. Runnable
+--------------------------------------------------------------------------------
+QUESTION: What is a Runnable in LangChain?
+
+SIMPLE ANSWER:
+The universal interface of every callable component: models, prompts, parsers,
+chains, tools, agents. They all support invoke, batch, stream, and their async
+a-variants. RunnableLambda wraps a plain function into a Runnable.
+
+EXAMPLE FROM OUR CODE:
+runnable = RunnableLambda(double)
+runnable.invoke(4); runnable.batch([1,2,3]); runnable.stream(4)
+(06_runnable/main.py)
+
+--------------------------------------------------------------------------------
+ 8. LCEL
+--------------------------------------------------------------------------------
+QUESTION: What is LCEL and how does the pipe operator work?
+
+SIMPLE ANSWER:
+LangChain Expression Language: composing Runnables with `|`. The output of the
+left runnable becomes the input of the right one. chain = prompt | model | parser.
+The result is still a Runnable.
+
+EXAMPLE FROM OUR CODE:
+chain = prompt | model | parser
+result = chain.invoke({"topic": "LCEL"})
+(07_lcel/main.py)
+
+--------------------------------------------------------------------------------
+ 9. Chain
+--------------------------------------------------------------------------------
+QUESTION: What is a chain?
+
+SIMPLE ANSWER:
+A fixed pipeline of Runnables. No decisions - data flows prompt -> model -> parser
+every time. Different from an agent, which decides its own steps.
+
+EXAMPLE FROM OUR CODE:
+chain = prompt | model | StrOutputParser()     # translate example
+(05_basic_chain/main.py)
+
+--------------------------------------------------------------------------------
+ 10. Tool
+--------------------------------------------------------------------------------
+QUESTION: How do you create a tool?
+
+SIMPLE ANSWER:
+Put @tool on a function. The docstring becomes the description, type hints become
+the JSON argument schema. The tool has .name, .description, .args_schema, .invoke.
+
+EXAMPLE FROM OUR CODE:
+@tool
+def add_numbers(a: int, b: int) -> int:
+    """Add two numbers together."""
+    return a + b
+(17_tools/main.py)
+
+--------------------------------------------------------------------------------
+ 11. Tool calling
+--------------------------------------------------------------------------------
+QUESTION: How does tool calling work?
+
+SIMPLE ANSWER:
+The model is given the tools' JSON schemas (bind_tools). It replies with an
+AIMessage that has tool_calls - what it WANTS to call - but the model does NOT
+execute. Your code (or an agent) runs the function and feeds the ToolMessage back.
+
+EXAMPLE FROM OUR CODE:
+response = model.bind_tools([add_numbers]).invoke("What is 12 + 30?")
+response.tool_calls   # [{'name': 'add_numbers', 'args': {...}}]
+(17_tools/main.py)
+
+--------------------------------------------------------------------------------
+ 12. Agent
+--------------------------------------------------------------------------------
+QUESTION: What is an agent?
+
+SIMPLE ANSWER:
+An LLM-driven loop. The model reads the state, decides the next step (answer
+directly or call a tool), sees tool results, and repeats until done. The LLM
+decides the path; a chain has a fixed path.
+
+EXAMPLE FROM OUR CODE:
+agent = create_agent(model=model, tools=[add_numbers, get_weather], system_prompt="...")
+result = agent.invoke({"messages": [{"role": "user", "content": "What is 5 + 7?"}]})
+answer = result["messages"][-1].content
+(18_basic_agent/main.py)
+
+--------------------------------------------------------------------------------
+ 13. create_agent
+--------------------------------------------------------------------------------
+QUESTION: What is create_agent and how does it relate to LangGraph?
+
+SIMPLE ANSWER:
+The current high-level agent API in LangChain. It takes a model, tools, a system
+prompt, and options (checkpointer, middleware, response_format, interrupt_before)
+and returns a compiled LangGraph that runs the agent loop (model -> tools ->
+model ...). You get the agent without building the graph by hand.
+
+EXAMPLE FROM OUR CODE:
+agent = create_agent(model=model, tools=[...], checkpointer=InMemorySaver())
+(18_basic_agent/main.py, 21_memory/main.py)
+The graph it builds looks like 30_langchain_langgraph/main.py.
+
+--------------------------------------------------------------------------------
+ 14. ReAct
+--------------------------------------------------------------------------------
+QUESTION: What is ReAct?
+
+SIMPLE ANSWER:
+Reason + Act. The agent loop: think about what to do, emit a tool call (Act), get
+the result (Observe), think again. The loop ends when the model answers without a
+tool call. create_agent produces this loop.
+
+EXAMPLE FROM OUR CODE:
+The two-step multiply example where printing all messages shows
+AIMessage(tool_calls) -> ToolMessage -> AIMessage(answer)
+(19_react_agent/main.py)
+
+--------------------------------------------------------------------------------
+ 15. Memory
+--------------------------------------------------------------------------------
+QUESTION: How does an agent remember a conversation?
+
+SIMPLE ANSWER:
+With a checkpointer plus a thread_id. The checkpointer saves state after every
+run; the same thread_id resumes that conversation, so history is in the model's
+context. Long-term memory across threads uses a store - a bigger system.
+
+EXAMPLE FROM OUR CODE:
+agent = create_agent(..., checkpointer=InMemorySaver())
+config = {"configurable": {"thread_id": "conversation-1"}}
+agent.invoke({"messages": [...]}, config=config)
+(21_memory/main.py)
+
+--------------------------------------------------------------------------------
+ 16. Middleware
+--------------------------------------------------------------------------------
+QUESTION: What is middleware in LangChain agents?
+
+SIMPLE ANSWER:
+Reusable hooks that wrap agent steps: before_model, after_model, wrap_model_call,
+wrap_tool_call. Used for logging, retries, PII redaction, guardrails. Subclass
+AgentMiddleware and pass instances to create_agent(middleware=[...]).
+
+EXAMPLE FROM OUR CODE:
+class LoggingMiddleware(AgentMiddleware):
+    def before_model(self, state, runtime): print(state["messages"][-1].content); return None
+agent = create_agent(..., middleware=[LoggingMiddleware()])
+(22_middleware/main.py)
+
+--------------------------------------------------------------------------------
+ 17. Streaming
+--------------------------------------------------------------------------------
+QUESTION: invoke vs stream?
+
+SIMPLE ANSWER:
+invoke() waits and returns the whole answer. stream() yields chunks as the model
+produces them. Streaming improves perceived latency. Agents can stream too
+(agent.stream yields state after each step).
+
+EXAMPLE FROM OUR CODE:
+for chunk in model.stream("...") : print(chunk.content, end="", flush=True)
+for step in agent.stream({"messages": [...]}): print(step)
+(24_streaming/main.py)
+
+--------------------------------------------------------------------------------
+ 18. RAG
+--------------------------------------------------------------------------------
+QUESTION: What is RAG and how do you build it?
+
+SIMPLE ANSWER:
+Retrieval-Augmented Generation: ground the LLM in your documents. Indexing =
+load -> split -> embed -> store. Querying = retrieve relevant chunks -> put them
+in the prompt as context -> model answers from that context only.
+
+EXAMPLE FROM OUR CODE:
+doc = TextLoader("data/company.txt").load()[0]
+chunks = RecursiveCharacterTextSplitter(chunk_size=200, chunk_overlap=50).split_documents([doc])
+store = FAISS.from_documents(chunks, embeddings)
+chain = get_context | prompt | model | StrOutputParser()
+(15_basic_rag/main.py)
+
+--------------------------------------------------------------------------------
+ 19. Embeddings
+--------------------------------------------------------------------------------
+QUESTION: What is an embedding?
+
+SIMPLE ANSWER:
+A vector (list of floats) that represents the meaning of a text. Similar texts
+produce similar vectors. Embeddings enable similarity search. The same embedding
+model must be used for indexing and querying.
+
+EXAMPLE FROM OUR CODE:
+embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", api_key=key)
+vector = embeddings.embed_query("LangChain is a framework...")   # len(vector)
+(12_embeddings/main.py)
+
+--------------------------------------------------------------------------------
+ 20. Vector store
+--------------------------------------------------------------------------------
+QUESTION: What does a vector store do?
+
+SIMPLE ANSWER:
+Stores documents as embedding vectors and returns the closest ones to a query via
+similarity search. add_documents adds; similarity_search(query, k=n) finds the n
+nearest. FAISS and Chroma are local; Pinecone is hosted - same interface.
+
+EXAMPLE FROM OUR CODE:
+vector_store = FAISS.from_documents(docs, embeddings)
+vector_store.add_documents(more_docs)
+results = vector_store.similarity_search("query", k=2)
+(13_vector_store/main.py)
+
+--------------------------------------------------------------------------------
+ 21. Retriever
+--------------------------------------------------------------------------------
+QUESTION: Vector store vs retriever?
+
+SIMPLE ANSWER:
+The vector store is storage + vector search. The retriever is the interface that
+returns relevant documents for a query - any backend (vector, keyword, hybrid)
+can power it. RAG code talks to the retriever, so backends are swappable.
+
+EXAMPLE FROM OUR CODE:
+retriever = vector_store.as_retriever(search_kwargs={"k": 2})
+results = retriever.invoke("Which framework helps build LLM apps?")
+(14_retriever/main.py)
+
+--------------------------------------------------------------------------------
+ 22. Agentic RAG
+--------------------------------------------------------------------------------
+QUESTION: Normal RAG vs agentic RAG?
+
+SIMPLE ANSWER:
+Normal RAG always retrieves. Agentic RAG gives the retrieval to an agent as a
+tool, so it decides WHEN to retrieve, can refine the query, or combine retrieval
+with other tools (SQL, web).
+
+EXAMPLE FROM OUR CODE:
+@tool
+def search_products(query: str) -> str:
+    return "\n".join(d.page_content for d in vector_store.similarity_search(query, k=2))
+agent = create_agent(model=model, tools=[search_products], system_prompt="...")
+(27_rag_agent/main.py)
+
+--------------------------------------------------------------------------------
+ 23. SQL agent
+--------------------------------------------------------------------------------
+QUESTION: How does an SQL agent work?
+
+SIMPLE ANSWER:
+The LLM turns a natural-language question into SQL, a tool executes it, and the
+agent summarizes the rows. Safety: expose a read-only tool (SELECT only) so the
+model cannot damage data.
+
+EXAMPLE FROM OUR CODE:
+@tool
+def run_sql_query(query: str) -> str:
+    if not query.strip().lower().startswith("select"): return "Only SELECT allowed."
+    return "\n".join(str(r) for r in DB.execute(query).fetchall())
+agent = create_agent(model=model, tools=[run_sql_query], system_prompt="...")
+(26_sql_agent/main.py)
+
+--------------------------------------------------------------------------------
+ 24. Multi-agent
+--------------------------------------------------------------------------------
+QUESTION: What is a multi-agent system?
+
+SIMPLE ANSWER:
+Several agents with different roles that collaborate. A supervisor routes a
+request to the right specialist. Each agent is its own system prompt + model;
+they communicate through inputs and outputs (or shared graph state).
+
+EXAMPLE FROM OUR CODE:
+supervisor(question) decides RESEARCH vs WRITE, then calls
+research_agent(question) and/or writer_agent(facts).
+(29_multi_agent/main.py)
+
+--------------------------------------------------------------------------------
+ 25. LangChain vs LangGraph
+--------------------------------------------------------------------------------
+QUESTION: LangChain vs LangGraph?
+
+SIMPLE ANSWER:
+LangChain = components and high-level APIs (models, prompts, tools, chains,
+create_agent). LangGraph = low-level orchestration: State, Nodes, edges, routing,
+loops, checkpoints. LangChain agents RUN on LangGraph underneath. Use LangChain
+for most apps; LangGraph when you need custom control flow.
+
+EXAMPLE FROM OUR CODE:
+30_langchain_langgraph/main.py puts a LangChain model and tool inside a
+StateGraph with a conditional loop - the same graph create_agent builds.
+
+--------------------------------------------------------------------------------
+ 26. LangChain vs LlamaIndex
+--------------------------------------------------------------------------------
+QUESTION: LangChain vs LlamaIndex?
+
+SIMPLE ANSWER:
+LangChain is a general LLM-app framework: chains, tools, agents, integrations.
+LlamaIndex specializes in data + RAG: data connectors, indexing, query engines.
+For agent-heavy apps use LangChain; for pure document RAG LlamaIndex is simpler.
+
+EXAMPLE FROM OUR CODE:
+LangChain's RAG is generic enough to add tools and agents on top
+(15_basic_rag -> 27_rag_agent progression).
+
+--------------------------------------------------------------------------------
+ 27. LangChain vs CrewAI
+--------------------------------------------------------------------------------
+QUESTION: LangChain vs CrewAI?
+
+SIMPLE ANSWER:
+CrewAI is a thin framework focused on role-based multi-agent collaboration
+(agents, tasks, crews). LangChain is the broader platform; it can build the same
+thing with more control (supervisor routing, LangGraph). CrewAI gives less code
+for multi-agent, LangChain more power and flexibility.
+
+EXAMPLE FROM OUR CODE:
+LangChain multi-agent by hand: supervisor function + specialist functions
+(29_multi_agent/main.py) - CrewAI would wrap similar roles in classes.
+
+================================================================================
+ PART 2 - COMPARISONS YOU MUST BE ABLE TO EXPLAIN
+================================================================================
+
+--------------------------------------------------------------------------------
+ LLM CALL vs CHAIN vs WORKFLOW vs AGENT
+--------------------------------------------------------------------------------
+LLM CALL  : model.invoke(text) -> one answer. No structure around it.
+CHAIN     : fixed pipeline of Runnables (prompt | model | parser). Same path
+            every run.  -> 05_basic_chain
+WORKFLOW  : predetermined sequence of steps, possibly with branching/parallelism
+            (RunnableBranch, RunnableParallel, LangGraph graph with fixed edges).
+            The CODE decides the path.  -> 08_parallel, 09_branching, 30
+AGENT     : the LLM decides the path at runtime (loop + tools + tool results).
+            -> 18_basic_agent
+Rule of thumb: fixed path = chain/workflow. Dynamic path decided by the model
+while running = agent.
+
+--------------------------------------------------------------------------------
+ BASIC AGENT vs REACT vs AUTONOMOUS AGENT
+--------------------------------------------------------------------------------
+BASIC AGENT   : an agent with a few tools and a prompt; loop of model/tool until
+                done.  -> 18_basic_agent
+REACT         : the pattern inside it: Reason -> Act -> Observe -> repeat.
+                -> 19_react_agent
+AUTONOMOUS    : ReAct at scale - long-horizon tasks, many tools, persistence,
+                planning, self-correction. Same idea, more robustness.
+Answer "they are the same loop with increasing capability/autonomy."
+
+--------------------------------------------------------------------------------
+ LANGCHAIN vs LANGGRAPH
+--------------------------------------------------------------------------------
+LANGCHAIN : components + high-level APIs (create_agent gives you an agent fast).
+LANGGRAPH : you build the graph (State, Nodes, edges) for full control.
+Both in one stack: LangChain components inside LangGraph nodes. Use LangGraph
+directly when you need custom loops, checkpoints, or human-in-the-loop that the
+high-level API can't express.
+
+--------------------------------------------------------------------------------
+ VECTOR STORE vs RETRIEVER
+--------------------------------------------------------------------------------
+VECTOR STORE : storage + similarity search (FAISS, Chroma, Pinecone).
+RETRIEVER    : interface that returns documents for a query; the vector store is
+               just one implementation (keyword/hybrid are others).
+Talk to the retriever in your code -> backends are swappable.
+
+--------------------------------------------------------------------------------
+ RAG vs AGENTIC RAG
+--------------------------------------------------------------------------------
+RAG         : always retrieve, then generate.  -> 15_basic_rag
+AGENTIC RAG : an agent decides whether/when to retrieve, can refine queries and
+              use other tools.  -> 27_rag_agent
+Difference = who decides retrieval: the pipeline (fixed) or the model (dynamic).
+
+--------------------------------------------------------------------------------
+ STATE vs MEMORY
+--------------------------------------------------------------------------------
+STATE   : all data flowing through a graph at a given time (messages, counters,
+          user_id). Defined by a schema; nodes read and update it.  -> 30
+MEMORY  : the part of state that PERSISTS across runs (usually messages), so the
+          agent remembers a conversation.  -> 21_memory
+State = current data; memory = durable state keyed by thread_id.
+
+================================================================================
+ PART 3 - CODE PATTERNS I MUST MEMORIZE
+================================================================================
+(Write each from memory in an interview. 5-20 lines each.)
+
+--------------------------------------------------------------------------------
+ 1. Model call
+--------------------------------------------------------------------------------
+    model = ChatGoogleGenerativeAI(model="gemini-3.5-flash", api_key=os.getenv("GEMINI_API_KEY"))
+    response = model.invoke("What is LangChain?")
+    print(response.content)          # AIMessage -> text
+
+--------------------------------------------------------------------------------
+ 2. Prompt + model
+--------------------------------------------------------------------------------
+    prompt = ChatPromptTemplate.from_messages([("human", "What is {topic}?")])
+    chain = prompt | model
+    answer = chain.invoke({"topic": "RAG"})
+
+--------------------------------------------------------------------------------
+ 3. Structured output
+--------------------------------------------------------------------------------
+    class Person(BaseModel):
+        name: str
+        age: int
+    person = model.with_structured_output(Person).invoke("Alice is 30.")
+    print(person.name, person.age)
+
+--------------------------------------------------------------------------------
+ 4. LCEL
+--------------------------------------------------------------------------------
+    chain = prompt | model | StrOutputParser()
+    result = chain.invoke({"topic": "LCEL"})     # a str
+
+--------------------------------------------------------------------------------
+ 5. RunnableParallel
+--------------------------------------------------------------------------------
+    parallel = RunnableParallel(
+        summary=summary_prompt | model,
+        keywords=keywords_prompt | model,
+    )
+    result = parallel.invoke({"topic": "LangChain"})
+    result["summary"]; result["keywords"]
+
+--------------------------------------------------------------------------------
+ 6. RunnableBranch
+--------------------------------------------------------------------------------
+    branch = RunnableBranch(
+        (lambda d: "python" in d["question"].lower(), technical | model),
+        general | model,
+    )
+    branch.invoke({"question": "..."})
+
+--------------------------------------------------------------------------------
+ 7. Tool
+--------------------------------------------------------------------------------
+    @tool
+    def add_numbers(a: int, b: int) -> int:
+        """Add two numbers together."""
+        return a + b
+    add_numbers.invoke({"a": 2, "b": 3})          # 5
+    model.bind_tools([add_numbers])              # model can request calls
+
+--------------------------------------------------------------------------------
+ 8. Basic agent
+--------------------------------------------------------------------------------
+    agent = create_agent(
+        model=model,
+        tools=[add_numbers, get_weather],
+        system_prompt="You are a helpful assistant. Use tools when needed.",
+    )
+    result = agent.invoke({"messages": [{"role": "user", "content": "What is 5 + 7?"}]})
+    answer = result["messages"][-1].content
+
+--------------------------------------------------------------------------------
+ 9. ReAct
+--------------------------------------------------------------------------------
+    # The loop create_agent builds (print steps to see it):
+    # AIMessage with tool_calls -> ToolMessage (result) -> AIMessage (answer)
+    agent = create_agent(model=model, tools=[multiply], system_prompt="You are a math assistant.")
+    for msg in agent.invoke({"messages": [{"role": "user", "content": "3 * 4, then *2"}]})["messages"]:
+        print(msg.type, msg.tool_calls or msg.content)
+
+--------------------------------------------------------------------------------
+ 10. RAG
+--------------------------------------------------------------------------------
+    doc = TextLoader("data/company.txt").load()[0]
+    chunks = RecursiveCharacterTextSplitter(chunk_size=200, chunk_overlap=50).split_documents([doc])
+    store = FAISS.from_documents(chunks, embeddings)
+    retriever = store.as_retriever(search_kwargs={"k": 3})
+
+    def get_context(q):
+        return {"context": "\n".join(d.page_content for d in retriever.invoke(q)), "question": q}
+
+    chain = get_context | prompt | model | StrOutputParser()
+
+--------------------------------------------------------------------------------
+ 11. Retriever
+--------------------------------------------------------------------------------
+    retriever = vector_store.as_retriever(search_kwargs={"k": 2})
+    docs = retriever.invoke("query")              # list of Document
+
+--------------------------------------------------------------------------------
+ 12. SQL agent
+--------------------------------------------------------------------------------
+    @tool
+    def run_sql_query(query: str) -> str:
+        if not query.strip().lower().startswith("select"):
+            return "Only SELECT queries are allowed."
+        return "\n".join(str(r) for r in DB.execute(query).fetchall())
+
+    agent = create_agent(model=model, tools=[run_sql_query], system_prompt="Answer via SQL.")
+
+--------------------------------------------------------------------------------
+ 13. Multi-tool agent
+--------------------------------------------------------------------------------
+    agent = create_agent(
+        model=model,
+        tools=[calculator, get_weather, today],   # LLM picks the right one
+        system_prompt="Use the right tool for each question.",
+    )
+
+--------------------------------------------------------------------------------
+ 14. Multi-agent
+--------------------------------------------------------------------------------
+    def research(question): return (research_prompt | model).invoke({"question": question}).content
+    def write(facts):      return (write_prompt | model).invoke({"facts": facts}).content
+
+    def supervisor(question):
+        decision = (route_prompt | model).invoke({"question": question}).content
+        return write(research(question)) if "RESEARCH" in decision else write(question)
+
+--------------------------------------------------------------------------------
+ 15. LangChain + LangGraph
+--------------------------------------------------------------------------------
+    class State(TypedDict):
+        messages: Annotated[list[AnyMessage], add_messages]
+
+    def call_model(state): return {"messages": [model.invoke(state["messages"])]}
+
+    def should_continue(state):
+        return "tools" if state["messages"][-1].tool_calls else END
+
+    g = StateGraph(State)
+    g.add_node("model", call_model); g.add_node("tools", ToolNode([add_numbers]))
+    g.add_edge(START, "model"); g.add_conditional_edges("model", should_continue)
+    g.add_edge("tools", "model")
+    app = g.compile()
+
+================================================================================
+ PART 4 - 30 CODING INTERVIEW QUESTIONS
+================================================================================
+For each: PROBLEM / EXPECTED FLOW / CONCEPT TESTED / SMALL REFERENCE SOLUTION.
+
+------------------------------------ EASY -------------------------------------
+
+1. Call an LLM using LangChain.
+   FLOW: input -> model -> answer
+   CONCEPT: ChatModel + invoke
+   SOLUTION:
+     model = ChatGoogleGenerativeAI(model="gemini-3.5-flash", api_key=os.getenv("GEMINI_API_KEY"))
+     response = model.invoke("Say hello")
+     print(response.content)
+
+2. Create a prompt template.
+   FLOW: {var} -> messages -> model
+   CONCEPT: ChatPromptTemplate
+   SOLUTION:
+     prompt = ChatPromptTemplate.from_messages([("human", "What is {topic}?")])
+     answer = (prompt | model).invoke({"topic": "RAG"})
+
+3. Create structured output.
+   FLOW: schema -> with_structured_output -> validated object
+   CONCEPT: Pydantic
+   SOLUTION:
+     class Person(BaseModel):
+         name: str
+         age: int
+     person = model.with_structured_output(Person).invoke("Alice is 30.")
+     print(person.name)
+
+4. Create an LCEL chain.
+   FLOW: prompt -> model -> parser
+   CONCEPT: pipe operator
+   SOLUTION:
+     chain = prompt | model | StrOutputParser()
+     result = chain.invoke({"topic": "LCEL"})     # str
+
+5. Create a tool.
+   FLOW: function -> @tool -> schema
+   CONCEPT: @tool decorator
+   SOLUTION:
+     @tool
+     def add_numbers(a: int, b: int) -> int:
+         """Add two numbers together."""
+         return a + b
+     print(add_numbers.invoke({"a": 2, "b": 3}))
+
+6. Run two branches in parallel.
+   FLOW: input -> RunnableParallel -> dict
+   CONCEPT: RunnableParallel
+   SOLUTION:
+     parallel = RunnableParallel(summary=prompt1 | model, keywords=prompt2 | model)
+     result = parallel.invoke({"topic": "LangChain"})
+     print(result["summary"].content, result["keywords"].content)
+
+7. Branch conditionally.
+   FLOW: condition -> chosen prompt
+   CONCEPT: RunnableBranch
+   SOLUTION:
+     branch = RunnableBranch(
+         (lambda d: "python" in d["question"].lower(), tech_prompt | model),
+         general_prompt | model,
+     )
+     print(branch.invoke({"question": "What is a python function?"}).content)
+
+8. Load a document and print its metadata.
+   FLOW: file -> Document
+   CONCEPT: TextLoader
+   SOLUTION:
+     doc = TextLoader("notes.txt").load()[0]
+     print(doc.page_content)
+     print(doc.metadata)
+
+9. Split text into chunks.
+   FLOW: doc -> splitter -> chunks
+   CONCEPT: RecursiveCharacterTextSplitter
+   SOLUTION:
+     splitter = RecursiveCharacterTextSplitter(chunk_size=100, chunk_overlap=20)
+     chunks = splitter.split_documents([doc])
+     print(len(chunks))
+
+10. Create an embedding.
+    FLOW: text -> vector
+    CONCEPT: embedding model
+    SOLUTION:
+      embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", api_key=key)
+      vector = embeddings.embed_query("hello world")
+      print(len(vector))
+
+------------------------------------ MEDIUM ------------------------------------
+
+11. Create a RAG pipeline.
+    FLOW: load -> split -> embed -> store -> retrieve -> prompt -> model
+    CONCEPT: full RAG
+    SOLUTION:
+      doc = TextLoader("notes.txt").load()[0]
+      chunks = RecursiveCharacterTextSplitter(chunk_size=200, chunk_overlap=50).split_documents([doc])
+      store = FAISS.from_documents(chunks, embeddings)
+      retriever = store.as_retriever(search_kwargs={"k": 2})
+      def get_context(q):
+          return {"context": "\n".join(d.page_content for d in retriever.invoke(q)), "question": q}
+      chain = get_context | prompt | model | StrOutputParser()
+      print(chain.invoke("What is the policy?"))
+
+12. Create a retriever.
+    FLOW: store -> as_retriever -> invoke
+    CONCEPT: retriever interface
+    SOLUTION:
+      retriever = vector_store.as_retriever(search_kwargs={"k": 2})
+      docs = retriever.invoke("query")
+      for d in docs: print(d.page_content)
+
+13. Create an agent with a tool.
+    FLOW: tools -> create_agent -> loop -> answer
+    CONCEPT: create_agent
+    SOLUTION:
+      agent = create_agent(model=model, tools=[add_numbers], system_prompt="Be concise.")
+      result = agent.invoke({"messages": [{"role": "user", "content": "What is 5 + 7?"}]})
+      print(result["messages"][-1].content)
+
+14. Create a structured-output agent.
+    FLOW: response_format -> agent -> structured_response
+    CONCEPT: structured agent
+    SOLUTION:
+      class Answer(BaseModel):
+          answer: str
+          confidence: float
+      agent = create_agent(model=model, tools=[], response_format=Answer)
+      result = agent.invoke({"messages": [{"role": "user", "content": "3 + 4?"}]})
+      print(result["structured_response"].answer)
+
+15. Create a SQL agent (read-only).
+    FLOW: question -> SQL tool -> agent
+    CONCEPT: safe tools
+    SOLUTION:
+      @tool
+      def run_sql_query(query: str) -> str:
+          if not query.strip().lower().startswith("select"):
+              return "Only SELECT allowed."
+          return "\n".join(str(r) for r in DB.execute(query).fetchall())
+      agent = create_agent(model=model, tools=[run_sql_query], system_prompt="Answer via SQL.")
+
+16. Keep an agent's conversation context.
+    FLOW: checkpointer + thread -> multi-turn
+    CONCEPT: memory
+    SOLUTION:
+      agent = create_agent(model=model, tools=[], checkpointer=InMemorySaver())
+      config = {"configurable": {"thread_id": "c1"}}
+      agent.invoke({"messages": [{"role": "user", "content": "My name is Alice."}]}, config=config)
+      result = agent.invoke({"messages": [{"role": "user", "content": "My name?"}]}, config=config)
+      print(result["messages"][-1].content)
+
+17. Stream a model call.
+    FLOW: stream -> chunks
+    CONCEPT: streaming
+    SOLUTION:
+      for chunk in model.stream("Count 1 to 5"):
+          print(chunk.content, end="", flush=True)
+
+18. Call a chain asynchronously.
+    FLOW: async function -> ainvoke
+    CONCEPT: async
+    SOLUTION:
+      import asyncio
+      async def main():
+          print((await chain.ainvoke({"word": "hello"})).content)
+      asyncio.run(main())
+
+19. Add logging middleware to an agent.
+    FLOW: hooks -> create_agent(middleware=)
+    CONCEPT: middleware
+    SOLUTION:
+      class LoggingMiddleware(AgentMiddleware):
+          def before_model(self, state, runtime):
+              print(state["messages"][-1].content[:40])
+              return None
+      agent = create_agent(model=model, tools=[], middleware=[LoggingMiddleware()])
+
+20. Give the model tools without an agent.
+    FLOW: bind_tools -> tool_calls
+    CONCEPT: tool calling
+    SOLUTION:
+      response = model.bind_tools([add_numbers]).invoke("What is 12 + 30?")
+      print(response.tool_calls)
+
+------------------------------------ ADVANCED ----------------------------------
+
+21. Create ReAct.
+    FLOW: reason -> act -> observe -> repeat
+    CONCEPT: ReAct loop
+    SOLUTION:
+      # create_agent builds this loop; show the steps:
+      agent = create_agent(model=model, tools=[multiply], system_prompt="Math assistant.")
+      for msg in agent.invoke({"messages": [{"role": "user", "content": "3*4 then *2"}]})["messages"]:
+          print(msg.type, msg.tool_calls or msg.content)
+
+22. Create agentic RAG.
+    FLOW: agent decides -> retrieval tool -> answer
+    CONCEPT: retrieval as a tool
+    SOLUTION:
+      @tool
+      def search(query: str) -> str:
+          return "\n".join(d.page_content for d in vector_store.similarity_search(query, k=2))
+      agent = create_agent(model=model, tools=[search], system_prompt="Use search for product questions.")
+
+23. Create a multi-tool agent.
+    FLOW: many tools -> model picks -> answer
+    CONCEPT: tool selection
+    SOLUTION:
+      agent = create_agent(model=model, tools=[calculator, get_weather, today], system_prompt="Pick the right tool.")
+
+24. Create a multi-agent system.
+    FLOW: supervisor -> specialists
+    CONCEPT: routing between roles
+    SOLUTION:
+      def research(q): return (rp | model).invoke({"question": q}).content
+      def write(f):    return (wp | model).invoke({"facts": f}).content
+      def supervisor(q):
+          d = (route | model).invoke({"question": q}).content
+          return write(research(q)) if "RESEARCH" in d else write(q)
+
+25. Combine LangChain and LangGraph.
+    FLOW: state -> nodes -> conditional edges
+    CONCEPT: StateGraph
+    SOLUTION:
+      class State(TypedDict):
+          messages: Annotated[list[AnyMessage], add_messages]
+      def call_model(state): return {"messages": [model.invoke(state["messages"])]}
+      def should_continue(state):
+          return "tools" if state["messages"][-1].tool_calls else END
+      g = StateGraph(State)
+      g.add_node("model", call_model); g.add_node("tools", ToolNode([add_numbers]))
+      g.add_edge(START, "model"); g.add_conditional_edges("model", should_continue)
+      g.add_edge("tools", "model")
+      app = g.compile()
+
+26. Add human approval before a tool runs.
+    FLOW: interrupt -> human -> Command(resume)
+    CONCEPT: human in the loop
+    SOLUTION:
+      agent = create_agent(model=model, tools=[charge_card],
+                           checkpointer=InMemorySaver(), interrupt_before=["tools"])
+      config = {"configurable": {"thread_id": "p1"}}
+      result = agent.invoke({"messages": [...]}, config=config)   # paused before tools
+      result = agent.invoke(Command(resume=True), config=config)  # approve
+
+27. Rerank retrieval results.
+    FLOW: retrieve broad -> re-sort -> top k
+    CONCEPT: reranking idea
+    SOLUTION:
+      candidates = vector_store.similarity_search(q, k=5)
+      ranked = sorted(candidates, key=lambda d: sum(w in d.page_content.lower() for w in q.split()), reverse=True)
+      top = ranked[:2]
+
+28. Rewrite a query before retrieval.
+    FLOW: LLM rewrites -> retrieve
+    CONCEPT: query rewriting
+    SOLUTION:
+      rewrite = ChatPromptTemplate.from_messages([("human", "Make this query clearer: {q}")])
+      better = (rewrite | model).invoke({"q": "docs for my api"}).content
+      docs = vector_store.similarity_search(better, k=2)
+
+29. Build a memory-aware structured agent.
+    FLOW: checkpointer + response_format
+    CONCEPT: combining agent features
+    SOLUTION:
+      agent = create_agent(model=model, tools=[], response_format=Answer,
+                           checkpointer=InMemorySaver())
+      result = agent.invoke({"messages": [...]}, config={"configurable": {"thread_id": "c1"}})
+      print(result["structured_response"])
+
+30. Build a RAG agent that also uses a calculator.
+    FLOW: retrieval tool + math tool + agent
+    CONCEPT: mixing tools with retrieval
+    SOLUTION:
+      agent = create_agent(
+          model=model,
+          tools=[search_products, calculator],
+          system_prompt="Use search for product questions, calculator for math.",
+      )
+
+================================================================================
+ END
+================================================================================
+Recap: master PART 3 patterns, explain PART 2 comparisons, and you can answer
+"How do you build X in LangChain?" in any interview.

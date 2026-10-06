@@ -1,0 +1,36 @@
+============================================================
+ HOW TO RUN ANY EXAMPLE
+============================================================
+
+This workspace is ONE Vite project. Every example lives in its
+own folder (e.g. 06_useState) and is copied into src/ when you
+want to run it.
+
+SETUP (once)
+------------------------------------------------------------
+  cd react_interview_prep
+  npm install
+
+RUN AN EXAMPLE
+------------------------------------------------------------
+  .\switch-example.ps1 06_useState
+  npm run dev
+
+  → open the URL Vite prints (usually http://localhost:5173)
+
+RESTORE THE LANDING PAGE
+------------------------------------------------------------
+  .\switch-example.ps1 _default
+
+WHY COPY FILES?
+  - Keeps every example tiny (just App.jsx + README.md).
+  - One node_modules, one install, fast.
+  - You always see exactly ONE concept at a time.
+
+NOTES
+  - Examples that use React Router (23, 24, 25, 38) need
+    react-router-dom — it is already in package.json.
+  - Styles come from src/index.css (classes like .container,
+    .card, .error, .modal, .tabs).
+  - In a real project the entry file is src/main.jsx; here it
+    is the same for every example.

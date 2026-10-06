@@ -1,0 +1,715 @@
+================================================================
+DBMS IMPORTANT COMPARISONS
+================================================================
+Each comparison: DEFINITION → KEY DIFFERENCE → WHEN TO USE → INTERVIEW ANSWER → COMMON TRAP
+================================================================
+
+==================================================
+1. DBMS vs RDBMS
+==================================================
+
+DEFINITION:
+DBMS: Software that manages databases. Can use any data model.
+RDBMS: A type of DBMS that stores data in tables with rows and columns following relational rules.
+
+KEY DIFFERENCE:
+DBMS is broader — includes hierarchical, network, object-oriented models. RDBMS specifically uses the relational model (tables).
+
+WHEN TO USE:
+When asked about database types or asked to compare MySQL/PostgreSQL with MongoDB.
+
+INTERVIEW ANSWER:
+"All RDBMS are DBMS, but not all DBMS are RDBMS. RDBMS stores data in tables with defined relationships. MongoDB is a DBMS but not RDBMS."
+
+COMMON TRAP:
+Saying "DBMS and RDBMS are different things." They're not — RDBMS is a subset of DBMS.
+
+==================================================
+2. Schema vs Instance
+==================================================
+
+DEFINITION:
+Schema: The structure/design of a database — tables, columns, data types, constraints.
+Instance: The actual data stored in the database at a specific moment.
+
+KEY DIFFERENCE:
+Schema is static (rarely changes). Instance is dynamic (changes with every INSERT/UPDATE/DELETE).
+
+WHEN TO USE:
+When asked about database structure vs data.
+
+INTERVIEW ANSWER:
+"Schema is the blueprint — like the architecture of a building. Instance is the current state of data — like who's in the building right now."
+
+COMMON TRAP:
+Confusing schema with database. Schema is the design; the database contains both schema and data.
+
+==================================================
+3. Primary Key vs Candidate Key
+==================================================
+
+DEFINITION:
+Candidate Key: Minimal set of attributes that uniquely identifies a row. A table can have multiple.
+Primary Key: One candidate key chosen as the main identifier. Only one per table.
+
+KEY DIFFERENCE:
+Every primary key is a candidate key, but not every candidate key is a primary key.
+
+WHEN TO USE:
+When asked about key types and relationships.
+
+INTERVIEW ANSWER:
+"A candidate key is any minimal unique identifier. The primary key is the one we select from the candidate keys to be the main identifier."
+
+COMMON TRAP:
+Saying a table can have multiple primary keys. It can have multiple candidate keys but only one primary key.
+
+==================================================
+4. Primary Key vs Unique Key
+==================================================
+
+DEFINITION:
+Primary Key: Uniquely identifies rows. Cannot be NULL. Only one per table.
+Unique Key: Also ensures uniqueness. Can allow NULL (most databases allow one NULL). Multiple per table.
+
+KEY DIFFERENCE:
+Primary key = NOT NULL + UNIQUE, one per table. Unique key = UNIQUE, multiple per table, may allow NULL.
+
+WHEN TO USE:
+When comparing constraint types.
+
+INTERVIEW ANSWER:
+"A primary key cannot be NULL and only one exists per table. A unique key allows one NULL and multiple unique constraints can exist on a table."
+
+COMMON TRAP:
+Thinking unique key and primary key are the same. They differ in NULL handling and quantity per table.
+
+==================================================
+5. Super Key vs Candidate Key
+==================================================
+
+DEFINITION:
+Super Key: Any set of attributes that uniquely identifies a tuple. Can have extra attributes.
+Candidate Key: A minimal super key — no proper subset can uniquely identify.
+
+KEY DIFFERENCE:
+Candidate key is minimal. Super key may contain unnecessary attributes. Every candidate key is a super key, but not vice versa.
+
+WHEN TO USE:
+When explaining key hierarchy.
+
+INTERVIEW ANSWER:
+"A super key is any unique identifier set. A candidate key is a minimal super key — you can't remove any attribute and still have uniqueness."
+
+COMMON TRAP:
+Thinking they're the same. Super keys can be redundant; candidate keys cannot.
+
+==================================================
+6. Primary Key vs Foreign Key
+==================================================
+
+DEFINITION:
+Primary Key: Uniquely identifies rows in its own table. Cannot be NULL.
+Foreign Key: References the primary key of another table. Enforces referential integrity.
+
+KEY DIFFERENCE:
+Primary key = identifier in its own table. Foreign key = reference to another table's primary key.
+
+WHEN TO USE:
+When explaining table relationships.
+
+INTERVIEW ANSWER:
+"A primary key uniquely identifies rows in its table. A foreign key in another table references that primary key to establish a relationship."
+
+COMMON TRAP:
+Saying a foreign key must be in a different table. A foreign key can reference the same table (self-referencing).
+
+==================================================
+7. Natural Key vs Surrogate Key
+==================================================
+
+DEFINITION:
+Natural Key: Uses real-world data as identifier — SSN, email, ISBN.
+Surrogate Key: Artificial key generated by the system — auto-increment ID, UUID.
+
+KEY DIFFERENCE:
+Natural key has business meaning. Surrogate key has no business meaning — just an identifier.
+
+WHEN TO USE:
+When discussing key design choices.
+
+INTERVIEW ANSWER:
+"A natural key uses real-world attributes like email or SSN. A surrogate key is system-generated like an auto-increment ID. Surrogate keys are preferred because natural keys can change."
+
+COMMON TRAP:
+Thinking natural keys are always better because they're "real." They can change and cause cascading updates.
+
+==================================================
+8. Entity vs Attribute
+==================================================
+
+DEFINITION:
+Entity: A real-world object or concept (Student, Product, Order).
+Attribute: A property or characteristic of an entity (Name, Price, Date).
+
+KEY DIFFERENCE:
+Entity is the "thing." Attribute describes the "thing."
+
+WHEN TO USE:
+When explaining ER modeling basics.
+
+INTERVIEW ANSWER:
+"An entity represents a real-world object. An attribute is a property of that entity — like 'name' is an attribute of the 'Student' entity."
+
+COMMON TRAP:
+Confusing an entity with an attribute. If it can stand alone, it's likely an entity.
+
+==================================================
+9. Entity vs Relationship
+==================================================
+
+DEFINITION:
+Entity: A thing or object in the real world.
+Relationship: An association between two or more entities.
+
+KEY DIFFERENCE:
+Entity = noun. Relationship = verb.
+
+WHEN TO USE:
+When explaining ER diagrams.
+
+INTERVIEW ANSWER:
+"An entity is a thing — like Student. A relationship describes how entities interact — like Student ENROLLS Course."
+
+COMMON TRAP:
+Treating relationships as entities. Relationships connect entities; they don't stand alone.
+
+==================================================
+10. 1NF vs 2NF
+==================================================
+
+DEFINITION:
+1NF: Each column contains atomic values. No repeating groups.
+2NF: In 1NF + no partial dependencies. Every non-key attribute depends on the full primary key.
+
+KEY DIFFERENCE:
+1NF removes repeating groups. 2NF removes partial dependencies in composite keys.
+
+WHEN TO USE:
+When explaining normalization progression.
+
+INTERVIEW ANSWER:
+"1NF ensures atomic values. 2NF builds on 1NF by removing partial dependencies — where a non-key attribute depends on only part of a composite primary key."
+
+COMMON TRAP:
+Applying 2NF to tables with single-column primary keys. Partial dependencies only matter with composite keys.
+
+==================================================
+11. 2NF vs 3NF
+==================================================
+
+DEFINITION:
+2NF: No partial dependencies.
+3NF: In 2NF + no transitive dependencies. Non-key attributes don't depend on each other.
+
+KEY DIFFERENCE:
+2NF removes partial dependencies. 3NF removes transitive dependencies.
+
+WHEN TO USE:
+When explaining normalization.
+
+INTERVIEW ANSWER:
+"2NF removes partial dependencies. 3NF goes further by removing transitive dependencies — when a non-key attribute depends on another non-key attribute."
+
+COMMON TRAP:
+Forgetting that 3NF applies to non-key to non-key dependencies. Key-to-key dependencies are fine.
+
+==================================================
+12. 3NF vs BCNF
+==================================================
+
+DEFINITION:
+3NF: No transitive dependencies. Non-key attributes depend only on the primary key.
+BCNF: Every determinant must be a super key. Stricter than 3NF.
+
+KEY DIFFERENCE:
+In 3NF, a non-key attribute can be a determinant if it's a candidate key. In BCNF, ALL determinants must be super keys.
+
+WHEN TO USE:
+When asked about the difference between 3NF and BCNF.
+
+INTERVIEW ANSWER:
+"BCNF is stricter. In 3NF, non-key attributes can determine other attributes in some cases. In BCNF, every determinant must be a super key — no exceptions."
+
+COMMON TRAP:
+Thinking 3NF and BCNF are the same. They differ in edge cases with overlapping candidate keys.
+
+==================================================
+13. Normalization vs Denormalization
+==================================================
+
+DEFINITION:
+Normalization: Reducing redundancy by splitting data into related tables.
+Denormalization: Adding controlled redundancy to improve read performance.
+
+KEY DIFFERENCE:
+Normalization optimizes for consistency and storage. Denormalization optimizes for read speed.
+
+WHEN TO USE:
+When discussing performance vs data integrity tradeoffs.
+
+INTERVIEW ANSWER:
+"Normalization reduces redundancy and anomalies. Denormalization adds redundancy for faster reads. The choice depends on read/write ratio and performance needs."
+
+COMMON TRAP:
+Thinking denormalization is always bad. In read-heavy systems, controlled denormalization is often the right choice.
+
+==================================================
+14. DELETE vs TRUNCATE vs DROP
+==================================================
+
+DEFINITION:
+DELETE: Removes specific rows. Logged row-by-row. Can use WHERE. Can be rolled back.
+TRUNCATE: Removes all rows. Minimally logged. No WHERE clause. Faster.
+DROP: Removes entire table structure and data. Cannot be rolled back.
+
+KEY DIFFERENCE:
+DELETE = selective, logged, slow. TRUNCATE = all rows, fast. DROP = table gone entirely.
+
+WHEN TO USE:
+When asked about data removal operations.
+
+INTERVIEW ANSWER:
+"DELETE removes specific rows with a WHERE clause and is fully logged. TRUNCATE removes all rows quickly with minimal logging. DROP removes the entire table structure and data."
+
+COMMON TRAP:
+Saying TRUNCATE can't be rolled back. It depends on the database — some support it within transactions.
+
+==================================================
+15. WHERE vs HAVING
+==================================================
+
+DEFINITION:
+WHERE: Filters rows before grouping/aggregation.
+HAVING: Filters groups after GROUP BY aggregation.
+
+KEY DIFFERENCE:
+WHERE works on individual rows. HAVING works on aggregated groups. WHERE cannot use aggregate functions.
+
+WHEN TO USE:
+When explaining query filtering.
+
+INTERVIEW ANSWER:
+"WHERE filters rows before grouping. HAVING filters after grouping. WHERE cannot use aggregate functions like COUNT or SUM; HAVING can."
+
+COMMON TRAP:
+Using aggregate functions in WHERE clause. Use HAVING for conditions involving aggregates.
+
+==================================================
+16. UNION vs UNION ALL
+==================================================
+
+DEFINITION:
+UNION: Combines results and removes duplicate rows.
+UNION ALL: Combines results and keeps all rows including duplicates.
+
+KEY DIFFERENCE:
+UNION removes duplicates (slower). UNION ALL keeps duplicates (faster).
+
+WHEN TO USE:
+When combining results from multiple queries.
+
+INTERVIEW ANSWER:
+"UNION combines results and removes duplicates. UNION ALL combines results and keeps duplicates. Use UNION ALL when you know there are no duplicates or don't need deduplication."
+
+COMMON TRAP:
+Using UNION when UNION ALL is sufficient. Duplicate checking has a performance cost.
+
+==================================================
+17. JOIN vs Subquery
+==================================================
+
+DEFINITION:
+JOIN: Combines rows from multiple tables based on related columns.
+Subquery: A query nested inside another query.
+
+KEY DIFFERENCE:
+JOINs combine horizontally across tables. Subqueries can filter, compute, or nest.
+
+WHEN TO USE:
+When deciding how to combine data from multiple tables.
+
+INTERVIEW ANSWER:
+"JOINs combine rows from multiple tables. Subqueries are queries within queries. JOINs are often more readable and performant for multi-table operations."
+
+COMMON TRAP:
+Always using subqueries when JOINs would be cleaner and faster.
+
+==================================================
+18. INNER JOIN vs OUTER JOIN
+==================================================
+
+DEFINITION:
+INNER JOIN: Returns only rows with matches in both tables.
+OUTER JOIN: Returns all rows from one or both tables, including non-matching rows (with NULLs).
+
+KEY DIFFERENCE:
+INNER discards non-matches. OUTER keeps them.
+
+WHEN TO USE:
+When explaining join types.
+
+INTERVIEW ANSWER:
+"INNER JOIN returns only matching rows. OUTER JOIN keeps non-matching rows and fills NULLs. LEFT OUTER keeps all left rows. RIGHT OUTER keeps all right rows. FULL OUTER keeps all from both."
+
+COMMON TRAP:
+Confusing LEFT JOIN with INNER JOIN. LEFT JOIN always keeps all left rows.
+
+==================================================
+19. Clustered vs Non-Clustered Index
+==================================================
+
+DEFINITION:
+Clustered Index: Determines physical order of data on disk. One per table.
+Non-Clustered Index: Separate structure with pointers to data. Multiple per table.
+
+KEY DIFFERENCE:
+Clustered = physical ordering. Non-clustered = logical ordering via pointers.
+
+WHEN TO USE:
+When discussing index types and performance.
+
+INTERVIEW ANSWER:
+"A clustered index determines the physical storage order of rows — only one per table. A non-clustered index is a separate structure with pointers — multiple per table."
+
+COMMON TRAP:
+Thinking clustered index is always on the primary key. It can be on any column (though primary key is common).
+
+==================================================
+20. B-Tree vs B+ Tree
+==================================================
+
+DEFINITION:
+B-Tree: Balanced search tree. Data in both internal and leaf nodes.
+B+ Tree: Balanced search tree. Data only in leaf nodes. Leaf nodes linked.
+
+KEY DIFFERENCE:
+B+ tree has all data at leaf level with links between leaves. B-tree has data throughout the tree.
+
+WHEN TO USE:
+When asked about database indexing structures.
+
+INTERVIEW ANSWER:
+"In B-trees, data can be in any node. In B+ trees, data is only in leaf nodes, and leaves are linked. B+ trees are better for range queries and disk access."
+
+COMMON TRAP:
+Saying B-trees are never used. They are used — just B+ trees are more common in databases.
+
+==================================================
+21. B+ Tree vs Hash Index
+==================================================
+
+DEFINITION:
+B+ Tree: Balanced tree supporting equality and range queries.
+Hash Index: Hash table supporting only equality lookups.
+
+KEY DIFFERENCE:
+B+ tree handles range queries. Hash index cannot handle range queries efficiently.
+
+WHEN TO USE:
+When discussing index selection.
+
+INTERVIEW ANSWER:
+"B+ trees are versatile — they handle equality and range queries efficiently. Hash indexes provide O(1) for equality but cannot efficiently handle range queries."
+
+COMMON TRAP:
+Choosing hash indexes when range queries are needed.
+
+==================================================
+22. View vs Materialized View
+==================================================
+
+DEFINITION:
+View: Virtual table defined by a query. No data stored. Computed on access.
+Materialized View: Physically stores query results. Refreshed periodically.
+
+KEY DIFFERENCE:
+View = virtual, always current. Materialized = physical, potentially stale.
+
+WHEN TO USE:
+When discussing query performance vs freshness.
+
+INTERVIEW ANSWER:
+"A view computes results on-the-fly from underlying tables. A materialized view stores results physically and refreshes periodically. Materialized views trade freshness for performance."
+
+COMMON TRAP:
+Using materialized views when real-time data is required.
+
+==================================================
+23. Procedure vs Function
+==================================================
+
+DEFINITION:
+Stored Procedure: Precompiled SQL statements. May return values through parameters.
+Function: Precompiled SQL. Must return a value. Can be used in SELECT.
+
+KEY DIFFERENCE:
+Function returns a value and can be used in expressions. Procedure performs actions and is called independently.
+
+WHEN TO USE:
+When discussing database programming objects.
+
+INTERVIEW ANSWER:
+"A function must return a value and can be used in SELECT. A procedure performs actions and returns values through output parameters but isn't used in expressions."
+
+COMMON TRAP:
+Thinking functions and procedures are interchangeable. They have different use cases and capabilities.
+
+==================================================
+24. Procedure vs Trigger
+==================================================
+
+DEFINITION:
+Stored Procedure: Explicitly called by user/application.
+Trigger: Automatically executes in response to table events (INSERT, UPDATE, DELETE).
+
+KEY DIFFERENCE:
+Procedure = manual invocation. Trigger = automatic on event.
+
+WHEN TO USE:
+When discussing database automation.
+
+INTERVIEW ANSWER:
+"A stored procedure is explicitly called when needed. A trigger automatically fires in response to table events. Use procedures for business logic; triggers for automatic reactions."
+
+COMMON TRAP:
+Overusing triggers for complex logic. They're hard to debug and can cause cascading effects.
+
+==================================================
+25. ACID vs BASE
+==================================================
+
+DEFINITION:
+ACID: Atomicity, Consistency, Isolation, Durability — strong consistency model.
+BASE: Basically Available, Soft state, Eventually consistent — availability-first model.
+
+KEY DIFFERENCE:
+ACID prioritizes consistency. BASE prioritizes availability. ACID for traditional databases. BASE for distributed systems.
+
+WHEN TO USE:
+When comparing database design philosophies.
+
+INTERVIEW ANSWER:
+"ACID ensures strong consistency for traditional databases. BASE provides eventual consistency for distributed systems where availability is more important than immediate consistency."
+
+COMMON TRAP:
+Saying BASE is "worse" than ACID. BASE is a deliberate choice for specific use cases.
+
+==================================================
+26. OLTP vs OLAP
+==================================================
+
+DEFINITION:
+OLTP: Online Transaction Processing — fast, simple transactions for daily operations.
+OLAP: Online Analytical Processing — complex queries over historical data for analytics.
+
+KEY DIFFERENCE:
+OLTP = many small writes. OLAP = few complex reads. Different schemas (normalized vs denormalized).
+
+WHEN TO USE:
+When comparing transactional vs analytical workloads.
+
+INTERVIEW ANSWER:
+"OLTP handles high-volume transactions for daily operations. OLAP handles complex analytical queries over historical data. OLTP uses normalized schemas; OLAP uses denormalized schemas."
+
+COMMON TRAP:
+Using OLTP for analytics or OLAP for transactions. They serve different purposes.
+
+==================================================
+27. Replication vs Sharding
+==================================================
+
+DEFINITION:
+Replication: Copying data across multiple servers. Same data on each.
+Sharding: Splitting data across servers. Different data on each.
+
+KEY DIFFERENCE:
+Replication = same data, redundancy. Sharding = different data, distribution.
+
+WHEN TO USE:
+When discussing scaling strategies.
+
+INTERVIEW ANSWER:
+"Replication copies data for redundancy and read scaling. Sharding distributes data for write scaling. Replication gives high availability. Sharding gives horizontal scalability."
+
+COMMON TRAP:
+Confusing the two. Replication = copies. Sharding = splits.
+
+==================================================
+28. Partitioning vs Sharding
+==================================================
+
+DEFINITION:
+Partitioning: Splitting a table within one database.
+Sharding: Splitting data across multiple database servers.
+
+KEY DIFFERENCE:
+Partitioning = internal to one database. Sharding = across multiple servers.
+
+WHEN TO USE:
+When discussing data distribution.
+
+INTERVIEW ANSWER:
+"Partitioning divides a table within one database for better performance. Sharding distributes data across multiple servers for horizontal scaling. Partitioning is a database optimization. Sharding is an architectural decision."
+
+COMMON TRAP:
+Treating them as synonyms. Partitioning is within one database; sharding is across servers.
+
+==================================================
+29. Deadlock vs Starvation
+==================================================
+
+DEFINITION:
+Deadlock: Circular wait — two or more transactions can't proceed because each waits for the other.
+Starvation: A transaction waits indefinitely because others are always prioritized.
+
+KEY DIFFERENCE:
+Deadlock = circular dependency, everyone stuck. Starvation = one transaction keeps losing the race.
+
+WHEN TO USE:
+When discussing concurrency problems.
+
+INTERVIEW ANSWER:
+"Deadlock is a circular wait where all involved transactions are stuck. Starvation is when a single transaction never gets to execute because other transactions are always chosen first."
+
+COMMON TRAP:
+Treating them as the same problem. Deadlock has a circular cause; starvation is about scheduling fairness.
+
+==================================================
+30. Authentication vs Authorization
+==================================================
+
+DEFINITION:
+Authentication: Verifying identity — "Who are you?"
+Authorization: Granting permissions — "What can you do?"
+
+KEY DIFFERENCE:
+Authentication = identity verification. Authorization = permission granting.
+
+WHEN TO USE:
+When discussing database security.
+
+INTERVIEW ANSWER:
+"Authentication verifies the user's identity. Authorization determines what actions the authenticated user can perform. Authentication comes first, then authorization."
+
+COMMON TRAP:
+Using the terms interchangeably. They are distinct security concepts.
+
+==================================================
+31. Full Backup vs Incremental vs Differential
+==================================================
+
+DEFINITION:
+Full Backup: Complete copy of the entire database.
+Incremental: Only changes since the last backup (any type).
+Differential: Changes since the last full backup.
+
+KEY DIFFERENCE:
+Full = complete but slow. Incremental = fast but complex recovery. Differential = middle ground.
+
+WHEN TO USE:
+When discussing backup strategies.
+
+INTERVIEW ANSWER:
+"Full backup copies everything — slow but simple recovery. Incremental copies only what changed since last backup — fast but needs all incrementals for recovery. Differential copies changes since last full — balance of speed and recovery."
+
+COMMON TRAP:
+Confusing incremental and differential. Incremental = since last backup (any). Differential = since last full.
+
+==================================================
+32. Synchronous vs Asynchronous Replication
+==================================================
+
+DEFINITION:
+Synchronous: Data is replicated immediately. All copies are always in sync.
+Asynchronous: Data is replicated with a delay. Possible lag between primary and replica.
+
+KEY DIFFERENCE:
+Synchronous = strong consistency, slower writes. Asynchronous = eventual consistency, faster writes.
+
+WHEN TO USE:
+When discussing replication strategies.
+
+INTERVIEW ANSWER:
+"Synchronous replication ensures all replicas have the same data immediately but adds latency to writes. Asynchronous replication is faster but replicas may lag behind the primary."
+
+COMMON TRAP:
+Assuming synchronous is always better. It adds latency which can hurt write performance significantly.
+
+==================================================
+33. Horizontal vs Vertical Partitioning
+==================================================
+
+DEFINITION:
+Horizontal Partitioning: Splitting rows across partitions. Same columns, different rows.
+Vertical Partitioning: Splitting columns across partitions. Different columns, same rows.
+
+KEY DIFFERENCE:
+Horizontal = row-based split. Vertical = column-based split.
+
+WHEN TO USE:
+When discussing data distribution strategies.
+
+INTERVIEW ANSWER:
+"Horizontal partitioning splits rows — like dividing customers by region. Vertical partitioning splits columns — like separating frequently accessed columns from rarely used ones. Horizontal is more common for large tables."
+
+COMMON TRAP:
+Thinking vertical partitioning is the same as normalization. They're different concepts.
+
+==================================================
+34. Strong Entity vs Weak Entity
+==================================================
+
+DEFINITION:
+Strong Entity: Has its own primary key. Exists independently.
+Weak Entity: Depends on a strong entity. No complete primary key of its own.
+
+KEY DIFFERENCE:
+Strong entity = independent existence with own key. Weak entity = dependent existence, partial key only.
+
+WHEN TO USE:
+When explaining ER modeling.
+
+INTERVIEW ANSWER:
+"A strong entity has its own primary key and exists independently. A weak entity depends on a strong entity for identification and doesn't have its own complete primary key."
+
+COMMON TRAP:
+Forgetting that weak entities need the owner's key as part of their identification.
+
+==================================================
+35. Data vs Information
+==================================================
+
+DEFINITION:
+Data: Raw, unorganized facts — numbers, text, dates.
+Information: Processed, organized data that has meaning and context.
+
+KEY DIFFERENCE:
+Data = raw facts. Information = meaningful data.
+
+WHEN TO USE:
+When explaining basic DBMS concepts.
+
+INTERVIEW ANSWER:
+"Data is raw, unorganized facts. Information is processed data that provides context and meaning. A DBMS transforms data into useful information."
+
+COMMON TRAP:
+Using the terms interchangeably. Data without context is just data.
+
+==================================================
+END OF COMPARISONS
+================================================================
+
+Total: 35 comparisons
+
+================================================================

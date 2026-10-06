@@ -1,0 +1,900 @@
+================================================================================
+                    OS IMPORTANT COMPARISONS - INTERVIEW PREP
+                           30 Essential Comparisons
+================================================================================
+
+
+================================================================================
+1. OS vs Kernel
+================================================================================
+
+DEFINITION:
+  - OS: The complete set of software that manages hardware and provides services
+    to user programs (includes kernel, system calls, UI, utilities).
+  - Kernel: The core component of the OS that directly interacts with hardware
+    and manages resources.
+
+KEY DIFFERENCE:
+  The kernel is a part of the OS; the OS is the entire system including the
+  kernel, user interfaces, and utilities.
+
+WHEN IT MATTERS:
+  When asked "what is an OS" or "what does a kernel do" — don't use the terms
+  interchangeably.
+
+INTERVIEW ANSWER:
+  "An OS is the full software ecosystem managing hardware and providing services.
+  The kernel is its core — it handles memory, CPU scheduling, and device I/O.
+  Every OS has a kernel, but the OS also includes shells, libraries, and utilities."
+
+COMMON TRAP:
+  Saying "OS and kernel are the same thing." They are not.
+
+
+================================================================================
+2. User Mode vs Kernel Mode
+================================================================================
+
+DEFINITION:
+  - User Mode: Restricted CPU mode where applications run with limited access
+    to hardware and memory.
+  - Kernel Mode: Privileged CPU mode where the OS kernel runs with full access
+    to all hardware and instructions.
+
+KEY DIFFERENCE:
+  User mode restricts access for safety; kernel mode has unrestricted access
+  for system operations.
+
+WHEN IT MATTERS:
+  When explaining system calls, mode switching, or why an app can't directly
+  access hardware.
+
+INTERVIEW ANSWER:
+  "User mode is a restricted state where applications run with limited privileges
+  to prevent them from corrupting the system. Kernel mode has full hardware access
+  and is where the OS executes. A mode switch happens during system calls,
+  interrupts, or exceptions."
+
+COMMON TRAP:
+  Thinking user mode and kernel mode are separate processes. They are CPU states,
+  not processes.
+
+
+================================================================================
+3. Program vs Process
+================================================================================
+
+DEFINITION:
+  - Program: A passive set of instructions stored on disk (static).
+  - Process: An active instance of a program being executed (dynamic).
+
+KEY DIFFERENCE:
+  A program is a blueprint on disk; a process is that blueprint loaded into
+  memory and running.
+
+WHEN IT MATTERS:
+  When asked about memory management, scheduling, or process creation.
+
+INTERVIEW ANSWER:
+  "A program is a passive file sitting on disk — just instructions. A process
+  is an active program in execution with its own memory space, program counter,
+  and resources. Multiple processes can run from the same program."
+
+COMMON TRAP:
+  Saying "a process is a program." A program becomes a process only when loaded
+  into memory and executed.
+
+
+================================================================================
+4. Process vs Thread
+================================================================================
+
+DEFINITION:
+  - Process: An independent unit of execution with its own memory space.
+  - Thread: A lightweight unit of execution within a process that shares the
+    process's memory.
+
+KEY DIFFERENCE:
+  Processes have separate address spaces; threads within the same process share
+  the same address space.
+
+WHEN IT MATTERS:
+  When discussing parallelism, performance optimization, or IPC vs thread sync.
+
+INTERVIEW ANSWER:
+  "A process is an independent program in execution with its own memory. A thread
+  is the smallest unit of execution within a process. Threads share code, data,
+  and heap with other threads in the same process but have their own stack and
+  program counter. Processes are heavier; threads are lighter and faster to create."
+
+COMMON TRAP:
+  Forgetting that threads share memory while processes do not.
+
+
+================================================================================
+5. Process vs Thread vs Coroutine
+================================================================================
+
+DEFINITION:
+  - Process: Independent execution unit with separate memory space.
+  - Thread: Lightweight execution unit within a process, sharing memory.
+  - Coroutine: Cooperative, user-space function that yields control voluntarily.
+
+KEY DIFFERENCE:
+  Processes are isolated, threads are concurrent within a process, and
+  coroutines are cooperatively scheduled within a single thread.
+
+WHEN IT MATTERS:
+  When discussing Go (goroutines), Python (asyncio), or lightweight concurrency.
+
+INTERVIEW ANSWER:
+  "A process is heavyweight and isolated. A thread is lightweight and shares
+  memory with sibling threads. A coroutine is even lighter — it runs on a single
+  thread and cooperatively yields control, making it great for I/O-bound tasks
+  without the overhead of OS-level context switching."
+
+COMMON TRAP:
+  Thinking coroutines provide parallelism. They run on a single thread and
+  provide concurrency, not parallelism.
+
+
+================================================================================
+6. Concurrency vs Parallelism
+================================================================================
+
+DEFINITION:
+  - Concurrency: Multiple tasks making progress in overlapping time periods
+    (interleaved execution on one core).
+  - Parallelism: Multiple tasks executing simultaneously at the exact same time
+    (on multiple cores).
+
+KEY DIFFERENCE:
+  Concurrency is about dealing with multiple things at once; parallelism is
+  about doing multiple things at once.
+
+WHEN IT MATTERS:
+  When asked about multithreading, multicore systems, or Go's concurrency model.
+
+INTERVIEW ANSWER:
+  "Concurrency is structure — managing multiple tasks that can run in overlapping
+  time periods. Parallelism is execution — running tasks literally at the same
+  instant on multiple cores. You can have concurrency without parallelism on a
+  single core through time slicing."
+
+COMMON TRAP:
+  Using the terms interchangeably. Concurrency does not require multiple cores.
+
+
+================================================================================
+7. Process vs Multithreading
+================================================================================
+
+DEFINITION:
+  - Process (Multiprogramming): Running multiple independent programs, each
+    with their own address space.
+  - Multithreading: Running multiple threads within a single process, sharing
+    the same address space.
+
+KEY DIFFERENCE:
+  Multiprocessing creates separate address spaces; multithreading shares one
+  address space among multiple execution flows.
+
+WHEN IT MATTERS:
+  When discussing resource efficiency, communication overhead, and design
+  trade-offs.
+
+INTERVIEW ANSWER:
+  "Multiprocessing uses multiple independent processes with separate memory,
+  offering isolation but higher overhead. Multithreading uses multiple threads
+  within one process with shared memory, which is faster for communication but
+  requires careful synchronization to avoid race conditions."
+
+COMMON TRAP:
+  Thinking multithreading and multiprocessing are always interchangeable.
+  Isolation needs favour multiprocessing; shared data needs favour threads.
+
+
+================================================================================
+8. User-level vs Kernel-level Threads
+================================================================================
+
+DEFINITION:
+  - User-level Threads: Managed by a thread library in user space; the kernel
+    is unaware of them.
+  - Kernel-level Threads: Managed directly by the OS kernel; the kernel handles
+    creation, scheduling, and context switching.
+
+KEY DIFFERENCE:
+  User-level threads are invisible to the kernel and scheduled in user space;
+  kernel-level threads are natively managed and scheduled by the kernel.
+
+WHEN IT MATTERS:
+  When asked about threading models, performance, or why one blocked thread
+  can block all user-level threads.
+
+INTERVIEW ANSWER:
+  "User-level threads are created and managed by a runtime library without
+  kernel involvement, making them fast but if one thread blocks, the whole
+  process blocks. Kernel-level threads are managed by the OS, so the kernel
+  can schedule them independently — one thread blocking does not block others."
+
+COMMON TRAP:
+  Forgetting that user-level threads cannot leverage multiple cores because
+  the kernel only sees one process.
+
+
+================================================================================
+9. Preemptive vs Non-preemptive Scheduling
+================================================================================
+
+DEFINITION:
+  - Preemptive: The OS can forcibly pause a running process and assign the CPU
+    to another process.
+  - Non-preemptive: Once a process gets the CPU, it keeps it until it
+    voluntarily releases it (terminates or blocks).
+
+KEY DIFFERENCE:
+  Preemptive scheduling allows the OS to take the CPU away; non-preemptive
+  requires the process to give it up.
+
+WHEN IT MATTERS:
+  When asked about real-time systems, responsiveness, or specific scheduling
+  algorithms (e.g., RR is preemptive, FCFS is not).
+
+INTERVIEW ANSWER:
+  "In preemptive scheduling, the OS can interrupt a running process after its
+  time quantum expires and switch to another process, ensuring fairness and
+  responsiveness. In non-preemptive scheduling, the process holds the CPU until
+  it finishes or waits for I/O, which is simpler but can cause poor response
+  times."
+
+COMMON TRAP:
+  Thinking all scheduling is preemptive. FCFS and SJF are non-preemptive.
+
+
+================================================================================
+10. FCFS vs SJF
+================================================================================
+
+DEFINITION:
+  - FCFS (First Come First Served): Processes are executed in the order they
+    arrive in the ready queue.
+  - SJF (Shortest Job First): The process with the smallest burst time is
+    executed first.
+
+KEY DIFFERENCE:
+  FCFS is based on arrival order; SJF is based on the shortest expected
+  execution time.
+
+WHEN IT MATTERS:
+  When asked about average waiting time optimization or convoy effect.
+
+INTERVIEW ANSWER:
+  "FCFS is simple — processes run in arrival order — but causes the convoy
+  effect where short jobs wait behind long ones. SJF picks the shortest job
+  next, minimizing average waiting time, but requires knowing burst times
+  in advance, which is often impractical."
+
+COMMON TRAP:
+  Forgetting that SJF can cause starvation of long processes.
+
+
+================================================================================
+11. SJF vs SRTF
+================================================================================
+
+DEFINITION:
+  - SJF (Shortest Job First): Non-preemptive — once the shortest job starts,
+    it runs to completion.
+  - SRTF (Shortest Remaining Time First): Preemptive version of SJF — a new
+    arrival with a shorter remaining time can preempt the current process.
+
+KEY DIFFERENCE:
+  SJF is non-preemptive; SRTF is preemptive, always running the process with
+  the shortest remaining time.
+
+WHEN IT MATTERS:
+  When asked for the optimal scheduling algorithm for minimizing average
+  waiting time.
+
+INTERVIEW ANSWER:
+  "SJF is non-preemptive and selects the shortest job from the ready queue.
+  SRTF is the preemptive variant — whenever a new process arrives with a
+  shorter remaining time than the current process, a context switch occurs.
+  SRTF gives the minimum average waiting time but has higher context switch
+  overhead."
+
+COMMON TRAP:
+  Confusing SJF with SRTF. SJF does NOT preempt; SRTF does.
+
+
+================================================================================
+12. Round Robin vs FCFS
+================================================================================
+
+DEFINITION:
+  - Round Robin: Each process gets a fixed time quantum; after it expires, the
+    process goes to the back of the queue.
+  - FCFS: Each process runs to completion before the next process starts.
+
+KEY DIFFERENCE:
+  Round Robin is preemptive with a time quantum; FCFS is non-preemptive with
+  no time limit.
+
+WHEN IT MATTERS:
+  When discussing interactive systems, response time, and time quantum
+  selection.
+
+INTERVIEW ANSWER:
+  "FCFS is simple and non-preemptive — processes run in order to completion,
+  which can cause long waits. Round Robin gives each process a small time slice
+  and cycles through them, providing better response time for interactive
+  systems. The time quantum size in RR is critical — too small causes excessive
+  context switches, too large degrades to FCFS."
+
+COMMON TRAP:
+  Forgetting that too large a time quantum in Round Robin makes it behave
+  exactly like FCFS.
+
+
+================================================================================
+13. Starvation vs Deadlock
+================================================================================
+
+DEFINITION:
+  - Starvation: A process waits indefinitely because higher-priority processes
+    keep getting the CPU/resources.
+  - Deadlock: Two or more processes are permanently blocked, each holding a
+    resource the other needs.
+
+KEY DIFFERENCE:
+  Starvation is about indefinite postponement due to scheduling; deadlock is
+  a circular dependency where no process can proceed.
+
+WHEN IT MATTERS:
+  When asked about priority scheduling issues or resource allocation problems.
+
+INTERVIEW ANSWER:
+  "Deadlock is a circular wait — Process A holds what B needs and vice versa,
+  so both are permanently stuck. Starvation is when a process never gets the
+  CPU because higher-priority processes keep being scheduled. Deadlock involves
+  resource dependency; starvation involves priority imbalance."
+
+COMMON TRAP:
+  Thinking starvation implies a circular dependency. It does not — it is
+  purely about unfair scheduling.
+
+
+================================================================================
+14. Deadlock vs Livelock
+================================================================================
+
+DEFINITION:
+  - Deadlock: Processes are blocked forever waiting for each other's resources
+    with no progress.
+  - Livelock: Processes are not blocked but keep changing state in response to
+    each other without making actual progress.
+
+KEY DIFFERENCE:
+  Deadlock means processes are stuck and doing nothing; livelock means processes
+  are active but still not making progress.
+
+WHEN IT MATTERS:
+  When discussing concurrency bugs, dining philosophers, or advanced sync
+  problems.
+
+INTERVIEW ANSWER:
+  "In deadlock, processes are blocked and waiting — no execution happens. In
+  livelock, processes are actively executing but continuously reacting to each
+  other without progressing, like two people stepping aside for each other in a
+  hallway. Livelock is harder to detect because the processes are technically
+  running."
+
+COMMON TRAP:
+  Thinking livelock is just deadlock. In livelock, processes are running but
+  uselessly — they consume CPU without advancing.
+
+
+================================================================================
+15. Mutex vs Semaphore
+================================================================================
+
+DEFINITION:
+  - Mutex (Mutual Exclusion): A locking mechanism that ensures only one thread
+    can access a critical section at a time. Owned by the thread that acquires it.
+  - Semaphore: A signaling mechanism using an integer counter to control access
+    to a resource pool. Not owned by any thread.
+
+KEY DIFFERENCE:
+  A mutex has ownership (only the locker can unlock it); a semaphore has no
+  ownership and any thread can signal it.
+
+WHEN IT MATTERS:
+  When asked about synchronization primitives or designing producer-consumer
+  problems.
+
+INTERVIEW ANSWER:
+  "A mutex is a lock with ownership — only the thread that locked it can unlock
+  it, and it allows exactly one thread in a critical section. A semaphore is a
+  counter-based signaling mechanism with no ownership — any thread can increment
+  or decrement it, making it suitable for controlling access to a pool of
+  resources, not just one."
+
+COMMON TRAP:
+  Saying "a mutex is a binary semaphore." While similar in count (0/1), a mutex
+  has ownership semantics that a semaphore lacks.
+
+
+================================================================================
+16. Binary Semaphore vs Counting Semaphore
+================================================================================
+
+DEFINITION:
+  - Binary Semaphore: A semaphore with only two values — 0 and 1 — acting as
+    a simple lock or signal.
+  - Counting Semaphore: A semaphore with an integer value that tracks the
+    number of available resources in a pool.
+
+KEY DIFFERENCE:
+  Binary semaphore controls access to a single resource (like a mutex);
+  counting semaphore controls access to multiple instances of a resource.
+
+WHEN IT MATTERS:
+  When asked about resource pooling, connection limiting, or producer-consumer
+  problems.
+
+INTERVIEW ANSWER:
+  "A binary semaphore has values 0 or 1 and is used for mutual exclusion or
+  signaling. A counting semaphore can have any non-negative integer value and
+  is used to manage a pool of N identical resources — like limiting concurrent
+  database connections to 10 by initializing the semaphore to 10."
+
+COMMON TRAP:
+  Confusing binary semaphore with mutex. A binary semaphore has no ownership;
+  a mutex does. Any thread can release a binary semaphore.
+
+
+================================================================================
+17. Shared Memory vs Message Passing
+================================================================================
+
+DEFINITION:
+  - Shared Memory: Processes communicate by reading and writing to a common
+    memory region.
+  - Message Passing: Processes communicate by sending and receiving messages
+    through the OS (e.g., pipes, sockets).
+
+KEY DIFFERENCE:
+  Shared memory is fast but requires synchronization; message passing is safer
+  but involves OS overhead for data transfer.
+
+WHEN IT MATTERS:
+  When asked about IPC mechanisms or designing inter-process communication.
+
+INTERVIEW ANSWER:
+  "Shared memory is the fastest IPC method — processes read/write to a common
+  memory region — but it requires explicit synchronization like mutexes. Message
+  passing (pipes, sockets) is slower because data copies through the OS kernel,
+  but it is safer since processes don't share memory, reducing sync bugs."
+
+COMMON TRAP:
+  Thinking shared memory is always better. It is faster but much harder to
+  debug due to race conditions.
+
+
+================================================================================
+18. Paging vs Segmentation
+================================================================================
+
+DEFINITION:
+  - Paging: Divides memory into fixed-size blocks called pages (logical) and
+    frames (physical).
+  - Segmentation: Divides memory into variable-size segments based on logical
+    divisions (code, stack, heap).
+
+KEY DIFFERENCE:
+  Paging uses fixed-size blocks with no logical meaning; segmentation uses
+  variable-size blocks that correspond to program structure.
+
+WHEN IT MATTERS:
+  When asked about memory management schemes, fragmentation, or address
+  translation.
+
+INTERVIEW ANSWER:
+  "Paging divides memory into fixed-size pages, eliminating external
+  fragmentation but potentially causing internal fragmentation. Segmentation
+  divides memory into variable-size logical segments like code, data, and stack,
+  which is more meaningful but causes external fragmentation. Modern systems
+  primarily use paging."
+
+COMMON TRAP:
+  Thinking paging and segmentation are mutually exclusive. Many systems use
+  both (e.g., x86 segmentation + paging).
+
+
+================================================================================
+19. Internal vs External Fragmentation
+================================================================================
+
+DEFINITION:
+  - Internal Fragmentation: Wasted memory inside an allocated block because the
+    block is larger than the process needs.
+  - External Fragmentation: Wasted memory between allocated blocks — total free
+    memory is enough but not contiguous.
+
+KEY DIFFERENCE:
+  Internal fragmentation wastes space within allocated blocks; external
+  fragmentation wastes space between allocated blocks.
+
+WHEN IT MATTERS:
+  When discussing paging, segmentation, or memory allocation strategies.
+
+INTERVIEW ANSWER:
+  "Internal fragmentation happens when allocated memory is larger than needed —
+  the leftover space inside the block is wasted. External fragmentation occurs
+  when free memory is scattered in small non-contiguous chunks, so even if total
+  free memory is sufficient, a large allocation cannot be satisfied. Paging
+  eliminates external fragmentation; segmentation is prone to it."
+
+COMMON TRAP:
+  Mixing up which allocation scheme causes which type of fragmentation. Paging
+  causes internal; segmentation causes external.
+
+
+================================================================================
+20. Logical vs Physical Address
+================================================================================
+
+DEFINITION:
+  - Logical Address: The address generated by the CPU during program execution;
+    the address the program thinks it is using.
+  - Physical Address: The actual address in main memory (RAM) where data is
+    stored.
+
+KEY DIFFERENCE:
+  Logical addresses are virtual and process-relative; physical addresses are
+  real hardware memory locations.
+
+WHEN IT MATTERS:
+  When asked about address translation, memory management units (MMU), or
+  virtual memory.
+
+INTERVIEW ANSWER:
+  "A logical address is generated by the CPU and represents the address a
+  process thinks it is accessing. The MMU translates this to a physical address,
+  which is the actual location in RAM. This translation enables virtual memory,
+  process isolation, and allows each process to have its own address space."
+
+COMMON TRAP:
+  Thinking logical and physical addresses are the same in all systems. With
+  virtual memory they always differ.
+
+
+================================================================================
+21. Page vs Frame
+================================================================================
+
+DEFINITION:
+  - Page: A fixed-size block of logical (virtual) address space.
+  - Frame: A fixed-size block of physical memory (RAM) where pages are loaded.
+
+KEY DIFFERENCE:
+  Pages are the logical units in virtual memory; frames are the physical units
+  in RAM. Both are the same size.
+
+WHEN IT MATTERS:
+  When discussing page tables, address translation, or memory mapping.
+
+INTERVIEW ANSWER:
+  "A page is a fixed-size block of virtual address space from a process's
+  perspective. A frame is a fixed-size block of physical RAM where pages are
+  actually stored. The page table maps pages to frames. They are the same size,
+  but pages are logical and frames are physical."
+
+COMMON TRAP:
+  Confusing which is logical and which is physical. Pages = logical, Frames =
+  physical. Remember: PF = Page-to-Frame mapping.
+
+
+================================================================================
+22. Virtual Memory vs Physical Memory
+================================================================================
+
+DEFINITION:
+  - Virtual Memory: An abstraction that gives each process the illusion of a
+    large, private address space, backed by disk when RAM is insufficient.
+  - Physical Memory: The actual RAM hardware installed in the system.
+
+KEY DIFFERENCE:
+  Virtual memory is a logical abstraction backed by disk; physical memory is
+  the real, limited RAM.
+
+WHEN IT MATTERS:
+  When asked about memory isolation, overcommitment, or why systems can run
+  more processes than RAM allows.
+
+INTERVIEW ANSWER:
+  "Physical memory is the actual RAM — limited and shared among all processes.
+  Virtual memory is an abstraction that gives each process its own address space
+  and allows the OS to swap pages to disk when RAM is full. This enables running
+  processes larger than physical memory and provides isolation between processes."
+
+COMMON TRAP:
+  Thinking virtual memory is just disk space. It is a memory management
+  abstraction that uses disk as backing store.
+
+
+================================================================================
+23. TLB vs Page Table
+================================================================================
+
+DEFINITION:
+  - TLB (Translation Lookaside Buffer): A small, fast hardware cache that
+    stores recent virtual-to-physical address translations.
+  - Page Table: The complete data structure stored in memory that maps all
+    virtual pages to physical frames for a process.
+
+KEY DIFFERENCE:
+  TLB is a small, fast cache for recent translations; the page table is the
+  complete but slower mapping stored in main memory.
+
+WHEN IT MATTERS:
+  When asked about memory access performance or why address translation is fast.
+
+INTERVIEW ANSWER:
+  "The page table stores the complete virtual-to-physical address mapping in
+  memory, which is relatively slow to access. The TLB is a small, fast hardware
+  cache that stores the most recently used translations. On a TLB hit, the
+  address is translated in one cycle. On a TLB miss, the system falls back to
+  the page table, which is slower."
+
+COMMON TRAP:
+  Thinking the TLB replaces the page table. It does not — it is a cache on top
+  of the page table.
+
+
+================================================================================
+24. FIFO vs LRU (Page Replacement)
+================================================================================
+
+DEFINITION:
+  - FIFO (First In First Out): Replaces the oldest page in memory — the page
+    that was loaded first.
+  - LRU (Least Recently Used): Replaces the page that has not been accessed
+    for the longest time.
+
+KEY DIFFERENCE:
+  FIFO evicts based on load order; LRU evicts based on access pattern.
+
+WHEN IT MATTERS:
+  When asked about page replacement algorithms or Belady's anomaly.
+
+INTERVIEW ANSWER:
+  "FIFO replaces the page that arrived first — it is simple but does not
+  consider usage, so it may evict a frequently used page. LRU evicts the page
+  that has not been used for the longest time, which better reflects actual
+  usage patterns. LRU performs better but is more expensive to implement.
+  FIFO can exhibit Belady's anomaly — more frames can cause more page faults."
+
+COMMON TRAP:
+  Believing FIFO always performs worse than LRU. In practice LRU is generally
+  better, but FIFO is simpler. Also, LRU does NOT suffer from Belady's anomaly.
+
+
+================================================================================
+25. Paging vs Swapping
+================================================================================
+
+DEFINITION:
+  - Paging: Moving individual fixed-size pages between RAM and disk as needed.
+  - Swapping: Moving an entire process between RAM and disk (suspend/resume).
+
+KEY DIFFERENCE:
+  Paging moves small fixed-size pages; swapping moves the whole process at once.
+
+WHEN IT MATTERS:
+  When asked about virtual memory management or process scheduling under memory
+  pressure.
+
+INTERVIEW ANSWER:
+  "Paging moves individual pages between RAM and disk, allowing partial memory
+  usage — a process does not need to be fully in RAM. Swapping moves an entire
+  process to disk to free up memory, which is coarser and used when the system
+  is under severe memory pressure. Modern systems primarily use paging."
+
+COMMON TRAP:
+  Thinking paging and swapping are the same. Paging is fine-grained (pages);
+  swapping is coarse-grained (whole process).
+
+
+================================================================================
+26. Polling vs Interrupts
+================================================================================
+
+DEFINITION:
+  - Polling: The CPU periodically checks a device's status in a loop to see if
+    it needs attention.
+  - Interrupts: The device sends a signal to the CPU to get attention when it
+    needs service.
+
+KEY DIFFERENCE:
+  Polling is CPU-driven (active checking); interrupts are device-driven
+  (asynchronous notification).
+
+WHEN IT MATTERS:
+  When asked about I/O handling, device drivers, or CPU efficiency.
+
+INTERVIEW ANSWER:
+  "Polling is when the CPU repeatedly checks device status in a loop, which is
+  simple but wastes CPU cycles. Interrupts allow devices to signal the CPU when
+  they need attention, which is much more efficient — the CPU can do other work
+  instead of busy-waiting. Most modern systems use interrupts, sometimes combined
+  with polling for high-frequency devices."
+
+COMMON TRAP:
+  Thinking polling is never used. High-speed network cards and SSDs may use
+  polling (or hybrid approaches) to reduce interrupt overhead.
+
+
+================================================================================
+27. Interrupts vs DMA
+================================================================================
+
+DEFINITION:
+  - Interrupts: Hardware signals that cause the CPU to pause current execution
+    and handle an event (e.g., device completion).
+  - DMA (Direct Memory Access): Hardware that allows devices to transfer data
+    directly to/from memory without CPU involvement.
+
+KEY DIFFERENCE:
+  Interrupts notify the CPU about events; DMA transfers data without involving
+  the CPU at all during the transfer.
+
+WHEN IT MATTERS:
+  When asked about I/O performance, data transfer mechanisms, or why the CPU
+  is not a bottleneck for disk I/O.
+
+INTERVIEW ANSWER:
+  "An interrupt pauses the CPU to handle an event, which is useful for
+  notifications but still requires CPU time. DMA lets devices transfer data
+  directly to memory without CPU involvement, freeing the CPU for other work.
+  Typically, DMA initiates the transfer and an interrupt fires when it completes."
+
+COMMON TRAP:
+  Thinking DMA eliminates all CPU involvement. The CPU still sets up the DMA
+  transfer and receives an interrupt when it finishes.
+
+
+================================================================================
+28. File vs Directory
+================================================================================
+
+DEFINITION:
+  - File: A named collection of data stored on a filesystem (text, binary,
+    executable, etc.).
+  - Directory: A special file that contains entries mapping names to other
+    files or subdirectories (a folder).
+
+KEY DIFFERENCE:
+  A file stores data; a directory stores references to other files and
+  directories, forming a hierarchical structure.
+
+WHEN IT MATTERS:
+  When asked about filesystem structure, file operations, or path resolution.
+
+INTERVIEW ANSWER:
+  "A file is a named container of data — it holds content like text, images,
+  or executables. A directory is a special file that acts as a container for
+  other files and directories, organizing them into a tree structure. In Unix,
+  everything is a file — directories are just files that store name-to-inode
+  mappings."
+
+COMMON TRAP:
+  Forgetting that directories are themselves files in Unix/Linux systems.
+
+
+================================================================================
+29. Contiguous vs Linked vs Indexed Allocation
+================================================================================
+
+DEFINITION:
+  - Contiguous: Each file occupies a contiguous block of consecutive disk
+    blocks.
+  - Linked: Each file is a linked list of disk blocks that can be scattered
+    anywhere on disk.
+  - Indexed: An index block holds pointers to all the disk blocks belonging to
+    a file.
+
+KEY DIFFERENCE:
+  Contiguous keeps blocks together (fast but causes fragmentation); linked
+  scatters blocks with pointers (flexible but slow sequential access); indexed
+  uses a central index block (fast access but uses extra space).
+
+WHEN IT MATTERS:
+  When asked about filesystem design, disk performance trade-offs, or how
+  modern filesystems store files.
+
+INTERVIEW ANSWER:
+  "Contiguous allocation stores file blocks sequentially on disk — fast
+  sequential access but causes external fragmentation. Linked allocation
+  scatters blocks and links them with pointers — no fragmentation but slow
+  random access because you must traverse the chain. Indexed allocation uses
+  an index block listing all block pointers — fast random access but the
+  index block itself needs space and management. Modern filesystems like ext4
+  use indexed approaches (extent-based)."
+
+COMMON TRAP:
+  Forgetting that contiguous allocation suffers from external fragmentation,
+  while linked allocation suffers from poor random access performance.
+
+
+================================================================================
+30. Protection vs Security
+================================================================================
+
+DEFINITION:
+  - Protection: Mechanisms within the OS that control access to internal
+    objects (memory, CPU, files) to prevent bugs and failures.
+  - Security: Defending the system against external threats, unauthorized
+    access, and malicious attacks.
+
+KEY DIFFERENCE:
+  Protection is internal — preventing faults between components; security is
+  external — defending against intentional threats and unauthorized access.
+
+WHEN IT MATTERS:
+  When asked about OS design goals, access control, or system reliability.
+
+INTERVIEW ANSWER:
+  "Protection is an internal OS mechanism — it ensures processes cannot access
+  each other's memory or interfere with system resources, preventing faults
+  and bugs from cascading. Security is broader — it defends the system against
+  external threats like unauthorized access, malware, and data breaches.
+  Protection is a building block for security but does not cover threats like
+  phishing, social engineering, or network attacks."
+
+COMMON TRAP:
+  Treating protection and security as synonyms. Protection prevents accidental
+  faults between processes; security prevents intentional malicious attacks.
+
+
+================================================================================
+                              QUICK REFERENCE TABLE
+================================================================================
+
+  #   | Comparison                    | Core Distinction
+  ----|-------------------------------|------------------------------------------
+  1   | OS vs Kernel                  | OS is the whole system; kernel is its core
+  2   | User vs Kernel Mode           | Restricted vs privileged CPU state
+  3   | Program vs Process            | Static on disk vs active in memory
+  4   | Process vs Thread             | Separate memory vs shared memory
+  5   | Process vs Thread vs Coroutine| Isolated vs shared vs cooperative
+  6   | Concurrency vs Parallelism    | Overlapping vs simultaneous execution
+  7   | Process vs Multithreading     | Separate address spaces vs shared
+  8   | User vs Kernel Threads        | Invisible to kernel vs managed by kernel
+  9   | Preemptive vs Non-preemptive  | Forced switch vs voluntary release
+  10  | FCFS vs SJF                   | Arrival order vs shortest burst
+  11  | SJF vs SRTF                   | Non-preemptive vs preemptive shortest
+  12  | Round Robin vs FCFS           | Time-sliced vs run-to-completion
+  13  | Starvation vs Deadlock        | Indefinite wait vs circular dependency
+  14  | Deadlock vs Livelock           | Stuck idle vs active but no progress
+  15  | Mutex vs Semaphore            | Ownership vs signaling
+  16  | Binary vs Counting Semaphore  | Single resource vs resource pool
+  17  | Shared Memory vs Message Pass | Fast+sync needed vs safe+OS overhead
+  18  | Paging vs Segmentation        | Fixed blocks vs logical divisions
+  19  | Internal vs External Frag     | Wasted inside block vs between blocks
+  20  | Logical vs Physical Address   | CPU view vs actual RAM location
+  21  | Page vs Frame                 | Logical unit vs physical unit
+  22  | Virtual vs Physical Memory    | Abstraction vs real RAM
+  23  | TLB vs Page Table             | Fast cache vs complete mapping
+  24  | FIFO vs LRU                   | Evict oldest vs evict least recent
+  25  | Paging vs Swapping            | Individual pages vs whole process
+  26  | Polling vs Interrupts         | CPU checks vs device signals
+  27  | Interrupts vs DMA             | CPU handles event vs CPU-free transfer
+  28  | File vs Directory             | Stores data vs stores references
+  29  | Contiguous/Linked/Indexed     | Together / chained / index block
+  30  | Protection vs Security        | Internal fault control vs external defense
+
+================================================================================
+                        End of OS Important Comparisons
+================================================================================

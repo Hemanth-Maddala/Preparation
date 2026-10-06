@@ -1,0 +1,84 @@
+============================================================
+ REACT INTERVIEW TRAPS — mistakes interviewers love to test
+============================================================
+
+1. MUTATING STATE DIRECTLY
+   WRONG:   state.push(item); state.count++;
+   CORRECT: setState([...state, item]); setCount(count + 1);
+   WHY: React cannot detect a direct mutation, so there is no
+        re-render and the object React holds gets corrupted.
+
+2. useEffect WITHOUT DEPENDENCIES (when you want it once)
+   WRONG:   useEffect(() => { fetch(url).then(...); });
+   CORRECT: useEffect(() => { ... }, []);
+   WHY: With no array the effect runs after EVERY render, causing
+        infinite fetch loops.
+
+3. INCORRECT DEPENDENCY ARRAY
+   WRONG:   useEffect(() => { setCount(count + 1); }, []);
+   CORRECT: useEffect(() => { setCount((c) => c + 1); }, []);
+   WHY: The effect uses `count` but does not list it. The functional
+        form avoids the dependency; otherwise list every value the
+        effect reads.
+
+4. USING ARRAY INDEX AS KEY
+   WRONG:   items.map((item, i) => <li key={i}>...)
+   CORRECT: items.map((item) => <li key={item.id}>...)
+   WHY: When items are reordered, filtered, or deleted, indexes
+        shift and React reuses the wrong DOM nodes and state.
+
+5. CALLING HOOKS CONDITIONALLY
+   WRONG:
+     if (user) {
+       const [x, setX] = useState(0);   // hook inside a condition
+     }
+   CORRECT: always call hooks at the top level, in the same order,
+            on every render.
+   WHY: React pairs hooks with state by their call ORDER.
+
+6. CALLING HOOKS INSIDE LOOPS
+   WRONG:
+     items.forEach(() => {
+       const [x, setX] = useState(0);
+     });
+   CORRECT: call the hook once outside the loop; store data in state.
+   WHY: Same rule — hook order must be stable across renders.
+
+7. FORGETTING value/onChange ON A CONTROLLED INPUT
+   WRONG:   <input onChange={(e) => setName(e.target.value)} />
+   CORRECT: <input value={name} onChange={(e) => setName(e.target.value)} />
+   WHY: Without `value`, the DOM owns the value and React state goes
+        stale — the UI and state disagree.
+
+8. UNNECESSARY useMemo / useCallback
+   WRONG: wrapping every computation and function "just in case".
+   CORRECT: only for genuinely expensive work or memoized children.
+   WHY: They add comparison overhead and hurt readability. React is
+        fast; most values and functions are cheap.
+
+9. USING CONTEXT FOR EVERYTHING
+   WRONG: putting every piece of state in Context so nobody has to
+          pass props.
+   CORRECT: Context only for shared app-level data (theme, auth,
+            language).
+   WHY: Every context value change re-renders ALL consumers, and
+        components become coupled to global state.
+
+10. FETCHING DATA REPEATEDLY
+    WRONG: calling fetch inside the render body, or inside an effect
+           without dependencies.
+    CORRECT: useEffect with [] (or the real deps) + ignore/cancel
+             stale responses.
+    WHY: network spam, render loops, memory leaks.
+
+11. UPDATING STATE BASED ON STALE STATE
+    WRONG:   setCount(count + 1); setCount(count + 1);  // result: +1
+    CORRECT: setCount((prev) => prev + 1); setCount((prev) => prev + 1); // +2
+    WHY: `count` is the value captured from the current render, and
+         the updates are batched. Use the updater function when the
+         new value depends on the previous one.
+
+12. NOT PREVENTING DEFAULT ON FORM SUBMIT
+    WRONG:   const handleSubmit = (e) => { doWork(); };   // page reloads
+    CORRECT: const handleSubmit = (e) => { e.preventDefault(); doWork(); };
+    WHY: Without it the browser reloads the page and all state is lost.

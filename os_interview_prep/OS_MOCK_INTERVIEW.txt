@@ -1,0 +1,506 @@
+================================================================================
+                         OS MOCK INTERVIEW
+                    7 Rounds | 40+ Questions
+================================================================================
+
+
+================================================================================
+ROUND 1: OS FUNDAMENTALS
+================================================================================
+
+Interviewer: What is an operating system?
+Candidate:   An OS is system software that acts as an intermediary between user
+             applications and hardware. It manages resources like CPU, memory,
+             and I/O devices, providing a stable and consistent environment for
+             programs to run.
+
+Interviewer: What does an OS do exactly?
+Candidate:   It does four core things: process management (scheduling, creation,
+             termination), memory management (allocation, virtual memory), file
+             system management (storage, retrieval), and device management (I/O
+             control through drivers).
+
+Interviewer: What is a kernel?
+Candidate:   The kernel is the core component of the OS that runs in privileged
+             mode. It has direct access to hardware and manages critical
+             operations like scheduling, memory management, and system calls.
+             It is the bridge between hardware and software.
+
+Interviewer: Is the kernel the entire OS?
+Candidate:   No. The kernel is the core, but the OS also includes system
+             libraries, user utilities (shell, CLI tools), system calls
+             interface, and system programs. In monolithic kernels like Linux,
+             more lives inside the kernel. In microkernels like MINIX, most
+             services run in user space.
+
+Interviewer: What is user mode vs kernel mode? Why do we need both?
+Candidate:   User mode is a restricted mode where applications run with limited
+             privileges to protect the system from faulty or malicious code.
+             Kernel mode has unrestricted access to hardware and all resources.
+             We need both for protection, isolation, and stability.
+
+Interviewer: What happens when you type a command in the terminal?
+Candidate:   The shell reads your input, parses it, and executes it either as a
+             built-in command or by calling fork() to create a new process. The
+             child process calls exec() to load the program, the scheduler
+             places it in the ready queue, and the CPU begins executing it.
+
+
+================================================================================
+ROUND 2: PROCESSES + THREADS
+================================================================================
+
+Interviewer: What is a process?
+Candidate:   A process is an instance of a running program. It includes the
+             program code, current activity (program counter), data segment,
+             stack, and OS resources. Each process gets its own virtual address
+             space and is managed by the OS through a PCB.
+
+Interviewer: What is the difference between a program and a process?
+Candidate:   A program is a static file on disk, a passive entity like a recipe.
+             A process is the active entity, the recipe being cooked. The same
+             program can spawn multiple processes. A program becomes a process
+             when it is loaded into memory and executed.
+
+Interviewer: What are the different states of a process?
+Candidate:   Five states: New (being created), Ready (waiting for CPU), Running
+             (executing on CPU), Waiting/Blocked (waiting for I/O or event), and
+             Terminated (finished execution). There is also a Ready/Suspended
+             state in some systems for swapped-out processes.
+
+Interviewer: What is a PCB?
+Candidate:   PCB stands for Process Control Block. It is a data structure the
+             OS maintains for each process containing the process ID, program
+             counter, CPU registers, memory limits, I/O status, scheduling
+             priority, and accounting info. It is essential for context switching.
+
+Interviewer: What is context switching?
+Candidate:   Context switching is the process of saving the state of the current
+             running process (registers, program counter, stack pointer) into
+             its PCB and loading the saved state of the next process to run.
+             The CPU then resumes execution of the new process.
+
+Interviewer: Why is context switching expensive?
+Candidate:   It is expensive for three reasons: it is pure overhead with no
+             useful work done, it requires saving and restoring many CPU
+             registers and the TLB, and it can cause cache pollution where the
+             new process evicts useful cache lines the previous process had.
+
+Interviewer: What is a thread?
+Candidate:   A thread is the smallest unit of execution within a process. It has
+             its own program counter, registers, and stack but shares the
+             process's code segment, data segment, and heap. Multiple threads
+             in a process enable concurrency within a single program.
+
+Interviewer: How is a thread different from a process?
+Candidate:   Processes are heavyweight, each with a separate address space and
+             resources. Threads are lightweight, sharing the same address space
+             within a process. Inter-process communication requires IPC
+             mechanisms, while threads communicate directly through shared memory.
+
+Interviewer: Why are threads cheaper than processes?
+Candidate:   Creating a thread only allocates a stack and register set, while
+             creating a process requires duplicating the entire address space,
+             file descriptors, and other resources. Thread switching does not
+             need to switch the memory map, making context switches much faster.
+
+Interviewer: Do threads share everything?
+Candidate:   No. Threads share the code segment, data segment, heap, and file
+             descriptors. But each thread has its own stack, program counter,
+             and register set. This separation is what allows independent
+             execution while the sharing enables efficient communication.
+
+Interviewer: What is a zombie process?
+Candidate:   A zombie process is one that has finished execution but still has an
+             entry in the process table because its parent has not yet called
+             wait() to read its exit status. It consumes no resources except a
+             PCB entry. Excessive zombies indicate a bug in the parent process.
+
+Interviewer: What is an orphan process?
+Candidate:   An orphan process is one whose parent has terminated before it did.
+             Orphan processes are automatically adopted by init (PID 1) or
+             systemd, which will eventually reap them. They continue running
+             normally and are not inherently problematic.
+
+
+================================================================================
+ROUND 3: SCHEDULING
+================================================================================
+
+Interviewer: What is process scheduling?
+Candidate:   Process scheduling is the OS activity of deciding which process in
+             the ready queue gets the CPU next. The scheduler uses algorithms
+             to optimize criteria like throughput, turnaround time, waiting
+             time, and response time while maintaining fairness.
+
+Interviewer: What are the different scheduling algorithms?
+Candidate:   FCFS (First Come First Served), SJF (Shortest Job First),
+             SRTF (Shortest Remaining Time First), Round Robin, Priority
+             Scheduling, Multilevel Queue, and Multilevel Feedback Queue.
+             FCFS and SJF are non-preemptive. Round Robin and SRTF are
+             preemptive.
+
+Interviewer: Which one is optimal and why?
+Candidate:   SJF is optimal for minimizing average waiting time, proven by
+             scheduling theory. SRTF is optimal for average response time.
+             But both require knowing burst times in advance, which is
+             impractical. MLFQ approximates SJF behavior without
+             prediction by observing past behavior.
+
+Interviewer: What is Round Robin?
+Candidate:   Round Robin assigns each process a fixed time quantum, typically
+             10-100ms. When the quantum expires, the process is preempted and
+             moved to the back of the ready queue. It is fair, simple, and
+             provides good response time. The quantum size is the critical
+             tuning parameter.
+
+Interviewer: What happens if the time quantum is too small? Too large?
+Candidate:   If too small, context switching overhead dominates because the CPU
+             spends more time switching than executing useful work. If too
+             large, Round Robin degrades to FCFS, and response time suffers
+             because each process holds the CPU for an extended period.
+
+Interviewer: What is starvation?
+Candidate:   Starvation occurs when a process waits indefinitely because other
+             processes with higher priority or shorter bursts keep getting
+             scheduled first. In priority scheduling, a low-priority process
+             may never run if high-priority processes continuously arrive.
+
+Interviewer: How do you prevent starvation?
+Candidate:   Aging is the primary technique: gradually increase the priority of
+             waiting processes over time so even the lowest-priority process
+             eventually becomes runnable. Round Robin inherently prevents
+             starvation by giving every process a time slice.
+
+Interviewer: What is the convoy effect?
+Candidate:   The convoy effect happens in FCFS when one long burst process holds
+             the CPU, and many short processes pile up behind it waiting. This
+             causes extremely high average waiting time and poor CPU
+             utilization. It is the primary motivation for SJF and Round Robin.
+
+Interviewer: What is preemptive vs non-preemptive scheduling?
+Candidate:   Non-preemptive scheduling gives the CPU to a process until it
+             voluntarily releases it (blocks or terminates). Preemptive
+             scheduling allows the OS to forcibly take the CPU away after a
+             time quantum or when a higher-priority process arrives. Modern
+             OSes use preemptive scheduling exclusively.
+
+
+================================================================================
+ROUND 4: SYNCHRONIZATION + DEADLOCKS
+================================================================================
+
+Interviewer: What is a race condition?
+Candidate:   A race condition occurs when the correctness of a program depends
+             on the relative timing of multiple threads or processes accessing
+             shared data. The outcome varies depending on which execution
+             order occurs, leading to unpredictable and often incorrect results.
+
+Interviewer: What is a critical section?
+Candidate:   A critical section is the portion of code where a process accesses
+             shared resources like variables, files, or data structures. Only
+             one process should be in its critical section at a time to prevent
+             race conditions. Mutual exclusion must be enforced here.
+
+Interviewer: What is a mutex?
+Candidate:   A mutex (mutual exclusion) is a synchronization primitive that
+             allows only one thread to hold the lock at a time. A thread must
+             acquire the lock before entering the critical section and release
+             it upon exit. If another thread tries to acquire a held mutex, it
+             blocks until the lock is released.
+
+Interviewer: What is a semaphore?
+Candidate:   A semaphore is a signaling mechanism using an integer counter. A
+             binary semaphore (value 0 or 1) works like a mutex. A counting
+             semaphore allows up to N concurrent accesses. P (wait) decrements
+             the counter, blocking if zero. V (signal) increments it, waking a
+             blocked process.
+
+Interviewer: What is the difference between a mutex and a semaphore?
+Candidate:   A mutex has ownership: only the thread that locked it can unlock
+             it. A semaphore has no ownership; any thread can signal it.
+             Mutexes protect critical sections. Semaphores coordinate ordering
+             between threads, like producer-consumer problems. A mutex is a
+             special case of a binary semaphore.
+
+Interviewer: What is deadlock?
+Candidate:   Deadlock is a state where two or more processes are permanently
+             blocked, each waiting for a resource held by another in the cycle.
+             None can proceed, and they will wait forever without external
+             intervention. It is a serious issue in systems with shared
+             resources.
+
+Interviewer: What are the four conditions for deadlock?
+Candidate:   Mutual exclusion, hold and wait, no preemption, and circular wait.
+             All four must hold simultaneously for deadlock to occur. If any
+             one is prevented, deadlock cannot happen. These are called the
+             Coffman conditions, established in 1971.
+
+Interviewer: How do you prevent deadlock?
+Candidate:   Break one of the four conditions. Prevent hold and wait by
+             requiring processes to request all resources at once. Prevent
+             circular wait by imposing a total ordering on resources and
+             requiring processes to acquire them in that order. This is the
+             most practical approach used in real systems.
+
+Interviewer: What is deadlock avoidance?
+Candidate:   Avoidance allows processes to request resources dynamically but
+             only grants them if the system remains in a safe state, meaning
+             there exists a sequence where all processes can complete. The
+             Banker's algorithm is the classic avoidance algorithm.
+
+Interviewer: How does Banker's algorithm work?
+Candidate:   It maintains matrices for available resources, maximum demand,
+             allocation, and need. Before granting a resource request, it
+             simulates the allocation and runs a safety algorithm to check if
+             a safe sequence exists. If safe, the request is granted. If not,
+             the process must wait.
+
+Interviewer: What is the difference between deadlock and livelock?
+Candidate:   In deadlock, processes are blocked and do nothing. In livelock,
+             processes actively change state in response to each other but make
+             no progress, like two people stepping aside for each other in a
+             hallway repeatedly. Livelock wastes CPU cycles while deadlock
+             wastes no CPU at all.
+
+Interviewer: What is priority inversion?
+Candidate:   Priority inversion occurs when a high-priority process is blocked
+             waiting for a resource held by a low-priority process, while a
+             medium-priority process preempts the low-priority one. The high
+             priority effectively waits on the medium priority. Priority
+             inheritance, where the low-priority process temporarily boosts
+             its priority, is the standard solution.
+
+
+================================================================================
+ROUND 5: MEMORY MANAGEMENT
+================================================================================
+
+Interviewer: What is virtual memory?
+Candidate:   Virtual memory is an abstraction that gives each process its own
+             private address space, decoupled from physical memory. The OS
+             maps virtual addresses to physical addresses using page tables.
+             It allows programs to use more memory than physically available
+             and provides isolation between processes.
+
+Interviewer: What is paging?
+Candidate:   Paging divides both virtual and physical memory into fixed-size
+             blocks called pages and frames. Virtual pages are mapped to
+             physical frames via a page table maintained by the OS. It
+             eliminates external fragmentation because any free frame can
+             be allocated to any page.
+
+Interviewer: What is segmentation?
+Candidate:   Segmentation divides memory into variable-sized segments based on
+             logical divisions like code, stack, and heap. Each segment has a
+             base address and a limit. Segments map to physical memory but can
+             create external fragmentation because they are variable-sized.
+
+Interviewer: What is the difference between paging and segmentation?
+Candidate:   Paging uses fixed-size blocks and is transparent to the programmer,
+             while segmentation uses variable-sized blocks that correspond to
+             logical units and are visible to the programmer. Paging causes
+             internal fragmentation; segmentation causes external fragmentation.
+             Modern systems primarily use paging.
+
+Interviewer: What is internal vs external fragmentation?
+Candidate:   Internal fragmentation is wasted space within an allocated block,
+             like the last page of a process not being fully used. External
+             fragmentation is free memory that is broken into small non-
+             contiguous pieces that cannot satisfy a large allocation request.
+             Paging eliminates external; segmentation causes it.
+
+Interviewer: What is a page fault?
+Candidate:   A page fault is a trap raised by hardware when a process accesses
+             a page that is marked as not present in its page table. It is not
+             an error. It signals the OS to handle the situation, typically by
+             loading the needed page from disk into physical memory.
+
+Interviewer: What happens during a page fault?
+Candidate:   The OS looks up the page's location on disk, finds a free frame or
+             evicts one using a replacement policy, reads the page from disk
+             into that frame, updates the page table, and restarts the
+             instruction. If no free frame is available, a page replacement
+             algorithm selects a victim.
+
+Interviewer: What is a TLB?
+Candidate:   A TLB (Translation Lookaside Buffer) is a hardware cache inside
+             the MMU that stores recent virtual-to-physical page translations.
+             Without it, every memory access would require a page table walk,
+             which is slow. A TLB hit takes one cycle; a miss requires
+             multiple memory accesses to walk the page table.
+
+Interviewer: What is demand paging?
+Candidate:   Demand paging loads pages into memory only when they are accessed,
+             not when the process is created. Initially no pages are loaded,
+             and each first access triggers a page fault. This reduces startup
+             time, saves memory, and is the foundation of how virtual memory
+             systems work in practice.
+
+Interviewer: What is thrashing?
+Candidate:   Thrashing occurs when the system spends more time paging than
+             executing useful work. It happens when the total working set of
+             all processes exceeds physical memory, causing constant page
+             faults. CPU utilization drops dramatically while I/O utilization
+             spikes. The system appears frozen.
+
+Interviewer: How do you solve thrashing?
+Candidate:   Reduce the degree of multiprogramming by swapping out or killing
+             processes so the remaining working sets fit in memory. Use working
+             set tracking to allocate frames proportional to each process's
+             actual needs. Increase physical memory as a long-term fix.
+
+Interviewer: What is the difference between FIFO and LRU page replacement?
+Candidate:   FIFO replaces the oldest loaded page regardless of usage, making
+             it simple but not usage-aware. LRU replaces the page that has not
+             been accessed for the longest time, approximating optimal
+             replacement. LRU performs better but is more expensive to
+             implement. FIFO suffers from Belady's anomaly.
+
+
+================================================================================
+ROUND 6: FILE SYSTEMS + I/O
+================================================================================
+
+Interviewer: What is a file system?
+Candidate:   A file system is the method and data structure the OS uses to
+             organize, store, retrieve, and manage data on storage devices.
+             It provides a hierarchical directory structure, maps file names to
+             disk blocks, manages free space, and enforces permissions. Examples
+             include ext4, NTFS, and APFS.
+
+Interviewer: Explain contiguous vs linked vs indexed allocation.
+Candidate:   Contiguous allocates consecutive blocks for a file, offering fast
+             sequential access but causing external fragmentation. Linked
+             allocation chains blocks via pointers, eliminating fragmentation
+             but making random access slow. Indexed allocation uses an index
+             block to store pointers to all data blocks, giving random access
+             without fragmentation.
+
+Interviewer: What is an interrupt?
+Candidate:   An interrupt is a signal from hardware or software that causes the
+             CPU to temporarily stop its current execution, save state, and
+             jump to an interrupt handler to deal with the event. Interrupts
+             enable efficient I/O without the CPU wasting time waiting. Types
+             include hardware, software, and timer interrupts.
+
+Interviewer: What is polling vs interrupts?
+Candidate:   In polling, the CPU repeatedly checks the device status in a loop,
+             wasting cycles. In interrupts, the device signals the CPU when it
+             needs attention, letting the CPU do useful work in between.
+             Interrupts are far more efficient but add complexity. Polling can
+             be useful when device response times are very short.
+
+Interviewer: What is DMA?
+Candidate:   DMA (Direct Memory Access) is a hardware feature that allows
+             devices to transfer data directly to or from main memory without
+             involving the CPU for each byte. The CPU sets up the transfer
+             parameters and the DMA controller handles the data movement,
+             freeing the CPU for other work during large transfers.
+
+Interviewer: Why do we need DMA?
+Candidate:   Without DMA, the CPU must handle every byte of data transfer
+             between a device and memory, which is extremely slow for large
+             transfers like disk reads or network packets. DMA allows the CPU
+             to offload bulk data movement, dramatically improving system
+             performance and throughput.
+
+Interviewer: What is a device driver?
+Candidate:   A device driver is a specialized software module that translates
+             generic OS commands into device-specific operations. It knows the
+             hardware's register layout and protocols. Drivers act as an
+             abstraction layer, so the OS can communicate with diverse hardware
+             through a uniform interface without knowing device details.
+
+
+================================================================================
+ROUND 7: SCENARIO / DESIGN QUESTIONS
+================================================================================
+
+Interviewer: Your server application becomes slow under heavy load. Walk me
+             through what could be happening at the OS level.
+Candidate:   The CPU could be saturated from context switching if there are too
+             many processes, the ready queue could be backed up causing
+             scheduling delays, memory could be thrashing from insufficient RAM,
+             the I/O subsystem could be bottlenecked from disk or network
+             contention, or file descriptor limits could be hit causing
+             connection failures.
+
+Interviewer: Where would you start diagnosing?
+Candidate:   I would check CPU utilization with top or vmstat to see if it is
+             CPU-bound or I/O-bound. If CPU is high, look at context switch
+             rates. If CPU is low but load is high, it is likely I/O-bound
+             or waiting on locks. Check memory usage to rule out thrashing.
+             Look at network socket buffers and file descriptor counts.
+
+Interviewer: You need to design a system where two components must coordinate
+             access to a shared resource. How do you approach this?
+Candidate:   First, determine if the shared resource is in-memory or across
+             processes. For in-process, use a mutex for mutual exclusion. For
+             cross-process, use a named semaphore or OS-level locking. If the
+             access pattern is producer-consumer, use a bounded buffer with
+             semaphores. Always define a clear lock ordering to prevent
+             deadlocks.
+
+Interviewer: What if one component runs significantly faster than the other?
+Candidate:   The fast component will waste cycles waiting. I would add a
+             buffering mechanism, like a bounded queue with backpressure, so
+             the fast producer can work ahead within limits. Use two
+             semaphores: one counting empty slots and one counting full
+             slots. This decouples the components and balances throughput
+             while preventing overflow.
+
+Interviewer: A user reports their application takes 10 seconds to start. How
+             would you diagnose this from an OS perspective?
+Candidate:   I would profile system calls during startup using strace to identify
+             bottlenecks. Check if there is excessive I/O from loading large
+             files, check page fault count indicating cold cache, look at
+             scheduling delays if CPU is shared, check for lock contention
+             from the loader, and examine DNS or network calls that might
+             be blocking.
+
+Interviewer: What if strace shows many open and read calls but each is fast?
+Candidate:   The issue is likely the sheer number of small reads, causing many
+             context switches or I/O waits. Solutions include using memory-mapped
+             files instead of read syscalls, reading larger chunks with
+             readahead, or reducing the number of files the application loads
+             at startup. The cumulative overhead of many small syscalls is
+             the bottleneck.
+
+Interviewer: You have a real-time system that must respond within 50ms. What
+             OS design decisions matter?
+Candidate:   Use a real-time OS or configure PREEMPT_RT on Linux for bounded
+             scheduling latency. Set appropriate process priorities with
+             SCHED_FIFO or SCHED_DEADLINE. Disable swap to avoid
+             unpredictable page faults. Use memory locking with mlockall.
+             Ensure interrupt handlers are short and defer work to threaded
+             interrupts.
+
+Interviewer: What could violate the 50ms deadline?
+Candidate:   Page faults cause disk access latency in milliseconds. Priority
+             inversion could delay the process behind a lower-priority holder.
+             Long critical sections holding mutexes could block the real-time
+             thread. Kernel preemption disabled regions extend worst-case
+             latency. Background I/O or garbage collection could cause
+             unexpected pauses.
+
+Interviewer: How would you handle a situation where a process is consuming
+             too much memory?
+Candidate:   First identify it with tools like ps, top, or /proc/[pid]/status.
+             Check if it is a leak by monitoring growth over time. Use ulimit
+             or cgroups to set memory limits per process. In production, set
+             up OOM killer thresholds. For immediate relief, use memory
+             profiling tools to identify the leak source.
+
+Interviewer: What if the process legitimately needs that much memory?
+Candidate:   Then the system needs more physical RAM or better memory management.
+             Enable swap as a safety net, though it degrades performance. Use
+             huge pages to reduce TLB pressure if the access pattern is
+             sequential. Implement memory pools or slab allocators to reduce
+             overhead. Consider splitting the workload across multiple
+             machines if a single node cannot handle it.
+
+
+================================================================================
+                            END OF INTERVIEW
+================================================================================

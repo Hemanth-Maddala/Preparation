@@ -1,0 +1,451 @@
+============================================================
+ REACT INTERVIEW PREPARATION
+============================================================
+How to use: read each topic, then say the answer out loud
+before reading the answer. Repeat until you can answer instantly.
+
+----------------------------------------------------------------------
+1. WHAT IS REACT?
+----------------------------------------------------------------------
+React is a JavaScript library for building user interfaces.
+You build UI from small reusable pieces called components, and React
+keeps the UI in sync with your data (state) automatically.
+
+----------------------------------------------------------------------
+2. WHY REACT?
+----------------------------------------------------------------------
+- Component-based: UI is broken into small reusable pieces.
+- Declarative: you describe WHAT the UI should look like,
+  React handles HOW to get there.
+- Fast updates via the Virtual DOM.
+- Huge ecosystem, strong community, great tooling (Vite, Next.js).
+
+----------------------------------------------------------------------
+3. WHAT IS JSX?
+----------------------------------------------------------------------
+JSX is a JavaScript syntax extension that looks like HTML:
+    const el = <h1>Hello {name}</h1>;
+It is NOT HTML. It is compiled into React.createElement calls.
+You can put any JavaScript expression inside {}. Use className, not
+class. JSX must return ONE root element (or use a fragment <>...</>).
+
+----------------------------------------------------------------------
+4. WHAT IS A COMPONENT?
+----------------------------------------------------------------------
+A component is a function (or class) that returns JSX. It is a
+reusable piece of UI.
+    function App() {
+      return <h1>Hello</h1>;
+    }
+Component names start with a capital letter so JSX knows it is a
+component, not an HTML tag.
+
+----------------------------------------------------------------------
+5. FUNCTIONAL VS CLASS COMPONENTS?
+----------------------------------------------------------------------
+Functional: a plain function returning JSX; uses hooks. This is the
+modern, recommended choice.
+Class: has a render() method, this.state, this.setState. Older.
+Still required for Error Boundaries (there is no hook equivalent yet).
+
+----------------------------------------------------------------------
+6. PROPS VS STATE?
+----------------------------------------------------------------------
+Props: data passed INTO a component from its parent. Read-only.
+State: data OWNED by the component. Changes with setState/setXxx.
+Rule of thumb: props flow DOWN, events (callbacks) flow UP.
+
+----------------------------------------------------------------------
+7. WHY SHOULDN'T STATE BE MODIFIED DIRECTLY?
+----------------------------------------------------------------------
+Calling the setter tells React something changed so it re-renders.
+Mutating state directly (state.push(...)) changes the object without
+React knowing, so no re-render happens and you corrupt the data React
+is holding. Always use the setter.
+
+----------------------------------------------------------------------
+8. WHAT CAUSES A COMPONENT TO RE-RENDER?
+----------------------------------------------------------------------
+1) Its own state changes.
+2) Its props change (parent passes different values).
+3) Its parent re-renders (children re-render by default).
+4) A Context value it consumes changes.
+
+----------------------------------------------------------------------
+9. WHAT IS THE VIRTUAL DOM?
+----------------------------------------------------------------------
+A lightweight JavaScript copy of the real DOM kept in memory.
+When state changes, React builds a new virtual DOM tree, compares it
+with the previous one (diffing), and applies only the changed parts to
+the real DOM. This keeps updates fast.
+
+----------------------------------------------------------------------
+10. WHAT IS RECONCILIATION?
+----------------------------------------------------------------------
+Reconciliation is React's algorithm for diffing the old virtual DOM
+tree against the new one and computing the minimum set of changes
+needed in the real DOM.
+
+----------------------------------------------------------------------
+11. WHY ARE KEYS REQUIRED IN LISTS?
+----------------------------------------------------------------------
+Keys let React identify which items changed, were added, or were
+removed during reconciliation. Without keys React falls back to item
+position, which causes wrong updates and lost state.
+
+----------------------------------------------------------------------
+12. WHY SHOULDN'T ARRAY INDEX ALWAYS BE USED AS KEY?
+----------------------------------------------------------------------
+When items are reordered, filtered, or deleted, indexes shift, so
+React matches the wrong items and reuses their DOM/state. Use a stable,
+unique id. Index is acceptable only for a static list that never
+changes order.
+
+----------------------------------------------------------------------
+13. WHAT IS A CONTROLLED COMPONENT?
+----------------------------------------------------------------------
+The input's value comes from React state and updates through onChange.
+React state is the single source of truth.
+    <input value={name} onChange={(e) => setName(e.target.value)} />
+
+----------------------------------------------------------------------
+14. WHAT IS AN UNCONTROLLED COMPONENT?
+----------------------------------------------------------------------
+The DOM owns the input's value; React reads it only when needed,
+usually with a ref.
+    const inputRef = useRef(null);
+    <input ref={inputRef} defaultValue="hi" />
+    console.log(inputRef.current.value);
+Controlled is preferred in React because state and UI always match.
+
+----------------------------------------------------------------------
+15. WHAT IS useState?
+----------------------------------------------------------------------
+A hook that adds state to a functional component. It returns a pair:
+the current value and a setter. Calling the setter re-renders the
+component with the new value.
+    const [count, setCount] = useState(0);
+    setCount(count + 1);
+    setCount((prev) => prev + 1);   // safest when value depends on previous
+
+----------------------------------------------------------------------
+16. WHAT IS useEffect?
+----------------------------------------------------------------------
+A hook for side effects — things that happen outside rendering:
+fetching data, timers, subscriptions, manual DOM updates.
+    useEffect(() => { /* side effect */ }, [dependencies]);
+
+----------------------------------------------------------------------
+17. WHEN DOES useEffect RUN?
+----------------------------------------------------------------------
+- []             -> once, after the first render (mount).
+- [value]        -> on mount AND every time `value` changes.
+- (no array)     -> after EVERY render.
+The effect always runs after the DOM has been updated.
+
+----------------------------------------------------------------------
+18. WHAT DOES THE DEPENDENCY ARRAY DO?
+----------------------------------------------------------------------
+It lists the values the effect depends on. If any change, the effect
+re-runs. Empty array = run once. Missing dependencies cause stale
+values; including values that change every render causes infinite loops.
+
+----------------------------------------------------------------------
+19. WHAT IS CLEANUP?
+----------------------------------------------------------------------
+A function you return from the effect. React runs it before the effect
+re-runs and when the component unmounts. Use it to cancel timers,
+remove listeners, or cancel subscriptions.
+    useEffect(() => {
+      const timer = setTimeout(...);
+      return () => clearTimeout(timer);
+    }, [query]);
+
+----------------------------------------------------------------------
+20. WHAT IS useRef?
+----------------------------------------------------------------------
+A mutable object that survives renders but does NOT trigger re-render
+when changed. Two main uses:
+1) Reference a DOM node:   <input ref={inputRef} />
+2) Keep a value across renders without causing renders:
+   const countRef = useRef(0);  countRef.current += 1;
+
+----------------------------------------------------------------------
+21. useRef VS useState?
+----------------------------------------------------------------------
+useState changes trigger re-renders; useRef changes do not.
+Use useState for anything the UI must display. Use useRef for DOM
+access or for values you need to keep across renders without rendering.
+
+----------------------------------------------------------------------
+22. WHAT IS useContext?
+----------------------------------------------------------------------
+A hook that reads the current value of a Context. Context lets you pass
+data through the tree without prop drilling.
+    const theme = useContext(ThemeContext);
+
+----------------------------------------------------------------------
+23. WHEN SHOULD CONTEXT BE USED?
+----------------------------------------------------------------------
+For shared app-wide data: theme, language, current user.
+NOT for everything. Frequent context value changes re-render every
+consumer, and components become coupled to global state. If only a
+few components need data, props are fine.
+
+----------------------------------------------------------------------
+24. useState VS useReducer?
+----------------------------------------------------------------------
+useState: simple, independent state values.
+useReducer: several related state pieces with complex update rules;
+the update logic lives in one pure reducer function.
+    const [state, dispatch] = useReducer(reducer, initialState);
+    dispatch({ type: "increment" });
+Use useReducer when updates follow clear action types (todo list,
+form, shopping cart).
+
+----------------------------------------------------------------------
+25. WHAT IS A CUSTOM HOOK?
+----------------------------------------------------------------------
+A normal function that uses other hooks and whose name starts with
+"use". It lets you reuse stateful logic between components.
+    function useCounter() {
+      const [count, setCount] = useState(0);
+      const increment = () => setCount((c) => c + 1);
+      return { count, increment };
+    }
+
+----------------------------------------------------------------------
+26. WHAT IS LIFTING STATE UP?
+----------------------------------------------------------------------
+Moving shared state to the closest common parent so several children
+can read and update it. Children receive the value and an updater via
+props.
+    App holds `name`; NameInput updates it, NameDisplay shows it.
+
+----------------------------------------------------------------------
+27. PARENT -> CHILD COMMUNICATION?
+----------------------------------------------------------------------
+Pass data as props.
+    <Child message={message} />
+
+----------------------------------------------------------------------
+28. CHILD -> PARENT COMMUNICATION?
+----------------------------------------------------------------------
+Parent passes a callback function as a prop; the child calls it.
+    <Child onNotify={setMessage} />
+
+----------------------------------------------------------------------
+29. SIBLING COMMUNICATION?
+----------------------------------------------------------------------
+Through the shared parent. Lift the state to the parent and pass it
+down to both siblings.
+
+----------------------------------------------------------------------
+30. WHAT IS React.memo?
+----------------------------------------------------------------------
+A higher-order component that memoizes a component: it skips re-renders
+when its props are unchanged (shallow comparison). Use it for heavy
+child components that receive stable props.
+    const Child = memo(function Child(props) { ... });
+
+----------------------------------------------------------------------
+31. WHAT IS useMemo?
+----------------------------------------------------------------------
+Memoizes the RESULT of a computation. It recomputes only when the
+dependencies change. Use it for genuinely expensive calculations.
+    const expensive = useMemo(() => compute(n), [n]);
+
+----------------------------------------------------------------------
+32. WHAT IS useCallback?
+----------------------------------------------------------------------
+Memoizes a FUNCTION reference so the same function object is reused
+between renders. Use it with React.memo children so they don't
+re-render on every parent render.
+    const handleClick = useCallback(() => setCount(c => c + 1), []);
+
+----------------------------------------------------------------------
+33. useMemo VS useCallback?
+----------------------------------------------------------------------
+useMemo  -> memoize a VALUE.
+useCallback -> memoize a FUNCTION.
+(useCallback(fn, deps) is shorthand for useMemo(() => fn, deps).)
+
+----------------------------------------------------------------------
+34. WHAT CAUSES UNNECESSARY RENDERS?
+----------------------------------------------------------------------
+- A parent re-rendering children that don't need to.
+- New inline objects/arrays/functions passed as props each render.
+- Context values that change often.
+- State kept too high in the tree.
+- Missing React.memo around heavy children.
+
+----------------------------------------------------------------------
+35. HOW DO YOU OPTIMIZE REACT?
+----------------------------------------------------------------------
+- React.memo for heavy leaf components with rarely-changing props.
+- useMemo for expensive computations; useCallback for stable callbacks.
+- Correct keys in lists.
+- Keep context values small and specific.
+- Code splitting (lazy, Suspense) for large apps.
+- DO NOT optimize everything — most components are cheap. Premature
+  optimization adds complexity and bugs.
+
+----------------------------------------------------------------------
+36. HOW DO YOU FETCH API DATA?
+----------------------------------------------------------------------
+Inside useEffect (side effect), with .then or async/await:
+    useEffect(() => {
+      fetch(url)
+        .then((res) => res.json())
+        .then(setData)
+        .catch(() => setError("Failed to load"));
+    }, []);
+
+----------------------------------------------------------------------
+37. HOW DO YOU HANDLE LOADING / ERROR STATES?
+----------------------------------------------------------------------
+Three pieces of state: data, loading, error. Branch on them.
+    if (loading) return <p>Loading...</p>;
+    if (error) return <p>{error}</p>;
+    return data.map((item) => ...);
+
+----------------------------------------------------------------------
+38. HOW DO YOU IMPLEMENT LOGIN?
+----------------------------------------------------------------------
+1) email + password state, 2) controlled inputs, 3) validate,
+4) call a fake/real login with loading state, 5) on success store the
+user (state/localStorage) and navigate, 6) on failure show the error.
+(Full step-by-step: REACT_LOGIN_PAGE_INTERVIEW.txt)
+
+----------------------------------------------------------------------
+39. HOW DO YOU IMPLEMENT PROTECTED ROUTES?
+----------------------------------------------------------------------
+A wrapper component that checks auth and redirects:
+    function Protected({ isAuth, children }) {
+      return isAuth ? children : <Navigate to="/login" replace />;
+    }
+    <Route path="/dashboard"
+      element={<Protected isAuth={isAuth}><Dashboard /></Protected>} />
+
+----------------------------------------------------------------------
+40. HOW DO YOU PERSIST LOGIN STATE?
+----------------------------------------------------------------------
+Save the user to localStorage on login and read it back on load.
+    localStorage.setItem("auth", JSON.stringify(user));
+    useState(() => JSON.parse(localStorage.getItem("auth")));
+Clear it on logout. (Demo approach only — real apps use tokens and
+HttpOnly cookies.)
+
+----------------------------------------------------------------------
+41. WHAT IS localStorage?
+----------------------------------------------------------------------
+A browser storage API that stores key/value strings and survives page
+refresh and browser restarts. Per origin, ~5MB, synchronous.
+    localStorage.setItem("key", "value");
+    localStorage.getItem("key");
+    localStorage.removeItem("key");
+
+----------------------------------------------------------------------
+42. WHAT IS REACT ROUTER?
+----------------------------------------------------------------------
+The standard routing library for React. You declare routes with JSX:
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+      </Routes>
+    </BrowserRouter>
+
+----------------------------------------------------------------------
+43. LINK VS useNavigate?
+----------------------------------------------------------------------
+Link renders an <a> for user-click navigation (declarative).
+useNavigate navigates programmatically, e.g. after a login succeeds.
+    <Link to="/home">Home</Link>
+    const navigate = useNavigate(); navigate("/dashboard");
+
+----------------------------------------------------------------------
+44. WHAT IS DEBOUNCE?
+----------------------------------------------------------------------
+Delaying a function until a pause in activity. Classic example: a
+search box only calls the API after the user stops typing. Implemented
+with setTimeout inside useEffect and clearTimeout in the cleanup.
+
+----------------------------------------------------------------------
+45. HOW DO YOU IMPLEMENT SEARCH?
+----------------------------------------------------------------------
+Type -> state -> filter the list:
+    const filtered = items.filter((i) =>
+      i.name.toLowerCase().includes(query.toLowerCase())
+    );
+
+----------------------------------------------------------------------
+46. HOW DO YOU IMPLEMENT PAGINATION?
+----------------------------------------------------------------------
+page state + slice:
+    const pageItems = items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    <button onClick={() => setPage(page - 1)} disabled={page === 1}>Prev</button>
+    <button onClick={() => setPage(page + 1)} disabled={page === totalPages}>Next</button>
+
+----------------------------------------------------------------------
+47. HOW DO YOU BUILD A REUSABLE COMPONENT?
+----------------------------------------------------------------------
+Make it configurable through props and children; no hard-coded data.
+    function Card({ title, children }) { ... }
+    function Button({ variant = "primary", children, ...rest }) { ... }
+
+----------------------------------------------------------------------
+48. REACT VS JAVASCRIPT?
+----------------------------------------------------------------------
+JavaScript is the language; React is a UI library written in it.
+React adds components, JSX, state, and declarative rendering. Under
+the hood everything is plain JS: functions, arrays, objects, promises.
+
+----------------------------------------------------------------------
+49. REACT VS ANGULAR?
+----------------------------------------------------------------------
+React: a library. Flexible, small learning surface, JSX, one-way data
+flow, you choose the rest of your stack.
+Angular: a full framework. Opinionated, TypeScript required, modules,
+dependency injection, two-way data binding.
+React is easier to start; Angular gives more structure out of the box.
+
+----------------------------------------------------------------------
+50. REACT VS REACT NATIVE?
+----------------------------------------------------------------------
+React: renders to the web DOM (div, span).
+React Native: renders to native mobile components (View, Text,
+Touchable). Both share the same component + hooks mental model.
+
+----------------------------------------------------------------------
+51. VIRTUAL DOM VS REAL DOM?
+----------------------------------------------------------------------
+Real DOM: the browser's HTML tree; frequent small changes are slow.
+Virtual DOM: a JS object describing the UI; React diffs it and applies
+batched minimal changes to the real DOM.
+
+----------------------------------------------------------------------
+52. STATE UPDATES AND BATCHING?
+----------------------------------------------------------------------
+React batches multiple setState calls inside one event handler into a
+single re-render. So three setCount calls in one click handler cause
+ONE render, and each call still sees the same (old) state value.
+
+----------------------------------------------------------------------
+53. STALE STATE?
+----------------------------------------------------------------------
+Using an old captured value of state inside a callback/effect that was
+created earlier. Fix: use the functional form setCount((prev) => ...)
+or add the value to the effect's dependency array.
+
+----------------------------------------------------------------------
+54. CONTROLLED VS UNCONTROLLED (SUMMARY)?
+----------------------------------------------------------------------
+Controlled: value + onChange driven by React state.
+Uncontrolled: value lives in the DOM, read via ref.
+Prefer controlled in interviews and real apps.
+
+----------------------------------------------------------------------
+55. KEYS (SUMMARY)?
+----------------------------------------------------------------------
+Stable, unique, per-sibling, and not Math.random(). id > index. Use
+index only for static, never-reordered lists.

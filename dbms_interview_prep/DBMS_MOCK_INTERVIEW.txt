@@ -1,0 +1,264 @@
+================================================================
+DBMS MOCK INTERVIEW
+================================================================
+6 rounds covering different DBMS areas.
+Each round simulates a real interviewer with follow-up questions.
+Read the interviewer question → think about your answer → check the suggested answer.
+================================================================
+
+==================================================
+ROUND 1: DBMS FUNDAMENTALS
+==================================================
+
+INTERVIEWER: "Tell me about yourself and your experience with databases."
+CANDIDATE: (Personalize this with your own background)
+
+---
+
+INTERVIEWER: "What is a DBMS?"
+CANDIDATE: "A DBMS is software that manages databases — handling data storage, retrieval, security, and integrity. It sits between users and the database, providing an abstraction layer."
+INTERVIEWER: "Why do we need it instead of just storing data in files?"
+CANDIDATE: "Files have no standard access method, no concurrency control, no security, no referential integrity, and high redundancy. A DBMS solves all these problems — providing structured access, ACID guarantees, security, and efficient data management."
+INTERVIEWER: "Can you give me a real example where file-based storage failed?"
+CANDIDATE: "Imagine a banking system using flat files. Two tellers updating the same account simultaneously could overwrite each other's changes — a lost update. A DBMS with transactions and locking prevents this."
+
+---
+
+INTERVIEWER: "What is the difference between DBMS and RDBMS?"
+CANDIDATE: "RDBMS is a type of DBMS that stores data in tables with rows and columns following relational rules. All RDBMS are DBMS, but not all DBMS are RDBMS — MongoDB is a DBMS but not RDBMS."
+INTERVIEWER: "So when would you choose a non-relational DBMS?"
+CANDIDATE: "When data is unstructured, schema changes frequently, or you need massive horizontal scaling with eventual consistency."
+
+---
+
+INTERVIEWER: "What is a schema?"
+CANDIDATE: "A schema is the structure or design of a database — defining tables, columns, data types, and relationships. It's the blueprint."
+INTERVIEWER: "And an instance?"
+CANDIDATE: "An instance is the actual data stored in the database at a specific moment. Schema rarely changes; instance changes with every operation."
+
+---
+
+INTERVIEWER: "What is metadata?"
+CANDIDATE: "Data about data. Column names, data types, table sizes, index information — all metadata."
+
+---
+
+INTERVIEWER: "Tell me about the three-schema architecture."
+CANDIDATE: "External level — what individual users see. Conceptual level — logical structure of the entire database. Internal level — how data is physically stored. This provides data abstraction at three levels."
+
+INTERVIEWER: "What is data independence?"
+CANDIDATE: "Logical data independence — you can change the logical schema without affecting user views. Physical data independence — you can change storage without affecting the logical design."
+
+==================================================
+ROUND 2: KEYS + NORMALIZATION
+==================================================
+
+INTERVIEWER: "Explain the different types of keys."
+CANDIDATE: "Super key — any set of attributes that uniquely identifies a row. Candidate key — a minimal super key. Primary key — the candidate key we choose as the main identifier. Alternate key — candidate keys not chosen as primary key. Foreign key — references another table's primary key."
+INTERVIEWER: "Can a table have multiple primary keys?"
+CANDIDATE: "No. A table can have only one primary key, though it can be composite."
+INTERVIEWER: "Can a foreign key reference a non-primary key?"
+CANDIDATE: "Yes. A foreign key can reference any candidate key — any column with a UNIQUE constraint."
+
+---
+
+INTERVIEWER: "What is normalization?"
+CANDIDATE: "Normalization is organizing data to reduce redundancy and prevent insert, update, and delete anomalies by splitting large tables into smaller, related ones."
+INTERVIEWER: "What are the anomalies?"
+CANDIDATE: "Insert anomaly — can't add data without other data. Update anomaly — changing data in one place but not another. Delete anomaly — deleting one piece of data loses unrelated data."
+INTERVIEWER: "Walk me through the normal forms."
+CANDIDATE: "1NF — atomic values, no repeating groups. 2NF — no partial dependencies. 3NF — no transitive dependencies. BCNF — every determinant is a super key."
+INTERVIEWER: "What's the difference between 3NF and BCNF?"
+CANDIDATE: "3NF allows non-key attributes to be determinants in some edge cases. BCNF is stricter — every determinant must be a super key, no exceptions."
+INTERVIEWER: "When would 3NF not be enough?"
+CANDIDATE: "When there are overlapping candidate keys that create a dependency where a non-key attribute determines something but isn't a super key."
+
+---
+
+INTERVIEWER: "What is functional dependency?"
+CANDIDATE: "When one attribute determines another. If A → B, then for each value of A, there is exactly one value of B."
+INTERVIEWER: "What is partial dependency?"
+CANDIDATE: "When a non-key attribute depends on only part of a composite primary key."
+INTERVIEWER: "What is transitive dependency?"
+CANDIDATE: "When a non-key attribute depends on another non-key attribute — A → B → C where A is the key."
+
+==================================================
+ROUND 3: TRANSACTIONS + CONCURRENCY
+==================================================
+
+INTERVIEWER: "What is a transaction?"
+CANDIDATE: "A logical unit of work consisting of one or more operations. It either completes fully (commits) or fails fully (rolls back)."
+INTERVIEWER: "Explain ACID."
+CANDIDATE: "Atomicity — all or nothing. Consistency — valid state transitions. Isolation — concurrent transactions don't interfere. Durability — committed data survives crashes."
+INTERVIEWER: "How is isolation achieved?"
+CANDIDATE: "Through locking mechanisms and concurrency control protocols like two-phase locking."
+
+---
+
+INTERVIEWER: "What concurrency problems can occur?"
+CANDIDATE: "Dirty read — reading uncommitted data. Non-repeatable read — same row, different values on repeat read. Phantom read — different number of rows on repeat query. Lost update — one update overwriting another."
+INTERVIEWER: "What's the difference between a dirty read and a non-repeatable read?"
+CANDIDATE: "Dirty read reads uncommitted data that might be rolled back. Non-repeatable read reads committed data that changed between two reads within the same transaction."
+INTERVIEWER: "At which isolation levels do these occur?"
+CANDIDATE: "Read Uncommitted allows all three. Read Committed prevents dirty reads. Repeatable Read prevents dirty and non-repeatable reads. Serializable prevents all three."
+
+---
+
+INTERVIEWER: "What is a deadlock?"
+CANDIDATE: "When two or more transactions are stuck in a circular wait — each holding a lock the other needs."
+INTERVIEWER: "What are the four conditions for deadlock?"
+CANDIDATE: "Mutual exclusion — resource can't be shared. Hold and wait — holding a resource while waiting for another. No preemption — resources can't be forcibly taken. Circular wait — circular chain of waiting."
+INTERVIEWER: "How do you prevent it?"
+CANDIDATE: "Eliminate one condition — like requiring transactions to acquire all locks upfront, which prevents hold and wait."
+INTERVIEWER: "What's the difference between deadlock and starvation?"
+CANDIDATE: "Deadlock is a circular wait where everyone is stuck. Starvation is when one transaction keeps being postponed indefinitely because others are always chosen first."
+
+---
+
+INTERVIEWER: "What is serializability?"
+CANDIDATE: "A guarantee that the result of concurrent execution is equivalent to some serial (one-at-a-time) execution. It's the standard for correctness."
+INTERVIEWER: "What is a precedence graph?"
+CANDIDATE: "A graph used to test conflict serializability. Nodes are transactions, edges show conflicts. No cycles means the schedule is conflict serializable."
+
+==================================================
+ROUND 4: INDEXES + PERFORMANCE
+==================================================
+
+INTERVIEWER: "What is an index?"
+CANDIDATE: "A data structure that speeds up data retrieval by providing a quick lookup path. Like an index in a book."
+INTERVIEWER: "What's the tradeoff?"
+CANDIDATE: "Faster reads but slower writes because each index must be maintained on INSERT/UPDATE/DELETE. Also uses additional storage."
+INTERVIEWER: "When would you NOT add an index?"
+CANDIDATE: "On write-heavy columns, on columns with low cardinality (like boolean), or when the table is small enough that a full scan is fast."
+
+---
+
+INTERVIEWER: "What is a B+ tree?"
+CANDIDATE: "A balanced search tree used for database indexing. All data is at leaf nodes. Internal nodes guide the search. Leaf nodes are linked for range queries."
+INTERVIEWER: "Why B+ tree and not B-tree?"
+CANDIDATE: "B+ trees have all data at leaf level, making range queries efficient via linked leaves. B-trees have data in all nodes, which is less efficient for range scans and uses more disk I/O."
+INTERVIEWER: "Why not hash indexes?"
+CANDIDATE: "Hash indexes provide O(1) for equality lookups but cannot handle range queries efficiently. B+ trees handle both."
+
+---
+
+INTERVIEWER: "What is the difference between clustered and non-clustered index?"
+CANDIDATE: "Clustered index determines the physical order of data on disk — one per table. Non-clustered is a separate structure with pointers to data — multiple per table."
+INTERVIEWER: "Can you have a clustered index on a non-primary key column?"
+CANDIDATE: "Yes. While the primary key is a common choice, a clustered index can be on any column. You can have only one per table because data can be physically sorted one way."
+
+---
+
+INTERVIEWER: "What is a covering index?"
+CANDIDATE: "An index that includes all columns needed by a query. The database can return results entirely from the index without reading the table."
+INTERVIEWER: "When would you use one?"
+CANDIDATE: "For frequently executed queries that need specific columns — like a dashboard query that always selects user_id, name, and email. A covering index on those columns avoids table lookups."
+
+---
+
+INTERVIEWER: "Why can indexes hurt performance?"
+CANDIDATE: "Each index must be updated on every write operation. Too many indexes slow down INSERT, UPDATE, DELETE. The query optimizer might also choose a suboptimal index."
+INTERVIEWER: "How do you know which indexes to add?"
+CANDIDATE: "Analyze slow query logs, check execution plans, look for full table scans, and identify columns used in WHERE, JOIN, and ORDER BY clauses."
+
+==================================================
+ROUND 5: DISTRIBUTED DATABASES
+==================================================
+
+INTERVIEWER: "What is the CAP theorem?"
+CANDIDATE: "A distributed system can guarantee at most two of: Consistency, Availability, and Partition Tolerance. Since network partitions are inevitable, you typically choose between consistency and availability."
+INTERVIEWER: "Can you really choose any two?"
+CANDIDATE: "During normal operation, you can have all three. During a partition, you must choose between C and A. CP systems sacrifice availability during partitions. AP systems sacrifice consistency."
+
+---
+
+INTERVIEWER: "What is ACID vs BASE?"
+CANDIDATE: "ACID prioritizes consistency — used in traditional databases. BASE prioritizes availability — used in distributed systems where eventual consistency is acceptable."
+INTERVIEWER: "Give me an example where BASE makes sense."
+CANDIDATE: "A social media like count — it's okay if the count is slightly stale for a few seconds. High availability matters more than instant consistency."
+
+---
+
+INTERVIEWER: "What is replication?"
+CANDIDATE: "Copying data from one database server to another for redundancy, read scalability, and high availability."
+INTERVIEWER: "Synchronous vs asynchronous?"
+CANDIDATE: "Synchronous: immediate replication, strong consistency, slower writes. Asynchronous: faster writes, possible lag, eventual consistency."
+INTERVIEWER: "What is replication lag?"
+CANDIDATE: "The delay between a write on the primary and its appearance on a replica. Can cause stale reads from replicas."
+
+---
+
+INTERVIEWER: "What is sharding?"
+CANDIDATE: "Splitting a large database horizontally across multiple servers. Each shard holds a portion of the data."
+INTERVIEWER: "What's a shard key?"
+CANDIDATE: "The column that determines which shard a row belongs to. Choosing a good shard key is critical — it should distribute data evenly and align with query patterns."
+INTERVIEWER: "Sharding vs replication?"
+CANDIDATE: "Replication = same data on each server (redundancy). Sharding = different data on each server (distribution)."
+
+---
+
+INTERVIEWER: "What is the difference between partitioning and sharding?"
+CANDIDATE: "Partitioning splits a table within one database. Sharding splits data across multiple database servers. Partitioning is internal optimization; sharding is an architectural decision."
+
+==================================================
+ROUND 6: SCENARIO / DESIGN QUESTIONS
+==================================================
+
+INTERVIEWER: "You have a table with 100 million rows and queries are slow. Walk me through your approach."
+CANDIDATE: "First, I'd check the slow query log and analyze execution plans. I'd look for full table scans and missing indexes. I'd add appropriate indexes on filtered/joined columns. I'd check if the queries are using indexes properly — avoiding implicit type conversions. If the table is still too large, I'd consider partitioning. For read-heavy workloads, I'd add read replicas. I'd also check if the application has N+1 query problems."
+INTERVIEWER: "What if adding an index doesn't help?"
+CANDIDATE: "I'd check if the index is actually being used. I'd look for implicit type conversions preventing index usage. I'd check if the query needs rewriting. For very large tables, I'd consider partitioning or denormalization."
+
+---
+
+INTERVIEWER: "Design a database for an e-commerce platform."
+CANDIDATE: "Core tables: Users (id, name, email), Products (id, name, price, stock, category_id), Categories (id, name), Orders (id, user_id, total, status, created_at), OrderItems (id, order_id, product_id, quantity, price), Payments (id, order_id, amount, method, status). Relationships: Users 1:N Orders. Orders M:N Products through OrderItems. Products N:1 Categories."
+INTERVIEWER: "How would you handle inventory?"
+CANDIDATE: "Use optimistic locking or SELECT FOR UPDATE to prevent overselling. Check stock before deducting. Maintain an audit log of inventory changes."
+INTERVIEWER: "Would you normalize or denormalize?"
+CANDIDATE: "Normalize for consistency in core tables. Denormalize for read-heavy views — like product catalog pages that join products with categories and reviews. Use materialized views for frequently accessed aggregated data."
+
+---
+
+INTERVIEWER: "Two users try to buy the last item in stock at the same time. How do you prevent overselling?"
+CANDIDATE: "Use pessimistic locking — SELECT FOR UPDATE on the product row before checking and deducting stock. Or use optimistic locking with a version column — check the version hasn't changed before updating. Both ensure only one transaction succeeds."
+INTERVIEWER: "What's the downside of pessimistic locking?"
+CANDIDATE: "It reduces concurrency — other transactions must wait. For high-traffic items, this can create a bottleneck."
+
+---
+
+INTERVIEWER: "Your application needs to handle both heavy reads and heavy writes. How do you design the database?"
+CANDIDATE: "For reads: use read replicas, caching (Redis), proper indexes, and denormalized tables. For writes: minimize indexes, use efficient data types, consider write-optimized storage. Use connection pooling. Separate read and write paths if needed."
+INTERVIEWER: "What about caching strategy?"
+CANDIDATE: "Cache frequently accessed, rarely changing data. Use TTL for automatic expiration. Implement cache invalidation on writes. Consider cache-aside or write-through patterns."
+
+---
+
+INTERVIEWER: "You're migrating from a monolithic database to a microservices architecture. How do you handle the database?"
+CANDIDATE: "Each microservice should own its data. Start by identifying service boundaries. Extract data into separate databases per service. Use APIs for cross-service data access. Consider event-driven patterns for data synchronization. Migrate gradually — don't do a big bang."
+INTERVIEWER: "What about data that multiple services need?"
+CANDIDATE: "Use event-driven patterns — publish events when data changes. Services that need the data can subscribe and maintain their own copies. Or use a shared database temporarily during migration."
+
+---
+
+INTERVIEWER: "How would you design a database for a banking system with strict consistency requirements?"
+CANDIDATE: "Use ACID-compliant RDBMS. High isolation level — Repeatable Read or Serializable. Implement proper locking for concurrent transfers. Maintain complete audit trail for every transaction. Use synchronous replication for disaster recovery. Implement soft deletes for compliance."
+INTERVIEWER: "What about performance under high load?"
+CANDIDATE: "Read replicas for reporting queries. Connection pooling. Partition transaction history by date. Consider event sourcing for the audit trail. Use message queues for async processing of non-critical operations."
+
+==================================================
+TIPS FOR MOCK INTERVIEWS
+==================================================
+
+1. Think aloud — interviewers want to see your thought process.
+2. Start with the simple answer, then add depth.
+3. If you don't know, say so — then explain how you'd find out.
+4. Use concrete examples to illustrate concepts.
+5. Connect concepts — ACID relates to transactions, which relates to concurrency, which relates to isolation levels.
+6. Ask clarifying questions when a scenario is ambiguous.
+7. Mention tradeoffs — there's rarely one right answer.
+8. Practice explaining concepts in 30 seconds or less.
+
+================================================================
+END OF MOCK INTERVIEWS
+================================================================

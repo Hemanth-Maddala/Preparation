@@ -1,0 +1,130 @@
+================================================================
+LANGGRAPH LEARNING ROADMAP
+================================================================
+Work through the 16 projects IN ORDER. Each builds on the last.
+Run every project, then rewrite it from memory before moving on.
+
+================================================================
+PROJECT MAP
+================================================================
+
+Project 01_basic_stategraph
+  -> concept learned: State, StateGraph, node, START, END, compile, invoke
+
+Project 02_multiple_nodes
+  -> concept learned: multiple nodes, edges, state passing, updating
+
+Project 03_sequential_workflow
+  -> concept learned: realistic linear workflows, why a graph
+
+Project 04_conditional_routing
+  -> concept learned: conditional edges, routing functions, branching
+
+Project 05_loop_workflow
+  -> concept learned: cycles, loops, termination, max iterations
+
+Project 06_parallel_workflow
+  -> concept learned: parallel branches, fan-out/fan-in, aggregation
+
+Project 07_tool_calling
+  -> concept learned: tools, @tool, ToolNode, tool results
+
+Project 08_react_agent
+  -> concept learned: ReAct loop (reason/act/observe), conditional routing
+
+Project 09_memory_checkpointing
+  -> concept learned: checkpointing, thread_id, conversation memory
+
+Project 10_human_in_the_loop
+  -> concept learned: interrupts, resume, human approval
+
+Project 11_subgraphs
+  -> concept learned: compiled graph as node, reusable workflows
+
+Project 12_map_reduce
+  -> concept learned: Send, dynamic fan-out, reducers, aggregation
+
+Project 13_command_routing
+  -> concept learned: Command, dynamic control flow from a node
+
+Project 14_planner_executor
+  -> concept learned: Plan-and-Execute, planning, step execution
+
+Project 15_combined_agent
+  -> concept learned: combining everything into one agent
+
+Project 16_autonomous_goal_agent
+  -> concept learned: autonomy, goal-directed loops, ReAct as engine
+
+================================================================
+SKILL LEVELS
+================================================================
+
+BEGINNER - what I should know (after projects 01-06):
+  - What State, StateGraph, node, edge, START, END mean
+  - How to chain nodes and pass state
+  - How to branch with conditional edges
+  - How to create a loop with a termination guard
+  - How to run nodes in parallel and join them
+  - Why compile() and invoke() exist
+
+INTERMEDIATE - what I should know (after projects 07-12):
+  - How to define tools and use ToolNode
+  - The ReAct loop: reason -> act -> observe
+  - How memory works: checkpointing + thread_id
+  - How to pause/resume with interrupts (human-in-the-loop)
+  - How to reuse logic with subgraphs
+  - How to do dynamic fan-out with Send and reducers
+
+ADVANCED - what I should know (after projects 13-16):
+  - Command-based dynamic control flow
+  - Plan-and-Execute architecture
+  - Combining tools + state + routing + memory + safety
+  - Autonomous goal-directed agents and their constraints
+  - The correct relationship between ReAct and autonomy
+
+INTERVIEW READY - what I should be able to explain/write:
+  - Draw a workflow graph on paper
+  - Explain why LangGraph (vs plain code, LangChain, CrewAI)
+  - Write the basic skeleton from memory (PART 3 of the prep file)
+  - Write a ReAct agent from memory
+  - Explain checkpointing/memory/interrupts clearly
+  - Explain ReAct vs Plan-and-Execute vs autonomous agent correctly
+  - Answer "write a simple LangGraph workflow that does X"
+
+================================================================
+FINAL CHECKLIST
+================================================================
+
+[ ] I can create a StateGraph
+[ ] I can define State
+[ ] I can create nodes
+[ ] I can connect nodes
+[ ] I can use conditional routing
+[ ] I can create loops
+[ ] I can create parallel workflows
+[ ] I can use tools
+[ ] I can write a ReAct agent
+[ ] I understand checkpointing
+[ ] I understand memory
+[ ] I can implement human-in-the-loop
+[ ] I understand subgraphs
+[ ] I understand Send/map-reduce
+[ ] I understand Command
+[ ] I can implement Plan-and-Execute
+[ ] I understand autonomous agents
+[ ] I understand ReAct vs autonomous agents
+[ ] I can write LangGraph code from scratch
+
+RULES FOR THE DAY BEFORE THE INTERVIEW:
+  1. Rewrite project 01 and project 08 from memory (no docs).
+  2. Re-read PART 3 (code patterns) of LANGGRAPH_INTERVIEW_PREPARATION.txt.
+  3. Say out loud the answer to:
+     - "What is ReAct and how does it relate to an autonomous agent?"
+     - "How is memory implemented in LangGraph?"
+     - "How do you prevent infinite loops?"
+  4. Sleep.
+
+================================================================
+END OF FILE
+================================================================

@@ -1,0 +1,193 @@
+============================================================
+ REACT COMMON PATTERNS — quick revision before an interview
+============================================================
+How to use: skim each pattern. If you can write it from memory
+without looking, you are ready. These mirror the example folders.
+
+------------------------------------------------------------
+1. useState
+------------------------------------------------------------
+const [count, setCount] = useState(0);
+setCount(count + 1);            // normal update
+setCount((prev) => prev + 1);   // safe when new value depends on previous
+
+------------------------------------------------------------
+2. Input onChange
+------------------------------------------------------------
+<input value={value} onChange={(e) => setValue(e.target.value)} />
+
+------------------------------------------------------------
+3. Form onSubmit
+------------------------------------------------------------
+const handleSubmit = (e) => {
+  e.preventDefault();   // stop page reload — ALWAYS
+  // do something
+};
+<form onSubmit={handleSubmit}>...</form>
+
+------------------------------------------------------------
+4. Controlled input
+------------------------------------------------------------
+// React state owns the value; the input is just a mirror
+<input value={name} onChange={(e) => setName(e.target.value)} />
+
+------------------------------------------------------------
+5. Conditional rendering
+------------------------------------------------------------
+{isLoggedIn ? <Dashboard /> : <Login />}   // ternary
+{isLoggedIn && <p>Welcome back</p>}        // && (show when true)
+if (loading) return <p>Loading...</p>;     // early return
+
+------------------------------------------------------------
+6. Array map
+------------------------------------------------------------
+{items.map((item) => <div key={item.id}>{item.name}</div>)}
+
+------------------------------------------------------------
+7. Array filter
+------------------------------------------------------------
+const filtered = items.filter((item) =>
+  item.name.toLowerCase().includes(search.toLowerCase())
+);
+
+------------------------------------------------------------
+8. Add item
+------------------------------------------------------------
+setItems([...items, newItem]);   // never items.push()
+
+------------------------------------------------------------
+9. Delete item
+------------------------------------------------------------
+setItems(items.filter((item) => item.id !== id));
+
+------------------------------------------------------------
+10. Edit item
+------------------------------------------------------------
+setItems(items.map((item) =>
+  item.id === id ? { ...item, name: newName } : item
+));
+
+------------------------------------------------------------
+11. Toggle item
+------------------------------------------------------------
+setItems(items.map((item) =>
+  item.id === id ? { ...item, done: !item.done } : item
+));
+
+------------------------------------------------------------
+12. useEffect API call
+------------------------------------------------------------
+useEffect(() => {
+  fetch(url).then((r) => r.json()).then(setData);
+}, []);   // empty deps = run once on mount
+
+------------------------------------------------------------
+13. Loading / error / success
+------------------------------------------------------------
+if (loading) return <p>Loading...</p>;
+if (error) return <p>{error}</p>;
+return <ul>{data.map(...)}</ul>;
+
+------------------------------------------------------------
+14. localStorage
+------------------------------------------------------------
+const [name, setName] = useState(() => localStorage.getItem("key") || "");
+useEffect(() => localStorage.setItem("key", name), [name]);
+
+------------------------------------------------------------
+15. useRef (focus input)
+------------------------------------------------------------
+const inputRef = useRef(null);
+<input ref={inputRef} />
+inputRef.current.focus();
+
+------------------------------------------------------------
+16. useContext
+------------------------------------------------------------
+const ThemeContext = createContext();
+<ThemeContext.Provider value={theme}>...</ThemeContext.Provider>
+const theme = useContext(ThemeContext);
+
+------------------------------------------------------------
+17. useReducer
+------------------------------------------------------------
+function reducer(state, action) {
+  switch (action.type) {
+    case "increment": return { count: state.count + 1 };
+    default: return state;
+  }
+}
+const [state, dispatch] = useReducer(reducer, { count: 0 });
+dispatch({ type: "increment" });
+
+------------------------------------------------------------
+18. Custom hook
+------------------------------------------------------------
+function useCounter() {
+  const [count, setCount] = useState(0);
+  const increment = () => setCount((c) => c + 1);
+  return { count, increment };
+}
+const { count, increment } = useCounter();
+
+------------------------------------------------------------
+19. useNavigate
+------------------------------------------------------------
+const navigate = useNavigate();
+navigate("/dashboard");
+
+------------------------------------------------------------
+20. Protected route
+------------------------------------------------------------
+function Protected({ isAuth, children }) {
+  return isAuth ? children : <Navigate to="/login" replace />;
+}
+
+------------------------------------------------------------
+21. Modal
+------------------------------------------------------------
+const [isOpen, setIsOpen] = useState(false);
+{isOpen && (
+  <div className="overlay" onClick={() => setIsOpen(false)}>
+    <div className="modal" onClick={(e) => e.stopPropagation()}>
+      {children}
+    </div>
+  </div>
+)}
+
+------------------------------------------------------------
+22. Tabs
+------------------------------------------------------------
+const [active, setActive] = useState("profile");
+const content = tabs.find((t) => t.id === active).content;
+{tabs.map((t) => (
+  <button key={t.id} onClick={() => setActive(t.id)}
+    className={active === t.id ? "active" : ""}>
+    {t.label}
+  </button>
+))}
+
+------------------------------------------------------------
+23. Search (filter list)
+------------------------------------------------------------
+<input value={q} onChange={(e) => setQ(e.target.value)} />
+const results = items.filter((i) =>
+  i.name.toLowerCase().includes(q.toLowerCase())
+);
+
+------------------------------------------------------------
+24. Debounce
+------------------------------------------------------------
+useEffect(() => {
+  const t = setTimeout(() => setDebounced(query), 500);
+  return () => clearTimeout(t);   // cleanup cancels the previous timer
+}, [query]);
+
+------------------------------------------------------------
+25. Pagination
+------------------------------------------------------------
+const PAGE_SIZE = 5;
+const totalPages = Math.ceil(items.length / PAGE_SIZE);
+const pageItems = items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+<button onClick={() => setPage(page - 1)} disabled={page === 1}>Prev</button>
+<button onClick={() => setPage(page + 1)} disabled={page === totalPages}>Next</button>

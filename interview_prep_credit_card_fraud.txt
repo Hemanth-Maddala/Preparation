@@ -1,0 +1,335 @@
+====================================================================
+  CREDIT CARD FRAUD DETECTION - INTERNSHIP INTERVIEW PREP
+  (ML Project: End-to-End Credit Card Fraud Detection)
+====================================================================
+
+------------------------------------------------------------------
+  SECTION 1 : PROJECT SUMMARY (YOUR 2-MINUTE ELEVATOR PITCH)
+------------------------------------------------------------------
+
+Say this in your own words:
+
+"This was an end-to-end machine learning project to detect fraudulent
+credit card transactions. I worked with a Kaggle dataset of 10,000
+transactions, where only about 1.5% were fraudulent - so the data was
+highly imbalanced, which is realistic because in real life fraud is
+rare.
+
+My pipeline was: data loading -> EDA (exploratory data analysis) ->
+feature engineering -> handling categorical columns -> train/test split
+-> scaling -> handling class imbalance with SMOTE -> training 3 models
+(Logistic Regression, Random Forest, XGBoost) -> evaluation using
+precision, recall, F1 and ROC-AUC -> feature importance analysis ->
+saving the best model -> and finally building a real-time prediction
+pipeline that scores a single transaction in milliseconds.
+
+I chose fraud detection for the project because it is a classic,
+real-world ML problem where accuracy alone is misleading - the cost of
+missing a fraud (false negative) is very different from the cost of
+blocking a genuine customer (false positive)."
+
+Key numbers to memorise:
+- Dataset: 10,000 transactions, 10 columns
+- Fraud rate: ~1.5% (151 fraudulent out of 10,000)
+- 3 models compared: Logistic Regression, Random Forest, XGBoost
+- SMOTE used to balance training data
+- Final model saved as fraud_detector_model.pkl with joblib
+- Real-time latency: < 5 ms average
+
+------------------------------------------------------------------
+  SECTION 2 : THE DATASET AND COLUMNS (YOU MUST KNOW THESE)
+------------------------------------------------------------------
+
+Columns:
+1. transaction_id      - unique id, dropped (no predictive value)
+2. amount              - transaction amount in $
+3. transaction_hour    - hour of day (0-23)
+4. merchant_category   - categorical (e.g. Food, Electronics) - string
+5. foreign_transaction - binary (0/1) - was it foreign
+6. location_mismatch   - binary (0/1) - card used away from usual place
+7. device_trust_score  - numeric, trust score of the device (0-100ish)
+8. velocity_last_24h   - numeric, number of transactions in last 24h
+9. cardholder_age      - numeric, age of the cardholder
+10. is_fraud           - TARGET (0 = legit, 1 = fraud)
+
+Engineered features (I added 6):
+- log_amount         : log(1 + amount) to reduce right-skew
+- is_night           : 1 if transaction between midnight and 6am
+- high_velocity      : 1 if velocity_last_24h > 5
+- low_device_trust   : 1 if device_trust_score < 40
+- amount_bucket      : bucket amount into 0/1/2/3 (tiny/small/medium/large)
+- risk_score         : sum of the above 5 flags (0 to 5)
+
+------------------------------------------------------------------
+  SECTION 3 : COMMON INTERVIEW QUESTIONS WITH ANSWERS
+------------------------------------------------------------------
+
+Q1. "Explain the project in one minute."
+A1. An end-to-end ML project to classify credit card transactions as
+    fraud or legit. Data was imbalanced (~1.5% fraud), so I used SMOTE.
+    I compared Logistic Regression, Random Forest and XGBoost on
+    precision, recall, F1 and ROC-AUC, picked the best, saved it, and
+    built a real-time pipeline that returns a verdict and probability
+    in under 5 milliseconds.
+
+Q2. "Why these 3 models? Why not others like SVM or Neural Networks?"
+A2. 
+  - Logistic Regression: I used it as a simple, fast BASELINE. It is
+    linear, easy to interpret, and gives us a reference number. If a
+    complex model barely beats LR, the added complexity isn't worth it.
+  - Random Forest: an ensemble of decision trees (bagging). It handles
+    non-linear relationships, works well on tabular data, needs little
+    tuning, and gives free feature importance.
+  - XGBoost: gradient boosting, currently the go-to for tabular data.
+    It usually gives the best accuracy on structured datasets and
+    handles the imbalance well with its own objective tuning.
+  - I avoided Neural Networks because on small tabular datasets (only
+    10k rows) they don't have enough data to learn and are harder to
+    train/debug. SVM is slow to scale and not interpretable. For
+    structured/tabular fraud detection, tree-based models are the
+    industry standard.
+  - Also, these 3 models cover 3 different families: linear, bagging
+    and boosting - so I'm comparing completely different approaches.
+
+Q3. "Which model was the best and why?"
+A3. XGBoost (or Random Forest - check your notebook output, but based
+    on the notes XGBoost/Random Forest outperformed Logistic
+    Regression). I selected the winner using F1 score, because F1
+    balances precision and recall which matters most for imbalanced
+    fraud data. Tree-based models win because they can capture complex
+    non-linear patterns like combinations of device trust, velocity and
+    location mismatch, which a linear model cannot. 
+
+Q4. "Why did you use SMOTE? What does it do?"
+A4. Because fraud is only ~1.5% of the data, a model can get 98.5%
+    accuracy by simply predicting "not fraud" every time - useless for
+    detection. SMOTE (Synthetic Minority Over-sampling Technique)
+    creates synthetic fraud samples by interpolating between nearby
+    existing fraud samples in feature space, so the model sees enough
+    fraud examples to learn patterns.
+    IMPORTANT point to mention: I applied SMOTE ONLY to the training
+    set, never the test set, so the test set stays real and the
+    evaluation is honest.
+    Limitations I can mention: SMOTE can create noisy samples and isn't
+    ideal for high-dimensional data; an alternative is class weights
+    (class_weight='balanced' in sklearn) which many people prefer.
+
+Q5. "Why did you scale the features? Why StandardScaler specifically?"
+A5. Many features are on very different scales - amount ($850) vs
+    device_trust_score (0-100) vs velocity (0-10). Logistic Regression
+    and distance-based methods need scaled features so no single
+    feature dominates. StandardScaler subtracts the mean and divides by
+    the standard deviation, giving each feature mean=0 and variance=1.
+    (Tree-based models like RF and XGBoost don't strictly need scaling,
+    but it doesn't hurt and keeps the pipeline uniform.)
+    Important point: I fit the scaler ONLY on the training data and
+    used transform() on the test data to avoid data leakage.
+
+Q6. "Why did you use LabelEncoder for categorical columns?"
+A6. The dataset had a string column merchant_category (e.g. 'Food',
+    'Electronics'). StandardScaler crashed with "ValueError: could not
+    convert string to float" because of it. LabelEncoder converts each
+    unique category into an integer.
+    Honest limitation (interviewers love this): LabelEncoder assigns
+    arbitrary order (Food=0, Electronics=1...) which implies false
+    ordering to a tree/linear model. For this project it worked fine,
+    but in a better version I would use One-Hot Encoding or ordinal
+    encoding based on fraud-rate. I'll also mention the trade-off:
+    one-hot creates many columns, label encoding keeps it compact.
+
+Q7. "Why did you use stratified train/test split?"
+A7. A random split on imbalanced data can by chance put all the fraud
+    in train or test. Stratify=y makes sure the fraud percentage stays
+    the same (~1.5%) in both train and test, so both sets are
+    representative. I used 80/20 split with random_state=42.
+
+Q8. "Which metric did you use and why not accuracy?"
+A8. Accuracy is misleading on imbalanced data - a model predicting all
+    zeros gets 98.5% accuracy but catches zero fraud. I focused on:
+    - Recall: of all actual frauds, how many did we catch? (most
+      important - missing a fraud costs money)
+    - Precision: of all flagged frauds, how many were really fraud?
+      (low precision = annoying/blocking real customers)
+    - F1: harmonic mean of both - single number to pick best model.
+    - ROC-AUC: measures how well the model separates classes across
+      ALL thresholds, independent of the 0.5 cutoff.
+    I also printed a confusion matrix to see TP/FP/FN/TN clearly.
+
+Q9. "What did you find in the EDA? What was interesting?"
+A9. - The dataset is highly imbalanced (~1.5% fraud).
+    - Fraudulent transactions on average have lower amounts than legit
+      ones in this dataset (fraudsters avoid attention).
+    - Night transactions (is_night) correlate with fraud.
+    - Fraud rate is higher when location_mismatch = 1 and for foreign
+      transactions.
+    - High velocity_last_24h correlates with fraud.
+    - device_trust_score, velocity_last_24h and location_mismatch are
+      the top predictive features.
+
+Q10. "How does your real-time prediction pipeline work?"
+A10. The flow for one live transaction:
+      1. Raw transaction dict arrives
+      2. Categorical values are label-encoded (reusing the saved
+         encoders; unseen categories get -1)
+      3. Feature engineering runs (log_amount, is_night, high_velocity,
+         low_device_trust, amount_bucket, risk_score)
+      4. Features are scaled with the saved StandardScaler
+      5. Model predicts probability of fraud
+      6. Returns verdict (FRAUD/LEGITIMATE), probability %, and latency
+    I demonstrated it on real legit + real fraud + a manually crafted
+    suspicious transaction, and stress-tested with 200 random
+    transactions - average latency under 5 ms, so it's real-time capable.
+
+Q11. "How did you save and load the model?"
+A11. With joblib (better than pickle for large numpy arrays inside
+    sklearn objects). I saved 4 artifacts:
+      - fraud_detector_model.pkl   (best model)
+      - fraud_detector_scaler.pkl  (the fitted scaler)
+      - feature_names.pkl          (feature order, to prevent mismatch)
+      - fraud_label_encoders.pkl   (categorical encoders)
+    Then in a separate session I loaded all 4 back and used them -
+    this simulates a real deployment where training and serving are
+    separate.
+
+Q12. "What was the hardest bug/problem you faced?"
+A12. The StandardScaler crashed with "ValueError: could not convert
+    string to float: 'Food'" because merchant_category was a string
+    column in X but was never encoded. I fixed it by adding a
+    LabelEncoder step before the train/test split. I also mention that
+    I saved feature_names.pkl precisely to prevent this kind of
+    training/serving mismatch in future.
+
+Q13. "What is data leakage and did you handle it?"
+A13. Data leakage = information from the test set (or future) leaking
+    into training, making scores look better than reality. I avoided
+    it by:
+    - Scaling: fit scaler on train only.
+    - SMOTE: applied after the split, on train only.
+    - Feature engineering: only uses values from the same row (no
+      global statistics like mean of the whole dataset).
+    - Reusing saved encoders/scaler at inference time so the live
+      pipeline uses exactly the same transformation.
+
+Q14. "What would you improve if you had more time?"
+A14. (Interviewers love ambition.) Possible answers:
+    - Use One-Hot/ordinal encoding instead of LabelEncoder
+    - Add hyperparameter tuning (GridSearchCV / Optuna)
+    - Try class_weight='balanced' and compare with SMOTE
+    - Try other models: LightGBM, CatBoost, Isolation Forest
+      (unsupervised - useful when you have no labels)
+    - Use more real-world data (10k rows is small)
+    - Add model monitoring / drift detection for production
+    - Deploy as a REST API (FastAPI) with an endpoint like /predict
+    - Use threshold tuning - the 0.5 default threshold is not optimal
+      for fraud; we could lower it to catch more fraud (higher recall)
+      based on the cost trade-off.
+
+Q15. "Why is recall more important than precision in fraud detection?"
+A15. Missing a fraud transaction costs the bank real money and damages
+    customer trust. Blocking a legit transaction (false positive) is
+    annoying but less costly and reversible. So we often optimise for
+    higher recall. But there's a trade-off - too much recall means too
+    many legit customers get blocked, so in practice we pick a
+    threshold based on business cost.
+
+Q16. "What is the difference between Bagging and Boosting?"
+A16. Bagging (Random Forest): trains many trees in PARALLEL, each on a
+    random bootstrap sample, then averages their votes. Reduces
+    variance, is hard to overfit. Boosting (XGBoost): trains trees
+    SEQUENTIALLY, each new tree focuses on the mistakes of the previous
+    ones. Reduces bias, usually better accuracy but more prone to
+    overfitting if not regularised.
+
+Q17. "Explain the confusion matrix and the four outcomes."
+A17. True Positive (TP) = actually fraud, predicted fraud - good catch.
+    False Negative (FN) = actually fraud, predicted legit - DANGEROUS,
+    we missed a fraud.
+    False Positive (FP) = actually legit, predicted fraud - blocked a
+    genuine customer.
+    True Negative (TN) = actually legit, predicted legit - correct.
+    Precision = TP / (TP + FP). Recall = TP / (TP + FN).
+
+Q18. "Why didn't you use deep learning?"
+A18. Deep learning needs large amounts of data. With only 10,000 rows,
+    tree-based models (Random Forest, XGBoost) give comparable or better
+    accuracy with far less training time, less tuning, and they are
+    interpretable. Neural networks are better for images/text/audio or
+    very large tabular datasets.
+
+Q19. "What is the difference between ROC-AUC and Average Precision?"
+A19. ROC-AUC plots TPR vs FPR across thresholds; it's good for
+    balanced data but can look optimistically good on imbalanced data
+    because FPR is dominated by the majority class. Average Precision
+    (area under precision-recall curve) is more informative for
+    imbalanced data because it focuses on the minority (fraud) class.
+    That's why I tracked both.
+
+Q20. "How would you deploy this in production?"
+A20. I'd wrap the loaded model + scaler + encoders in a FastAPI/Flask
+    service exposing a POST /predict endpoint that takes a transaction
+    JSON and returns verdict + probability. I'd containerise it with
+    Docker, serve with a load balancer, add logging/metrics, and set up
+    retraining + monitoring for data drift. Optionally use a
+    streaming platform (Kafka) for real-time event processing, or
+    batch scoring if latency allows. My <5ms latency shows it can
+    handle real-time scoring.
+
+Q21. "What is feature engineering and why does it matter?"
+A21. Creating new features from existing ones to help the model see
+    patterns it couldn't otherwise. For example risk_score sums up all
+    the risky flags (foreign + mismatch + night + high velocity + low
+    device trust) - it gives the model a single "how suspicious is this"
+    signal. log_amount removes heavy skew so linear models work better.
+
+Q22. "Why random_state=42?" 
+A22. It fixes the random seed so results are reproducible. Without it,
+    every run would give a different split and different results, which
+    is bad for comparing models and for debugging. 42 is just a
+    convention/popular number (The Hitchhiker's Guide).
+
+Q23. "What would you do if a new category appears in production that
+      the encoder has never seen?"
+A23. In my live pipeline I handle it: if the value isn't in
+    le.classes_, I assign -1 as a fallback so the pipeline never
+    crashes. This is a real production problem - in practice you'd also
+    monitor these and periodically retrain the encoder. A robust
+    alternative is One-Hot Encoding with handle_unknown='ignore'.
+
+Q24. "Why did you use train_test_split instead of cross-validation?"
+A24. For simplicity and to demonstrate a clear train/test pipeline.
+    In production-grade work I'd use cross-validation (e.g.
+    StratifiedKFold) for more reliable model selection, and mention it
+    as an improvement.
+
+------------------------------------------------------------------
+  SECTION 4 : QUICK NUMBERS / FACTS TO MEMORISE
+------------------------------------------------------------------
+
+- Dataset: 10,000 rows, 10 columns
+- Fraud: 151 transactions = 1.51%
+- Split: 80/20 stratified, random_state=42
+- SMOTE applied on TRAIN only
+- Models: Logistic Regression (C=0.1), Random Forest (100 trees, max_depth=10),
+          XGBoost (100 trees, depth 6, lr 0.1)
+- Winner chosen by F1 score
+- Metrics: precision, recall, F1, ROC-AUC, Average Precision
+- Saved: model, scaler, feature_names, label_encoders (joblib)
+- Real-time latency: avg < 5 ms (tested on 200 transactions)
+- Top features: device_trust_score, velocity_last_24h, location_mismatch
+- Bug fixed: StandardScaler ValueError on merchant_category string
+
+------------------------------------------------------------------
+  SECTION 5 : QUESTIONS YOU SHOULD ASK THE INTERVIEWER (good look)
+------------------------------------------------------------------
+
+- "How is fraud detection currently handled in your company?"
+- "What does the tech stack look like - are models served via API,
+  batch, or stream?"
+- "How do you measure the business impact of a fraud model
+  (cost per false negative vs false positive)?"
+- "Is there an opportunity to move from an internship to a full-time
+  role?"
+
+====================================================================
+  END - GOOD LUCK!
+====================================================================

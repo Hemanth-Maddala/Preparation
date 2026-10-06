@@ -1,0 +1,258 @@
+====================================================================
+ OOPS INTERVIEW QUESTIONS (with short speakable answers)
+====================================================================
+ How to use: cover the answer, answer aloud in <= 2 sentences,
+ then compare. These are the exact questions real interviewers ask.
+
+====================================================================
+ 1. CORE
+====================================================================
+ Q: What is the difference between a class and an object?
+ A: A class is a blueprint that defines state (fields) and behavior
+    (methods). An object is a concrete instance of that blueprint,
+    created with `new`, with its own copy of instance state.
+
+ Q: What is the difference between a constructor and a method?
+ A: A constructor has the same name as the class, has no return
+    type (not even void), and runs automatically at `new` time to
+    initialize the object. Methods have a return type and are
+    called explicitly.
+
+ Q: What happens if you define no constructor in a class?
+ A: Java inserts a default no-arg constructor. But if you define any
+    constructor, the default one disappears.
+
+ Q: What is `this` used for?
+ A: It references the current object - to resolve shadowing
+    (this.name = name) and to call a sibling constructor (this(...)).
+
+====================================================================
+ 2. ENCAPSULATION
+====================================================================
+ Q: What is encapsulation?
+ A: Binding data and the methods that operate on it into a class,
+    and hiding the data with private fields, exposing only public
+    methods. It gives controlled access and lets you validate input.
+
+ Q: Why not just make fields public?
+ A: Public fields can be set to any value with no validation, so the
+    object can be put in an invalid state and later changes to
+    internal logic break all callers.
+
+====================================================================
+ 3. INHERITANCE
+====================================================================
+ Q: What does inheritance give the child class?
+ A: All accessible (non-private) fields and methods of the parent,
+    plus the IS-A relationship, plus the parent type for
+    polymorphism.
+
+ Q: Can a child access private members of the parent?
+ A: No, not directly. Use protected or public members, or access
+    them through public/protected methods.
+
+ Q: What is super() for?
+ A: It calls a parent constructor and MUST be the first statement in
+    a child constructor. Java adds super() implicitly if you do not.
+
+ Q: Does Java support multiple inheritance?
+ A: Not for classes - a class extends only one class. Multiple
+    inheritance of type is supported through interfaces.
+
+====================================================================
+ 4. POLYMORPHISM
+====================================================================
+ Q: Overloading vs overriding?
+ A: Overloading = same name, different parameters, decided at
+    compile time, can happen in the same class. Overriding = same
+    signature, child replaces parent, decided at runtime.
+
+ Q: Can overloading differ only by return type?
+ A: No. The compiler needs the parameter list to choose; return type
+    alone is ambiguous and not allowed.
+
+ Q: What is runtime polymorphism / dynamic method dispatch?
+ A: Animal a = new Dog(); a.sound() runs Dog.sound() because the
+    object type (Dog), not the reference type (Animal), decides at
+    runtime which method runs.
+
+ Q: Why is upcasting safe and downcasting dangerous?
+ A: A Dog IS-A Animal, so moving up the hierarchy always fits.
+    Moving down assumes the object really is that subtype; if not,
+    you get a ClassCastException. Use instanceof before downcasting.
+
+====================================================================
+ 5. ABSTRACTION
+====================================================================
+ Q: Abstract class vs interface?
+ A: An abstract class can have state (fields) and concrete methods
+    plus abstract ones; a class extends only one. An interface is
+    mostly a contract - a class implements many. Choose abstract
+    class for shared state/behavior, interface for capability.
+
+ Q: Can you instantiate an abstract class?
+ A: No. It exists to be extended. An anonymous subclass can be
+    created with new A(){...} but that is a subclass, not A itself.
+
+ Q: Can an abstract class have a constructor?
+ A: Yes. It runs via super() when a concrete subclass is created.
+
+====================================================================
+ 6. STATIC AND FINAL
+====================================================================
+ Q: What does static mean?
+ A: Class-level, not object-level. One copy shared by all objects.
+    Access via the class name; no `this` inside a static method.
+
+ Q: Can a static method access an instance variable?
+ A: No - it has no object context (`this`), so there is no instance
+    to read from. It can access static members only.
+
+ Q: Can static methods be overridden?
+ A: No. If you write the same signature in the child it is method
+    hiding, decided by the reference type at compile time, not
+    dynamic dispatch.
+
+ Q: What does final mean for a variable, method, class?
+ A: Variable: cannot be reassigned. Method: cannot be overridden.
+    Class: cannot be extended.
+
+ Q: Does final make an object immutable?
+ A: No. final blocks reassignment of the reference; the object
+    itself can still change (e.g. a final List can still be
+    modified). Immutability is about the object, not the reference.
+
+====================================================================
+ 7. THE OBJECT CLASS
+====================================================================
+ Q: Difference between == and equals()?
+ A: == compares references (or primitive values); equals() compares
+    logical content, and must be overridden to define what "same"
+    means for your class.
+
+ Q: Why override equals() and hashCode() together?
+ A: The contract: equal objects MUST have equal hashCodes. Objects
+    stored in HashMap/HashSet are found by hashCode bucket first,
+    then equals. Breaking the rule breaks collections.
+
+ Q: What is toString() for?
+ A: A human-readable text representation. System.out.println(obj)
+    calls obj.toString() automatically.
+
+ Q: What is getClass()?
+ A: A final method inherited from Object that returns the runtime
+    class of the object (the object type, not the reference type).
+
+====================================================================
+ 8. IMMUTABILITY
+====================================================================
+ Q: How do you make a class immutable?
+ A: final class, private final fields, initialize all fields in the
+    constructor, no setters, and return defensive copies of any
+    mutable fields.
+
+ Q: Is String immutable and why is it safe?
+ A: Yes, String is immutable. Its content cannot change after
+    creation, so Strings can be shared and cached safely, and
+    String references are safe to use as map keys.
+
+====================================================================
+ 9. RELATIONSHIPS
+====================================================================
+ Q: Aggregation vs composition?
+ A: Both are HAS-A. Aggregation = weak ownership; parts can exist
+    alone (Department holds Employees who exist without it).
+    Composition = strong ownership; part dies with the whole
+    (Car owns its Engine).
+
+ Q: Favor composition over inheritance - meaning?
+ A: Inheritance couples child to parent internals and works badly
+    across versions. Composition uses a field, exposes only what you
+    choose, and is more flexible. But inheritance is fine when a
+    real IS-A exists and you reuse parent behavior.
+
+====================================================================
+ 10. DESIGN PRINCIPLES
+====================================================================
+ Q: What are the SOLID principles?
+ A: S = one responsibility per class. O = open for extension, closed
+    for modification. L = a subclass must be replaceable by its
+    parent without breaking behavior. I = many small interfaces over
+    one fat interface. D = depend on abstractions, not concretions.
+
+ Q: What is high cohesion vs low coupling?
+ A: High cohesion = each class does one focused job well. Low
+    coupling = classes depend on each other as little as possible.
+    Good design has both.
+
+====================================================================
+ 11. PATTERNS
+====================================================================
+ Q: Singleton - what, when, why problematic?
+ A: Ensures one instance with a private constructor + a static
+    accessor. Useful for config, logging, DB connection. Problems:
+    global mutable state, hidden dependencies, hard to test.
+
+ Q: Factory pattern?
+ A: A factory method/class centralizes object creation so callers
+    depend on the interface, not on which concrete class is made.
+    New types = new factory branch, not new caller changes.
+
+ Q: Strategy pattern?
+ A: Define an interface for a behavior, put each variant in its own
+    class, and give the context a reference to a strategy. Replaces
+    big if/else chains and lets behavior change at runtime.
+
+ Q: Observer pattern?
+ A: A subject keeps a list of observers and notifies them when its
+    state changes. Publisher/subscriber. One-to-many notification.
+
+ Q: Decorator pattern?
+ A: Wrap an object in another object that adds behavior. Layers are
+    composed at runtime instead of exploding into subclasses
+    (Coffee -> MilkDecorator -> SugarDecorator).
+
+====================================================================
+ 12. EXCEPTIONS AND GENERICS
+====================================================================
+ Q: Checked vs unchecked exception?
+ A: Checked (extends Exception): compiler forces handling with
+    try-catch or throws. Unchecked (extends RuntimeException): not
+    forced - NullPointerException, ArithmeticException, etc.
+
+ Q: Checked exceptions when overriding a method?
+ A: The override can declare the same or narrower checked
+    exceptions, or none at all - it cannot add new or broader ones.
+    Otherwise a caller catching the parent signature would be
+    surprised.
+
+ Q: Why generics?
+ A: Compile-time type safety without casting. List<String> refuses
+    non-String at compile time instead of ClassCastException at
+    runtime.
+
+====================================================================
+ 13. COMMON TRAP QUESTIONS
+====================================================================
+ Q: Animal a = new Dog(); a.sound(); which sound runs?
+ A: Dog's, because the object type (not the reference type) decides
+    at runtime - dynamic method dispatch.
+
+ Q: What is the default value of an uninitialized int field?
+ A: 0. Local variables, however, have no default and must be
+    initialized before use or the code will not compile.
+
+ Q: Can constructors be overloaded?
+ A: Yes - different parameter lists, chosen at compile time.
+    Constructors cannot be overridden (they are not inherited).
+
+ Q: Can an interface have a constructor?
+ A: No. Interfaces cannot be instantiated and have no constructors.
+
+ Q: Can we write a class with main() inside it? 
+ A: Yes. main(String[] args) is just a special static method that
+    the JVM calls to start the program.
+
+====================================================================
+ END - if you can answer all of these aloud, you are ready.
+====================================================================

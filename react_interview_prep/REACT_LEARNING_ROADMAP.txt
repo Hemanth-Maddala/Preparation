@@ -1,0 +1,167 @@
+============================================================
+ REACT LEARNING ROADMAP — for interview preparation
+============================================================
+
+HOW THIS WORKSPACE WORKS
+------------------------------------------------------------
+- 41 folders. Each folder = ONE concept + small runnable code.
+- To run an example:
+    .\switch-example.ps1 06_useState
+    npm run dev
+  (restore the landing page with: .\switch-example.ps1 _default)
+- Study loop for every folder:
+    1. Read the README (what / why).
+    2. Read the code and run it.
+    3. Modify it (change values, add a button).
+    4. Close the file.
+    5. Write it from memory.
+    6. Check. Repeat until you can write it cold.
+
+------------------------------------------------------------
+ PHASE 1 — COMPONENTS + JSX
+------------------------------------------------------------
+Folders: 01_basic_component, 02_jsx, 03_functional_components
+Goal: "A component is a function that returns JSX."
+Must be able to: create a component, use {}, className, fragments,
+compose components.
+
+------------------------------------------------------------
+ PHASE 2 — PROPS + STATE
+------------------------------------------------------------
+Folders: 04_props, 05_children, 06_useState
+Goal: data flows down (props), data changes (state).
+Must be able to: pass/read props, use children, use useState and
+explain setCount(prev => ...).
+
+------------------------------------------------------------
+ PHASE 3 — EVENTS + CONDITIONAL RENDERING + LISTS
+------------------------------------------------------------
+Folders: 07_event_handling, 08_conditional_rendering, 09_lists_and_keys
+Goal: interaction and dynamic output.
+Must be able to: onClick/onChange/onSubmit, ternary/&&/early return,
+map + keys.
+
+------------------------------------------------------------
+ PHASE 4 — FORMS + LOGIN
+------------------------------------------------------------
+Folders: 10_forms, 11_controlled_components, 12_form_validation,
+         13_login_page, 14_register_page
+Goal: build a working login and register page.
+IMPORTANT: do 13_login_page twice — once with the README open, once
+from memory. This is the most common practical interview task.
+
+------------------------------------------------------------
+ PHASE 5 — useEffect + APIS
+------------------------------------------------------------
+Folders: 15_useEffect, 16_fetch_api, 17_loading_error_states
+Goal: fetch data with loading/error/success states.
+Must be able to: explain the dependency array and cleanup.
+
+------------------------------------------------------------
+ PHASE 6 — useRef + CONTEXT + REDUCER
+------------------------------------------------------------
+Folders: 18_useRef, 19_useContext, 20_useReducer
+Goal: DOM refs, prop-drilling escape hatch, complex state.
+
+------------------------------------------------------------
+ PHASE 7 — CUSTOM HOOKS
+------------------------------------------------------------
+Folder: 21_custom_hook
+Goal: reuse stateful logic. Build useCounter and useFetch.
+
+------------------------------------------------------------
+ PHASE 8 — ROUTING + AUTHENTICATION
+------------------------------------------------------------
+Folders: 23_react_router, 24_navigation, 25_protected_route, 38_auth_flow
+Goal: navigate, protect routes, persist login with localStorage.
+
+------------------------------------------------------------
+ PHASE 9 — PERFORMANCE
+------------------------------------------------------------
+Folders: 28_useMemo, 29_useCallback, 30_memo
+Goal: know WHAT these do AND when NOT to use them.
+
+------------------------------------------------------------
+ PHASE 10 — COMMON UI CODING TASKS
+------------------------------------------------------------
+Folders: 22_local_storage, 31_debounce_search, 32_modal, 33_tabs,
+         34_search_filter, 35_pagination, 36_todo_crud, 37_api_crud
+Goal: implement each from memory. These appear constantly in rounds.
+
+------------------------------------------------------------
+ PHASE 11 — COMBINE EVERYTHING
+------------------------------------------------------------
+Folders: 40_practical_dashboard, 41_interview_tasks
+Goal: blend concepts into realistic tasks.
+
+------------------------------------------------------------
+ PHASE 12 — MOCK PRACTICAL CODING ROUNDS
+------------------------------------------------------------
+Do the tasks in REACT_CODING_TASKS.txt with a timer.
+  - Easy tasks:   15-20 minutes
+  - Medium tasks: 30-40 minutes
+  - Hard tasks:   45-60 minutes
+Talk while you code — explain each decision out loud.
+
+------------------------------------------------------------
+ REVISION WEEK BEFORE AN INTERVIEW (daily)
+------------------------------------------------------------
+1. REACT_COMMON_PATTERNS.txt — all 25 patterns, every day.
+2. REACT_INTERVIEW_QUESTIONS.txt — quick-fire Q&A out loud.
+3. REACT_INTERVIEW_TRAPS.txt — know every trap by heart.
+4. REACT_OUTPUT_PREDICTIONS.txt — predict each snippet first.
+5. Rebuild from memory: counter, login, todo, search, modal,
+   pagination, fetch + loading/error, protected route.
+
+------------------------------------------------------------
+ BEFORE A PRACTICAL ROUND
+------------------------------------------------------------
+- Memorize the login implementation order (see 13_login_page README).
+- Memorize the loading/error/success pattern (17).
+- Memorize the protected-route wrapper (25).
+- Memorize debounce (31) and pagination (35).
+- Sketch the component tree BEFORE writing code.
+
+------------------------------------------------------------
+ FINAL CHECKLIST
+------------------------------------------------------------
+[ ] I can create a functional component
+[ ] I understand JSX
+[ ] I can pass props
+[ ] I understand children
+[ ] I can use useState
+[ ] I understand state updates
+[ ] I can handle events
+[ ] I can conditionally render
+[ ] I can render lists
+[ ] I understand keys
+[ ] I can create controlled inputs
+[ ] I can validate a form
+[ ] I can build a login page
+[ ] I can build a signup page
+[ ] I can use useEffect
+[ ] I can fetch API data
+[ ] I can handle loading/error states
+[ ] I can use useRef
+[ ] I can use Context
+[ ] I can use useReducer
+[ ] I can create custom hooks
+[ ] I can use localStorage
+[ ] I can use React Router
+[ ] I can navigate programmatically
+[ ] I can create protected routes
+[ ] I understand lifting state
+[ ] I understand component communication
+[ ] I understand React.memo
+[ ] I understand useMemo
+[ ] I understand useCallback
+[ ] I can implement debounce
+[ ] I can implement search/filter
+[ ] I can implement pagination
+[ ] I can build a Todo CRUD
+[ ] I can fetch API data
+[ ] I can build a simple dashboard
+[ ] I can explain Virtual DOM
+[ ] I understand re-rendering
+[ ] I can answer React interview questions
+[ ] I can build a basic React page from scratch

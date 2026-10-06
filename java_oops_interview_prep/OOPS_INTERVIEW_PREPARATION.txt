@@ -1,0 +1,128 @@
+====================================================================
+ JAVA OOPS INTERVIEW PREPARATION
+====================================================================
+ Goal: learn OOP well enough to explain it, write it, and predict
+ output during a real interview.
+
+ This workspace is NOT a project. It is a training ground.
+ Every folder is ONE concept -> one small runnable example.
+ Every top-level .txt file is a practice tool.
+
+====================================================================
+ THE MASTER LEARNING LOOP
+====================================================================
+ For every concept, go through ALL seven steps in order:
+
+  1. CONCEPT
+       Read the folder README.md. What is it? 2-5 sentences.
+
+  2. SMALL JAVA EXAMPLE
+       Open Main.java. Read it line by line.
+       Compile and run it:
+         javac Main.java
+         java Main
+
+  3. UNDERSTAND WHAT HAPPENS
+       Do NOT just run it. Explain to yourself WHY the output is
+       what it is. Which line produced which line of output?
+       "The reference type is X but the object type is Y..."
+       "super() runs before the child body..."
+
+  4. INTERVIEW QUESTION
+       Read the "Interview questions" section of README.md.
+       Answer aloud before reading the given answer.
+
+  5. CODING PRACTICE
+       Close the file. Re-type the example from memory.
+       Then try the matching problem in OOPS_CODING_PROBLEMS.txt.
+
+  6. OUTPUT PREDICTION
+       Open OOPS_OUTPUT_PREDICTION.txt.
+       Predict the output BEFORE scrolling to the answer section.
+       Mark yourself: correct / wrong / partly.
+
+  7. EXPLAIN FROM MEMORY
+       Without looking at anything, explain the concept aloud in
+       30 seconds. Use the "Interview answer" in the README as your
+       checklist. If you cannot, redo steps 1-6.
+
+====================================================================
+ RULES THAT MAKE THIS WORK
+====================================================================
+ - One concept at a time. Do not jump ahead.
+ - Write the code yourself at least once. Reading is not learning.
+ - Explain out loud. Saying it exposes gaps.
+ - Predict output before running. This trains the interview brain.
+ - Do not memorize answers. Memorize the REASONING.
+
+====================================================================
+ CONCEPT MAP
+====================================================================
+ Foundations            : 01 02 03 04
+ Encapsulation          : 05
+ Inheritance            : 06 07
+ Polymorphism           : 08 09 10 11
+ Abstraction            : 12 13 14
+ Keywords/modifiers     : 15 16 17 18
+ Object relationships   : 19 20 21
+ Object class methods   : 22 23 24 25
+ Advanced objects       : 26 27 28 29
+ Design principles      : 30 31
+ Patterns               : 32 33 34 35 36 37 38
+ JVM & extras           : 39 40 41
+
+====================================================================
+ HOW TO RUN THE EXAMPLES
+====================================================================
+ In any folder:
+   javac Main.java
+   java Main
+
+ All examples are self-contained. No packages. No frameworks.
+ That is intentional: this is exactly how you write code on a
+ whiteboard or in an online editor during an interview.
+
+====================================================================
+ WEEKLY PLAN (4 weeks)
+====================================================================
+ Week 1 : folders 01-11  (the core: class, inheritance, polymorphism)
+ Week 2 : folders 12-21  (abstraction, modifiers, relationships)
+ Week 3 : folders 22-29  (Object methods, immutability, ordering)
+ Week 4 : folders 30-41  (design principles, patterns, extras)
+
+ Each week:
+   - Day 1-4: one or two new folders, full learning loop.
+   - Day 5: redo output predictions for that week's topics.
+   - Day 6: re-type examples from memory.
+   - Day 7: do one round of OOPS_MOCK_INTERVIEW.txt.
+
+====================================================================
+ THE 30-SECOND REVISION (before the interview)
+====================================================================
+ - 01 class = blueprint, object = instance, new creates it.
+ - 05 encapsulation = private data + public methods.
+ - 06 inheritance = child IS-A parent, gets fields + methods.
+ - 09 overriding = same signature, runtime decides.
+ - 10 polymorphism = reference type vs object type.
+ - 12 abstract = can't instantiate, can mix abstract + concrete.
+ - 13 interface = contract, multiple inheritance of type.
+ - 16 static = class level, one copy, no this.
+ - 17 final = variable/method/class lock.
+ - 22 == compares references, equals() compares content.
+ - 23 equal objects MUST have equal hashCodes.
+ - 26 immutable = final fields + no setters + defensive copy.
+ - 29 favor composition over inheritance (but not always).
+ - 30 SOLID: S O L I D - one line each.
+ - 32 singleton = one instance, but not a silver bullet.
+ - 39 reference lives on stack, object lives on heap.
+
+====================================================================
+ FINAL ADVICE
+====================================================================
+ Interviewers do not ask "what is a class?"
+ They ask questions that force you to show UNDERSTANDING:
+   "What does this print and why?"
+   "What happens if I remove @Override?"
+   "How would you design X?"
+ This workspace trains exactly those moments. Run it. Write it.
+ Say it. Predict it. Explain it.

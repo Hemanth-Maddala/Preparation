@@ -1,0 +1,127 @@
+============================================================
+ OUTPUT PREDICTION / REACT REASONING
+============================================================
+Try to predict the answer before reading it. These test real
+understanding of React's render model.
+
+------------------------------------------------------------
+1. WHAT RENDERS?
+------------------------------------------------------------
+function App() {
+  const [n, setN] = useState(0);
+  return <div>{n}</div>;
+}
+ANSWER: Renders 0. Clicking anywhere does nothing — nothing calls setN.
+
+------------------------------------------------------------
+2. HOW MANY TIMES DOES IT RENDER? (batching)
+------------------------------------------------------------
+function App() {
+  const [n, setN] = useState(0);
+  console.log("render");
+  return <button onClick={() => { setN(1); setN(2); }}>go</button>;
+}
+ANSWER: 1 render initially. After the click: 1 more render (updates are
+batched). Final displayed value: 2.
+
+------------------------------------------------------------
+3. STATE AFTER CLICK — STALE STATE TRAP
+------------------------------------------------------------
+const [count, setCount] = useState(0);
+onClick={() => { setCount(count + 1); setCount(count + 1); }}
+ANSWER: count becomes 1, NOT 2. Both reads of `count` see 0 from the
+current render. Fix:
+onClick={() => { setCount((p) => p + 1); setCount((p) => p + 1); }}  // -> 2
+
+------------------------------------------------------------
+4. WHEN DOES EACH useEffect RUN?
+------------------------------------------------------------
+useEffect(() => console.log("A"), []);
+useEffect(() => console.log("B"));
+useEffect(() => console.log("C"), [count]);
+ANSWER: On mount: A, B, C. After that, B runs on every render, C runs
+only when `count` changes, A never runs again.
+
+------------------------------------------------------------
+5. CLEANUP TIMING
+------------------------------------------------------------
+useEffect(() => {
+  console.log("run");
+  return () => console.log("cleanup");
+}, [count]);
+ANSWER: Mount -> "run". `count` changes -> "cleanup", then "run".
+Unmount -> "cleanup".
+
+------------------------------------------------------------
+6. MULTIPLE STATE UPDATES IN ONE HANDLER
+------------------------------------------------------------
+onClick={() => { setA(a + 1); setB(b + 1); }}
+ANSWER: A single re-render; both updates are applied together.
+
+------------------------------------------------------------
+7. WHAT HAPPENS WHEN PROPS CHANGE?
+------------------------------------------------------------
+Parent re-renders -> child re-renders even if the props are "the same
+value", UNLESS the child is wrapped in React.memo (shallow compare).
+
+------------------------------------------------------------
+8. WHAT HAPPENS WHEN A KEY CHANGES?
+------------------------------------------------------------
+<li key={user.id}>...
+ANSWER: A changed key DESTROYS and RECREATES the element — any state
+inside it is reset. An unchanged key REUSES the element (state kept).
+
+------------------------------------------------------------
+9. DOES THE CHILD RE-RENDER? (memo + inline function)
+------------------------------------------------------------
+<Child onClick={() => doThing()} />
+ANSWER: Yes — even with React.memo, because a new function reference is
+created on every render. Fix: useCallback with the right deps.
+
+------------------------------------------------------------
+10. CONTROLLED INPUT WITHOUT onChange
+------------------------------------------------------------
+<input value={name} />
+ANSWER: Typing does nothing — the input is locked to React state and
+never updates. No error is thrown; the value just never changes.
+
+------------------------------------------------------------
+11. setState DURING RENDER (bad)
+------------------------------------------------------------
+function App() {
+  const [n, setN] = useState(0);
+  setN(n + 1);          // inside the render body!
+  return <p>{n}</p>;
+}
+ANSWER: Infinite render loop. State updates must go in event handlers,
+effects, or other callbacks — never directly in the render body.
+
+------------------------------------------------------------
+12. WHAT DOES THIS RENDER? (&& with a number)
+------------------------------------------------------------
+{isLoggedIn && <Dashboard />}
+ANSWER: If isLoggedIn is true -> <Dashboard />. If false -> nothing.
+BUT beware: {0 && <X />} renders "0" (React renders the number). Use
+boolean checks: {items.length > 0 && <X />}.
+
+------------------------------------------------------------
+13. FETCH + .then ORDER
+------------------------------------------------------------
+fetch(url).then((r) => r.json()).then(setData);
+ANSWER: setData runs AFTER the response JSON is parsed. Inside the
+component, `data` is already the parsed array/object — not a Promise.
+
+------------------------------------------------------------
+14. KEYS AND INPUT STATE
+------------------------------------------------------------
+items.map((item) => <Input key={item.id} />)
+ANSWER: Reordering `items` preserves each input's typed value because
+React tracks them by id. Using index as key would mix up the values.
+
+------------------------------------------------------------
+15. CONTEXT VALUE OBJECT
+------------------------------------------------------------
+<ThemeContext.Provider value={{ theme, setTheme }}>
+ANSWER: A NEW object is created on every render, so ALL consumers
+re-render on every render even if theme did not change. Fix:
+useMemo the value, or split into separate contexts.

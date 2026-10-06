@@ -1,0 +1,546 @@
+================================================================
+DBMS INTERVIEW PREPARATION — LEARNING ROADMAP
+================================================================
+Purpose: Structured path to master DBMS for software engineering interviews.
+Approach: Learn concepts → Understand why → Practice interview answers → Handle follow-ups
+================================================================
+
+==================================================
+PHASE 1: DBMS FUNDAMENTALS
+==================================================
+Duration: 1-2 days
+Priority: Foundation
+
+Topics:
+- What is a database?
+- What is DBMS?
+- Why do we need DBMS?
+- DBMS vs RDBMS
+- Database schema vs instance
+- Metadata
+- Database users and administrator
+- Database system architecture
+
+Goal:
+  Be able to explain DBMS in 30 seconds.
+  Answer "Why do we need DBMS?" clearly.
+
+Practice Questions:
+  Q: What is DBMS?
+  Q: DBMS vs RDBMS?
+  Q: What is schema?
+  Q: Schema vs instance?
+
+==================================================
+PHASE 2: RELATIONAL MODEL + KEYS
+==================================================
+Duration: 2-3 days
+Priority: Very High
+
+Topics:
+  Part A — Relational Model:
+  - Relation, tuple, attribute, domain
+  - Relation schema, relation instance
+  - Degree vs cardinality
+
+  Part B — Keys:
+  - Super key
+  - Candidate key
+  - Primary key
+  - Alternate key
+  - Foreign key
+  - Composite key
+  - Natural key vs surrogate key
+
+Goal:
+  Explain every key type.
+  Know relationships between keys.
+  Answer "Can a table have multiple candidate keys?" confidently.
+
+Practice Questions:
+  Q: What is a primary key?
+  Q: Primary key vs candidate key?
+  Q: Can a table have multiple primary keys?
+  Q: Can a foreign key be NULL?
+  Q: What is a composite key?
+
+==================================================
+PHASE 3: CONSTRAINTS + ER MODEL
+==================================================
+Duration: 2 days
+Priority: High
+
+Topics:
+  Part A — Constraints:
+  - NOT NULL, UNIQUE, PRIMARY KEY, FOREIGN KEY, CHECK, DEFAULT
+  - Entity integrity vs referential integrity
+
+  Part B — ER Model:
+  - Entity, entity set, attribute
+  - Relationship, relationship set
+  - Strong vs weak entity
+  - Attribute types (simple, composite, multivalued, derived, key)
+
+  Part C — Cardinality & Participation:
+  - 1:1, 1:N, M:1, M:N
+  - Total vs partial participation
+  - Junction tables for M:N
+
+Goal:
+  Draw ER diagrams mentally.
+  Explain cardinality types with examples.
+  Know when to use junction tables.
+
+Practice Questions:
+  Q: What is referential integrity?
+  Q: What is total participation?
+  Q: How do you implement many-to-many?
+  Q: Strong entity vs weak entity?
+
+==================================================
+PHASE 4: NORMALIZATION
+==================================================
+Duration: 3-4 days
+Priority: Very High (HIGHEST PRIORITY)
+
+Topics:
+  Part A — Foundation:
+  - Why normalization?
+  - Data redundancy
+  - Insert, update, delete anomalies
+  - Functional dependency
+  - Partial dependency
+  - Transitive dependency
+
+  Part B — Normal Forms:
+  - 1NF: Atomic values, no repeating groups
+  - 2NF: No partial dependencies
+  - 3NF: No transitive dependencies
+  - BCNF: Every determinant is a super key
+  - 4NF: No multi-valued dependencies
+  - 5NF: No join dependencies
+
+  Part C — Progression:
+  Unnormalized → 1NF → 2NF → 3NF → BCNF → 4NF → 5NF
+
+Goal:
+  Explain the normalization progression.
+  For each normal form, explain what it fixes.
+  Answer "3NF vs BCNF?" clearly.
+  Identify which dependency each normal form removes.
+
+Practice Questions:
+  Q: What is normalization?
+  Q: What is functional dependency?
+  Q: What is partial dependency?
+  Q: What is transitive dependency?
+  Q: Explain 1NF through BCNF.
+  Q: 3NF vs BCNF?
+
+==================================================
+PHASE 5: TRANSACTIONS + ACID
+==================================================
+Duration: 2 days
+Priority: Very High
+
+Topics:
+  - What is a transaction?
+  - Transaction states (Active → Committed/Aborted)
+  - ACID properties:
+    * Atomicity
+    * Consistency
+    * Isolation
+    * Durability
+
+Goal:
+  Explain each ACID property with a real-world example.
+  Answer "What is a transaction?" in 30 seconds.
+
+Practice Questions:
+  Q: What is a transaction?
+  Q: Explain ACID.
+  Q: What is atomicity?
+  Q: What is durability?
+  Q: How is isolation achieved?
+
+==================================================
+PHASE 6: CONCURRENCY + ISOLATION
+==================================================
+Duration: 2-3 days
+Priority: Very High
+
+Topics:
+  Part A — Concurrency Problems:
+  - Dirty read
+  - Non-repeatable read
+  - Phantom read
+  - Lost update
+
+  Part B — Isolation Levels:
+  - Read Uncommitted
+  - Read Committed
+  - Repeatable Read
+  - Serializable
+  - What each level prevents/allows
+
+Goal:
+  Explain each concurrency problem.
+  Map each isolation level to what it prevents.
+  Answer "What is a dirty read?" and "What is a phantom read?" clearly.
+
+Practice Questions:
+  Q: What is a dirty read?
+  Q: What is a non-repeatable read?
+  Q: What is a phantom read?
+  Q: What are the four isolation levels?
+  Q: Which level prevents dirty reads?
+
+==================================================
+PHASE 7: LOCKS + DEADLOCKS
+==================================================
+Duration: 2 days
+Priority: High
+
+Topics:
+  Part A — Locking:
+  - Shared lock vs exclusive lock
+  - Two-phase locking (2PL)
+  - Strict 2PL
+
+  Part B — Deadlocks:
+  - What is deadlock?
+  - Four conditions for deadlock
+  - Prevention, avoidance, detection, recovery
+  - Deadlock vs starvation
+
+Goal:
+  Explain shared vs exclusive locks.
+  List the four conditions for deadlock.
+  Answer "Deadlock vs starvation?" clearly.
+
+Practice Questions:
+  Q: What is a shared lock?
+  Q: What is deadlock?
+  Q: What are the four conditions for deadlock?
+  Q: Deadlock vs starvation?
+
+==================================================
+PHASE 8: RECOVERY + SERIALIZABILITY
+==================================================
+Duration: 1-2 days
+Priority: Medium-High
+
+Topics:
+  Part A — Recovery:
+  - Why recovery is needed
+  - Failure types (transaction, system, media)
+  - Write-ahead logging (WAL)
+  - Checkpoints
+  - Undo vs Redo
+
+  Part B — Serializability:
+  - Serial vs non-serial schedules
+  - Conflict serializability
+  - View serializability
+  - Precedence graph
+
+Goal:
+  Explain WAL simply.
+  Explain why serializability matters.
+
+Practice Questions:
+  Q: What is write-ahead logging?
+  Q: What is serializability?
+  Q: Undo vs redo?
+
+==================================================
+PHASE 9: INDEXING
+==================================================
+Duration: 2-3 days
+Priority: Very High
+
+Topics:
+  Part A — Index Basics:
+  - What is an index?
+  - Why indexes are used
+  - Advantages and disadvantages
+  - Primary vs secondary index
+  - Dense vs sparse index
+  - Covering index
+
+  Part B — Index Structures:
+  - B-tree
+  - B+ tree (why databases prefer it)
+  - B-tree vs B+ tree
+  - Hash indexing
+  - B+ tree vs hash index
+
+  Part C — Clustered vs Non-Clustered:
+  - Clustered index
+  - Non-clustered index
+  - Multiple non-clustered indexes
+  - Physical ordering
+
+Goal:
+  Explain why B+ trees are preferred.
+  Answer "Why can indexes hurt performance?"
+  Compare clustered vs non-clustered.
+
+Practice Questions:
+  Q: What is an index?
+  Q: Why B+ tree?
+  Q: Clustered vs non-clustered index?
+  Q: Why can indexes hurt performance?
+  Q: What is a covering index?
+
+==================================================
+PHASE 10: SQL CONCEPTS (Theory)
+==================================================
+Duration: 2 days
+Priority: High
+
+Topics:
+  - DDL, DML, DQL, DCL, TCL
+  - SELECT, WHERE, GROUP BY, HAVING, ORDER BY
+  - Joins (INNER, LEFT, RIGHT, FULL OUTER, CROSS, SELF)
+  - Subqueries
+  - Aggregate functions
+  - NULL and three-valued logic
+  - WHERE vs HAVING
+  - UNION vs UNION ALL
+
+Goal:
+  Explain each join type.
+  Answer "WHERE vs HAVING?" confidently.
+  Understand NULL behavior.
+
+Practice Questions:
+  Q: INNER JOIN vs LEFT JOIN?
+  Q: WHERE vs HAVING?
+  Q: UNION vs UNION ALL?
+  Q: JOIN vs subquery?
+  Q: What happens with NULL comparisons?
+
+==================================================
+PHASE 11: VIEWS + PROCEDURES + TRIGGERS
+==================================================
+Duration: 1 day
+Priority: Medium
+
+Topics:
+  - Views
+  - View vs materialized view
+  - Stored procedures
+  - Functions
+  - Triggers
+  - Procedure vs function vs trigger
+
+Goal:
+  Explain each concept simply.
+  Answer "View vs materialized view?" and "Procedure vs function?"
+
+Practice Questions:
+  Q: What is a view?
+  Q: View vs materialized view?
+  Q: Procedure vs function?
+  Q: What is a trigger?
+
+==================================================
+PHASE 12: OLTP + OLAP
+==================================================
+Duration: 1 day
+Priority: High
+
+Topics:
+  - OLTP concept
+  - OLAP concept
+  - OLTP vs OLAP comparison
+  - Schema differences (normalized vs denormalized)
+  - Data warehouse basics
+
+Goal:
+  Answer "OLTP vs OLAP?" with a clear comparison.
+
+Practice Questions:
+  Q: OLTP vs OLAP?
+  Q: What is a data warehouse?
+  Q: Why different schemas for OLTP vs OLAP?
+
+==================================================
+PHASE 13: NOSQL + CAP + BASE
+==================================================
+Duration: 2 days
+Priority: Medium-High
+
+Topics:
+  Part A — SQL vs NoSQL:
+  - Relational databases
+  - NoSQL types (document, key-value, column-family, graph)
+  - SQL vs NoSQL comparison
+
+  Part B — CAP Theorem:
+  - Consistency, Availability, Partition tolerance
+  - Why you can't have all three
+  - CP vs AP systems
+
+  Part C — ACID vs BASE:
+  - ACID properties (review)
+  - BASE properties
+  - When to use which
+
+Goal:
+  Explain CAP theorem correctly.
+  Answer "ACID vs BASE?" clearly.
+  Know when to use SQL vs NoSQL.
+
+Practice Questions:
+  Q: SQL vs NoSQL?
+  Q: What is CAP theorem?
+  Q: Can you really choose any two in CAP?
+  Q: ACID vs BASE?
+
+==================================================
+PHASE 14: REPLICATION + SHARDING + PARTITIONING
+==================================================
+Duration: 2 days
+Priority: Medium-High
+
+Topics:
+  Part A — Replication:
+  - What is replication?
+  - Synchronous vs asynchronous
+  - Replication lag
+  - Primary/replica concept
+
+  Part B — Sharding:
+  - What is sharding?
+  - Shard key
+  - Benefits and challenges
+
+  Part C — Partitioning:
+  - Horizontal vs vertical partitioning
+  - Range, list, hash partitioning
+  - Partitioning vs sharding
+
+Goal:
+  Answer "Replication vs sharding?"
+  Answer "Partitioning vs sharding?"
+
+Practice Questions:
+  Q: What is replication?
+  Q: What is sharding?
+  Q: Replication vs sharding?
+  Q: Partitioning vs sharding?
+
+==================================================
+PHASE 15: SECURITY + PERFORMANCE
+==================================================
+Duration: 1-2 days
+Priority: Medium
+
+Topics:
+  Part A — Security:
+  - Authentication vs authorization
+  - Roles and privileges
+  - SQL injection concept
+  - Parameterized queries
+  - Encryption (at rest, in transit)
+  - Least privilege
+
+  Part B — Performance:
+  - Indexing (review)
+  - Query optimization
+  - Connection pooling
+  - Caching
+  - Denormalization
+  - Pagination
+
+Goal:
+  Answer "Authentication vs authorization?"
+  List performance optimization strategies.
+
+Practice Questions:
+  Q: Authentication vs authorization?
+  Q: What is SQL injection?
+  Q: How do you improve database performance?
+
+==================================================
+PHASE 16: DATABASE DESIGN SCENARIOS
+==================================================
+Duration: 2-3 days
+Priority: High
+
+Topics:
+  - Design a student database
+  - Design an e-commerce database
+  - Design an employee database
+  - Design a hospital database
+  - Design a food-ordering database
+  - Design a banking database
+  - Design a social media database
+
+For each:
+  - What tables/entities?
+  - What relationships?
+  - What keys?
+  - Where normalize? Where denormalize?
+  - Performance considerations
+
+Goal:
+  Think through database design systematically.
+  Answer design questions with structure.
+
+==================================================
+PHASE 17: MOCK INTERVIEWS
+==================================================
+Duration: 2-3 days
+Priority: High
+
+Topics:
+  - Round 1: DBMS fundamentals
+  - Round 2: Keys + normalization
+  - Round 3: Transactions + concurrency
+  - Round 4: Indexes + performance
+  - Round 5: Distributed databases
+  - Round 6: Scenario/design questions
+
+Goal:
+  Answer questions confidently.
+  Handle follow-up questions smoothly.
+  Think aloud during scenarios.
+
+==================================================
+REVISION SCHEDULE
+==================================================
+
+Day 1-2:  Phase 1 + Phase 2 (Fundamentals + Keys)
+Day 3-4:  Phase 3 (Constraints + ER Model)
+Day 5-8:  Phase 4 (Normalization — take your time)
+Day 9-10: Phase 5 + Phase 6 (Transactions + Concurrency)
+Day 11-12: Phase 7 + Phase 8 (Locks + Recovery)
+Day 13-15: Phase 9 (Indexing)
+Day 16-17: Phase 10 (SQL Concepts)
+Day 18:    Phase 11 + Phase 12 (Views/Procedures + OLTP/OLAP)
+Day 19-20: Phase 13 + Phase 14 (NoSQL/CAP + Replication/Sharding)
+Day 21:    Phase 15 (Security + Performance)
+Day 22-24: Phase 16 (Design Scenarios)
+Day 25-27: Phase 17 (Mock Interviews)
+
+Total: ~4 weeks at moderate pace
+
+==================================================
+TIPS
+==================================================
+
+1. Don't memorize definitions. Understand concepts.
+2. For every concept, ask yourself "Why?" and "When would I use this?"
+3. Practice explaining concepts out loud.
+4. Focus on Phase 4 (Normalization) — it's the most asked topic.
+5. Always prepare for follow-up questions.
+6. Don't skip the scenario questions — they test real understanding.
+7. Review this roadmap daily before starting your study session.
+8. After completing all phases, do a full revision using the main preparation file.
+
+================================================================
+END OF LEARNING ROADMAP
+================================================================

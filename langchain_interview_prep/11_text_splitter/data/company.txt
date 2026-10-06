@@ -1,0 +1,9 @@
+TechNova Solutions is a software company that builds tools for developers.
+Product lines:
+NovaDeploy is a deployment platform for cloud applications.
+NovaMetrics is an analytics dashboard for monitoring server health.
+NovaDocs is a documentation generator for API teams.
+Company policies:
+The company is remote-first, so employees can work from anywhere.
+Every product ships a new version every month.
+Customers receive 24/7 email support from the support team.

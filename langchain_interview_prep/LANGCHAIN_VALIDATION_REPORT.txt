@@ -1,0 +1,270 @@
+================================================================================
+ LANGCHAIN VALIDATION REPORT
+================================================================================
+
+Environment used for validation:
+  Python 3.10.18
+  langchain 1.3.14 / langchain-core 1.5.3
+  langchain-google-genai 4.2.2
+  langchain-community 0.3.31 / langchain-text-splitters 0.3.11
+  langgraph 1.2.10
+  pydantic 2.12.5
+
+Checks performed on every project:
+  1. Syntax: python -m compileall ............ PASS (all 30 files)
+  2. Imports: every import resolved .......... PASS (134 imports, 30 files)
+  3. Offline runs: 06, 10, 11 executed ........ PASS (real output verified)
+  4. Agent/LangGraph construction ............. PASS (create_agent, response_format,
+     checkpointer, middleware, interrupt_before, StateGraph all compile)
+  5. Credentials: GEMINI_API_KEY via os.getenv only ... PASS (no hardcoded keys)
+  6. LLM + embedding calls need a real key and were NOT executed live.
+
+STATUS legend:
+  RUN       = executed end-to-end without an API key
+  BUILT     = compiles, imports resolve, agent/graph construction verified
+              (LLM/embedding call needs your GEMINI_API_KEY to run)
+
+--------------------------------------------------------------------------------
+PROJECT: 01_basic_model
+STATUS:  BUILT
+CONCEPT: The simplest model call (model + invoke + AIMessage.content)
+MAIN API USED: ChatGoogleGenerativeAI, invoke()
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (34 lines)
+ANY CORRECTIONS: none
+
+PROJECT: 02_messages
+STATUS:  BUILT
+CONCEPT: SystemMessage / HumanMessage / AIMessage, multi-turn list
+MAIN API USED: SystemMessage, HumanMessage, AIMessage, model.invoke(messages)
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (47 lines)
+ANY CORRECTIONS: none
+
+PROJECT: 03_prompt_template
+STATUS:  BUILT
+CONCEPT: ChatPromptTemplate with one {variable}, prompt | model
+MAIN API USED: ChatPromptTemplate.from_messages, prompt.invoke, LCEL pipe
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (38 lines)
+ANY CORRECTIONS: none
+
+PROJECT: 04_structured_output
+STATUS:  BUILT
+CONCEPT: Pydantic schema + with_structured_output -> validated object
+MAIN API USED: BaseModel, model.with_structured_output(Person)
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (41 lines)
+ANY CORRECTIONS: none
+
+PROJECT: 05_basic_chain
+STATUS:  BUILT
+CONCEPT: Prompt -> Model -> Parser (a chain)
+MAIN API USED: ChatPromptTemplate, StrOutputParser, prompt | model | parser
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (40 lines)
+ANY CORRECTIONS: none
+
+PROJECT: 06_runnable
+STATUS:  RUN
+CONCEPT: Runnable interface: invoke / batch / stream
+MAIN API USED: RunnableLambda
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (30 lines)
+ANY CORRECTIONS: none - output verified: invoke=8, batch=[2,4,6], stream=[8]
+
+PROJECT: 07_lcel
+STATUS:  BUILT
+CONCEPT: LCEL pipe operator, the canonical chain
+MAIN API USED: ChatPromptTemplate | model | StrOutputParser
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (40 lines)
+ANY CORRECTIONS: none
+
+PROJECT: 08_parallel
+STATUS:  BUILT (parallel composition verified offline)
+CONCEPT: RunnableParallel fan-out / fan-in
+MAIN API USED: RunnableParallel(summary=..., keywords=...)
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (42 lines)
+ANY CORRECTIONS: none
+
+PROJECT: 09_branching
+STATUS:  BUILT (conditional routing verified offline)
+CONCEPT: RunnableBranch conditional execution
+MAIN API USED: RunnableBranch((condition, runnable), fallback)
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (53 lines)
+ANY CORRECTIONS: condition receives the input dict (matches RunnableBranch API)
+
+PROJECT: 10_document_loader
+STATUS:  RUN
+CONCEPT: TextLoader -> Document (page_content + metadata)
+MAIN API USED: TextLoader, loader.load()
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (20 lines)
+ANY CORRECTIONS: data/company.txt added and verified
+
+PROJECT: 11_text_splitter
+STATUS:  RUN
+CONCEPT: chunk_size + chunk_overlap
+MAIN API USED: RecursiveCharacterTextSplitter, split_documents
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (30 lines)
+ANY CORRECTIONS: data/company.txt was added during validation (was missing);
+  output verified (7 chunks from 462 chars)
+
+PROJECT: 12_embeddings
+STATUS:  BUILT
+CONCEPT: text -> embedding vector, vector length
+MAIN API USED: GoogleGenerativeAIEmbeddings, embed_query
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (29 lines)
+ANY CORRECTIONS: model id "models/text-embedding-004" (canonical Gemini embedding id)
+
+PROJECT: 13_vector_store
+STATUS:  BUILT
+CONCEPT: add_documents + similarity_search in a local store
+MAIN API USED: FAISS.from_documents, add_documents, similarity_search
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (46 lines)
+ANY CORRECTIONS: FAISS chosen for simplicity (local, in-memory)
+
+PROJECT: 14_retriever
+STATUS:  BUILT
+CONCEPT: vector store != retriever; as_retriever()
+MAIN API USED: FAISS, as_retriever(search_kwargs={"k": 2}), retriever.invoke
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (43 lines)
+ANY CORRECTIONS: none
+
+PROJECT: 15_basic_rag
+STATUS:  BUILT
+CONCEPT: load -> split -> embed -> store -> retrieve -> prompt -> model -> answer
+MAIN API USED: TextLoader, RecursiveCharacterTextSplitter, FAISS, as_retriever,
+               LCEL chain with a plain function as the first runnable
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (57 lines)
+ANY CORRECTIONS: data/company.txt was added during validation (was missing);
+  LCEL-with-function composition verified offline
+
+PROJECT: 16_advanced_rag
+STATUS:  BUILT
+CONCEPT: 3 small patterns: query rewriting, metadata filtering, reranking idea
+MAIN API USED: prompt | model, similarity_search(filter=...), custom rerank fn
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (78 lines - 3 patterns, allowed)
+ANY CORRECTIONS: kept as three separate tiny sections instead of one big app
+
+PROJECT: 17_tools
+STATUS:  BUILT
+CONCEPT: @tool, tool schema, direct invoke, bind_tools, tool_calls
+MAIN API USED: @tool, tool.args_schema, tool.invoke, model.bind_tools
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (50 lines)
+ANY CORRECTIONS: none
+
+PROJECT: 18_basic_agent
+STATUS:  BUILT (agent construction verified)
+CONCEPT: create_agent, the current high-level agent API
+MAIN API USED: create_agent, agent.invoke({"messages": [...]})
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (57 lines)
+ANY CORRECTIONS: no manual LangGraph - create_agent builds the graph
+
+PROJECT: 19_react_agent
+STATUS:  BUILT
+CONCEPT: Reason -> Act -> Observe loop (visible in the message history)
+MAIN API USED: create_agent, result["messages"], msg.tool_calls
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (54 lines)
+ANY CORRECTIONS: none
+
+PROJECT: 20_structured_agent
+STATUS:  BUILT (response_format construction verified)
+CONCEPT: agent returning a validated Pydantic object
+MAIN API USED: create_agent(response_format=Answer), result["structured_response"]
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (51 lines)
+ANY CORRECTIONS: none
+
+PROJECT: 21_memory
+STATUS:  BUILT (checkpointer construction verified)
+CONCEPT: checkpointer + thread_id for conversation memory
+MAIN API USED: create_agent(checkpointer=InMemorySaver()), config thread_id
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (56 lines)
+ANY CORRECTIONS: long-term memory explained, not built (per spec)
+
+PROJECT: 22_middleware
+STATUS:  BUILT (custom middleware construction verified)
+CONCEPT: before/after model hooks for logging
+MAIN API USED: AgentMiddleware subclass, create_agent(middleware=[...])
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (63 lines)
+ANY CORRECTIONS: hook signature (state, runtime) verified against langchain 1.3.14
+
+PROJECT: 23_human_in_the_loop
+STATUS:  BUILT (interrupt + resume behavior verified with a live graph test)
+CONCEPT: pause before tools, human approves/rejects, resume
+MAIN API USED: interrupt_before=["tools"], InMemorySaver, Command(resume=True)
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (60 lines)
+ANY CORRECTIONS: interrupt_before stops BEFORE the node, so the paused state has
+  no "__interrupt__" key; that key only appears with interrupt() inside a node.
+  Fixed main.py + README (removed the invalid result.get("__interrupt__"));
+  resume via Command(resume=True) + same thread_id verified (langgraph 1.2.10).
+
+PROJECT: 24_streaming
+STATUS:  BUILT
+CONCEPT: invoke vs stream; model.stream + agent.stream
+MAIN API USED: model.stream, agent.stream
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (46 lines)
+ANY CORRECTIONS: none
+
+PROJECT: 25_async
+STATUS:  BUILT
+CONCEPT: ainvoke / abatch / astream, asyncio.gather
+MAIN API USED: chain.ainvoke, chain.abatch, chain.astream, asyncio.gather
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (53 lines)
+ANY CORRECTIONS: none
+
+PROJECT: 26_sql_agent
+STATUS:  BUILT (agent construction verified)
+CONCEPT: question -> SQL tool -> result; read-only protection
+MAIN API USED: sqlite3 (stdlib), @tool run_sql_query, create_agent
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (64 lines)
+ANY CORRECTIONS: in-memory SQLite created in main.py (no extra setup file);
+  destructive queries blocked by the SELECT-only guard
+
+PROJECT: 27_rag_agent
+STATUS:  BUILT
+CONCEPT: retrieval as a tool; agent decides when to retrieve
+MAIN API USED: @tool over similarity_search, create_agent
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (64 lines)
+ANY CORRECTIONS: none
+
+PROJECT: 28_multi_tool_agent
+STATUS:  BUILT (agent construction verified)
+CONCEPT: LLM picks the correct tool from several
+MAIN API USED: create_agent with 3 tools (calculator, weather, date)
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (59 lines)
+ANY CORRECTIONS: eval() used in the demo calculator with an explicit
+  "demo only, not for production" comment
+
+PROJECT: 29_multi_agent
+STATUS:  BUILT
+CONCEPT: supervisor routing to research + writer agents (real Gemini calls)
+MAIN API USED: prompt | model in small functions; decision string routing
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (60 lines)
+ANY CORRECTIONS: no extra framework - plain functions keep it interview-sized
+
+PROJECT: 30_langchain_langgraph
+STATUS:  BUILT (StateGraph compiled successfully)
+CONCEPT: LangChain components (model, tool) inside a LangGraph StateGraph
+MAIN API USED: StateGraph, add_messages, ToolNode, add_conditional_edges
+IS THE CODE SIMPLE ENOUGH FOR AN INTERVIEW? YES (71 lines - advanced, allowed)
+ANY CORRECTIONS: conditional edge returns node name or END (no path map needed)
+
+================================================================================
+GLOBAL CHECKS
+================================================================================
+- Folder count: exactly 30 (spec-compliant; no extra folders).
+- Per folder: only main.py, README.md, requirements.txt, .env.example (where the
+  concept needs an LLM), and a tiny data/ file where the concept needs a document.
+- READMEs follow the exact structure: What is it / Flow / Code idea /
+  Important lines / Interview question / Interview answer / Remember.
+- All keys read via os.getenv("GEMINI_API_KEY"); GEMINI_MODEL defaults to
+  gemini-3.5-flash (verified GA in the current Gemini API docs).
+- No hardcoded credentials anywhere.
+- API syntax checked against installed langchain 1.3.14 / langgraph 1.2.10.
+
+CORRECTIONS MADE DURING VALIDATION:
+  1. data/company.txt added to 11_text_splitter and 15_basic_rag (was missing).
+  2. RunnableBranch condition signature matches the current API (receives the
+     input dict).
+  3. Middleware hook signature verified: before_model(self, state, runtime).
+  4. create_agent node names confirmed ("model", "tools") so interrupt_before
+     works as written.
+  5. HITL fix: interrupt_before returns state WITHOUT "__interrupt__" (verified
+     on langgraph 1.2.10); "__interrupt__" only appears with interrupt() inside a
+     node. Folder 23 + interview guide updated accordingly.
+================================================================================
+END OF REPORT

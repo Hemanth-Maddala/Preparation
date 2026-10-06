@@ -1,0 +1,1465 @@
+=============================================================================
+        OS TRICKY INTERVIEW QUESTIONS - WHERE CANDIDATES GET IT WRONG
+=============================================================================
+Each question below is designed to test deep OS understanding. Most candidates
+answer these incorrectly. Study both the wrong and correct answers.
+
+=============================================================================
+SECTION 1: PROCESSES AND THREADS (Questions 1-12)
+=============================================================================
+
+-----------------------------------------------------------------------------
+Q1: Is Node.js single-threaded from an OS perspective?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, Node.js is single-threaded.
+
+WHY IT'S WRONG: Node.js uses a single-threaded event loop for JavaScript
+execution, but its underlying OS process is NOT single-threaded. The libuv
+library, DNS resolution, file I/O, and crypto operations all use thread pools
+managed by the OS. From the OS perspective, Node.js spawns multiple threads.
+
+CORRECT ANSWER: No. Node.js is single-threaded at the JavaScript/event loop
+level, but the OS sees a multi-threaded process. The libuv backend uses a
+thread pool (default 4 threads) for blocking operations like file I/O, DNS
+lookups, and compression. The event loop itself runs on one thread, but the
+process as a whole uses multiple OS threads.
+
+INTERVIEW TIP: Distinguish between the application-level threading model
+(event loop) and the OS-level threading model. Mention libuv thread pool
+to show depth.
+
+-----------------------------------------------------------------------------
+Q2: Is a process always heavier than a thread?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, a process always has more overhead than a thread.
+
+WHY IT'S WRONG: The overhead depends on what you measure. A thread shares
+the address space of its parent process, but creating a thread still
+requires its own stack, registers, and PCB entry. A lightweight process
+or a thread created with clone() in Linux can have nearly identical overhead
+to a forked process. The distinction is about resource sharing, not raw
+creation cost.
+
+CORRECT ANSWER: Generally yes, because a process has its own address space,
+page tables, file descriptors, and PCB. But the difference is about resource
+isolation, not always about raw overhead. In Linux, threads are created with
+clone() and share address space. A vfork() creates a process with nearly zero
+overhead since it shares the parent's address space. The real cost is in
+resource duplication, not creation alone.
+
+INTERVIEW TIP: Focus on what makes them different (resource sharing) rather
+than assuming one is always heavier. Mention vfork() and clone() as
+counterexamples.
+
+-----------------------------------------------------------------------------
+Q3: Does multithreading always improve performance?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, more threads means more parallelism and better
+performance.
+
+WHY IT'S WRONG: Multithreading adds overhead: context switching, cache
+thrashing, synchronization costs (locks, mutexes), and thread creation time.
+For CPU-bound single-core tasks, multithreading can actually DECREASE
+performance due to contention and switching. Amdahl's Law also limits
+speedup based on the serial portion of a program.
+
+CORRECT ANSWER: No. Performance depends on the workload and hardware.
+Multithreading helps with I/O-bound tasks and on multi-core systems, but
+for CPU-bound tasks on a single core, it can hurt performance due to context
+switch overhead, cache pollution, and synchronization contention. Amdahl's
+Law further limits speedup because the serial portion of the code cannot be
+parallelized.
+
+INTERVIEW TIP: Give a concrete example: a single CPU-bound task split into
+2 threads on a single-core machine runs SLOWER due to context switching
+overhead.
+
+-----------------------------------------------------------------------------
+Q4: Can a thread run without a process?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, in some cases threads can exist independently.
+
+WHY IT'S WRONG: A thread is a unit of execution WITHIN a process. It has no
+independent existence. Without a process, there is no address space, no
+resources, and no context for the thread to execute in. The kernel schedules
+threads, but those threads always belong to a process.
+
+CORRECT ANSWER: No, never. A thread is fundamentally a component of a
+process. It requires the process's address space, resources (file descriptors,
+signal handlers, etc.), and kernel data structures to exist. The OS kernel
+represents this as a task_struct (Linux) that is always linked to a process
+group. A thread without a process is meaningless.
+
+INTERVIEW TIP: Be definitive. A thread is defined as a lightweight process
+within a process - it has no independent existence. State this with confidence.
+
+-----------------------------------------------------------------------------
+Q5: Do all threads in a process share the same stack?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, all threads share the process's memory including
+the stack.
+
+WHY IT'S WRONG: This is one of the most common mistakes. Threads share the
+heap, global variables, and code segments, but each thread has its OWN
+private stack. If they shared a stack, function calls from different threads
+would corrupt each other's return addresses, local variables, and call frames.
+
+CORRECT ANSWER: No. Each thread has its own private stack and set of CPU
+registers. What threads share is the heap, global/static data, code segment,
+and open file descriptors. The private stack is essential because each thread
+executes independently and needs its own call stack for function calls, local
+variables, and return addresses.
+
+INTERVIEW TIP: Draw a memory layout diagram mentally: code, shared heap,
+per-thread stacks. This visual makes the answer clear and impressive.
+
+-----------------------------------------------------------------------------
+Q6: Can a process have zero threads?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: No, every process must have at least one thread.
+
+WHY IT'S WRONG: The common answer is actually correct for most contexts, but
+the tricky part is distinguishing between a zombie process and a living process.
+A zombie process is technically still a process entry in the process table
+but has no running threads - it is waiting to be reaped by its parent. So
+yes, a process CAN exist with zero threads, but it is dead (zombie).
+
+CORRECT ANSWER: A living, executing process always has at least one thread
+(the main thread). However, a zombie process has zero threads - it has
+completed execution and its resources have been freed, but its entry remains
+in the process table until the parent calls wait(). So a process entry can
+exist with zero threads, but it cannot EXECUTE without at least one.
+
+INTERVIEW TIP: Clarify the distinction between a "process entry in the
+process table" and an "active, executing process." This shows nuance.
+
+-----------------------------------------------------------------------------
+Q7: When a process calls fork(), does it create a thread or a process?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: It creates a thread, since it's part of the same program.
+
+WHY IT'S WRONG: fork() creates a completely new process with its own address
+space, file descriptors, and resources. The child process gets a copy of the
+parent's entire address space. This is fundamentally different from thread
+creation, which shares the parent's address space.
+
+CORRECT ANSWER: fork() creates a new process, not a thread. The child
+process receives a duplicate of the parent's address space, file descriptors,
+signal handlers, and other resources. The parent and child run independently
+in separate address spaces. In Linux, fork() is implemented using the
+copy-on-write (COW) mechanism to avoid immediately duplicating all memory,
+but it is still a process creation, not thread creation.
+
+INTERVIEW TIP: Emphasize the copy-on-write optimization to show you understand
+both the concept and the implementation detail.
+
+-----------------------------------------------------------------------------
+Q8: Is fork() the same as creating a thread?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: They are similar - both create a new execution unit.
+
+WHY IT'S WRONG: They are fundamentally different. fork() creates a new
+process with a separate address space. Thread creation (e.g., pthread_create)
+creates a new thread that shares the parent's address space. The differences
+affect memory visibility, performance, and IPC requirements.
+
+CORRECT ANSWER: No, they are fundamentally different. fork() creates a new
+process with its own address space (copy of parent), while thread creation
+shares the parent's address space. After fork(), parent and child must use
+IPC (pipes, shared memory) to communicate. After thread creation, threads
+communicate directly through shared memory. fork() is much more expensive
+due to address space duplication (mitigated by COW), while thread creation
+is lightweight.
+
+INTERVIEW TIP: Create a quick comparison: address space (separate vs shared),
+communication (IPC vs shared memory), and cost (expensive vs cheap).
+
+-----------------------------------------------------------------------------
+Q9: Can a zombie process consume CPU?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, zombie processes still use some CPU.
+
+WHY IT'S WRONG: A zombie process has completed execution. Its code is not
+running, and it consumes no CPU cycles. What it DOES consume is a slot in
+the process table (a PID entry), which is a limited kernel resource. The
+problem with zombies is memory/resource leaks in the process table, not
+CPU consumption.
+
+CORRECT ANSWER: No. A zombie process has finished execution and is not
+scheduled by the CPU. It consumes no CPU time. However, it does occupy an
+entry in the process table, consuming kernel memory. If many zombies
+accumulate, the system could run out of PIDs. The fix is for the parent to
+call wait() or waitpid() to reap the zombie.
+
+INTERVIEW TIP: Distinguish clearly between CPU consumption and process table
+resource consumption. Zombies waste PID slots, not CPU cycles.
+
+-----------------------------------------------------------------------------
+Q10: Is an orphan process always bad?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, orphan processes are always problematic and should
+be killed.
+
+WHY IT'S WRONG: Orphan processes are not inherently bad. An orphan process
+is simply one whose parent has terminated. The OS reassigns orphan processes
+to init (PID 1) or a subreaper, which will reap them when they terminate.
+Some server processes (daemons) intentionally orphan themselves to run in the
+background and detach from the controlling terminal.
+
+CORRECT ANSWER: No. An orphan process is a normal part of process management.
+The OS reparents orphaned processes to init/systemd (PID 1), which
+automatically reaps them when they finish. Many daemon processes intentionally
+become orphans to run independently in the background. The real concern is
+a RUNAWAY orphan that consumes resources unintentionally, not the orphan
+status itself.
+
+INTERVIEW TIP: Mention daemon processes as intentional orphans. This shows
+practical knowledge beyond textbook definitions.
+
+-----------------------------------------------------------------------------
+Q11: Can a process have multiple parent processes?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: No, every process has exactly one parent.
+
+WHY IT'S WRONG: In standard Unix/Linux, yes, a process has exactly one
+parent. However, the tricky part is that after fork(), the parent-child
+relationship is fixed. But the child's parent can CHANGE if the original
+parent dies - the child gets reparented to init/systemd. Also, the concept
+of "multiple parents" is confused with "multiple processes waiting on the
+same child" via wait().
+
+CORRECT ANSWER: No, a process has exactly one parent at any given time. The
+parent is set at creation and cannot be changed to a different parent in
+normal operation. However, if the parent dies, the child is reparented to
+init (PID 1) or a designated subreaper. This is a reassignment, not multiple
+parents. The child always has exactly one parent at any point in time.
+
+INTERVIEW TIP: Clarify that the question means "at any given time" vs
+"throughout its lifetime." A process can have different parents at different
+times (original parent, then init), but never two simultaneously.
+
+-----------------------------------------------------------------------------
+Q12: What happens if all threads in a process exit but the process hasn't
+      terminated?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: The process continues running with no threads.
+
+WHY IT'S WRONG: If all threads of a process exit, the process itself
+terminates. In Linux, when the last thread in a thread group exits, the
+entire process is terminated and resources are freed (unless it's a zombie
+waiting to be reaped). You cannot have a process with zero living threads.
+
+CORRECT ANSWER: The process terminates when its last thread exits. In Linux,
+the exit_group() system call terminates all threads in a thread group. The
+process becomes a zombie if its parent hasn't called wait() yet, but it is
+no longer executing. There is no such thing as a running process with zero
+living threads - the process's lifetime is tied to its thread group.
+
+INTERVIEW TIP: Mention exit_group() specifically - it shows you understand
+the Linux implementation. Note that a single-threaded process has exactly
+one thread, and when it exits, the process is done.
+
+
+=============================================================================
+SECTION 2: SCHEDULING (Questions 13-20)
+=============================================================================
+
+-----------------------------------------------------------------------------
+Q13: Is Round Robin always fair?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, Round Robin is the fairest scheduling algorithm
+because each process gets an equal time quantum.
+
+WHY IT'S WRONG: Round Robin is fair only in terms of CPU time allocation.
+It is NOT fair in terms of response time or completion time. Processes with
+different burst times still wait different amounts. A process with a very
+long burst time will context-switch many more times than a short one, wasting
+more time on switching. Also, the choice of time quantum affects fairness -
+too small a quantum penalizes I/O-bound tasks with switching overhead.
+
+CORRECT ANSWER: Round Robin is fair in terms of giving each process equal
+CPU time slices, but not in terms of overall efficiency or completion time.
+The fairness depends on the time quantum: a very small quantum increases
+context switch overhead, while a very large quantum degenerates into FCFS.
+It does not minimize average waiting time and can penalize CPU-bound processes
+with excessive context switches.
+
+INTERVIEW TIP: Distinguish between "fairness in CPU access" and "fairness
+in overall performance." Both are valid dimensions of fairness.
+
+-----------------------------------------------------------------------------
+Q14: Does SJF always give optimal average waiting time?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, SJF is provably optimal for average waiting time.
+
+WHY IT'S WRONG: SJF is optimal ONLY among non-preemptive algorithms. The
+correct statement is that Shortest Remaining Time First (SRTF), the PREEMPTIVE
+version of SJF, is optimal. Non-preemptive SJF can be suboptimal if a long
+job starts first and a short job arrives during its execution.
+
+CORRECT ANSWER: Non-preemptive SJF minimizes average waiting time among
+non-preemptive algorithms. However, the truly optimal algorithm for average
+waiting time is Shortest Remaining Time First (SRTF), which is the preemptive
+version. If a long process starts first and short processes arrive during its
+execution, SJF cannot preempt, resulting in higher average waiting time than
+SRTF would achieve.
+
+INTERVIEW TIP: Always specify "among non-preemptive algorithms" when
+discussing SJF's optimality. Then mention SRTF as the truly optimal one.
+
+-----------------------------------------------------------------------------
+Q15: Is preemptive scheduling always better than non-preemptive?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, preemptive is always better because it prevents
+processes from hogging the CPU.
+
+WHY IT'S WRONG: Preemptive scheduling adds overhead from context switching
+and interrupts. For embedded real-time systems or batch processing, non-
+preemptive scheduling can be more efficient because it avoids unnecessary
+switches. Preemptive scheduling also introduces complexity like race conditions
+in shared data, requiring synchronization mechanisms.
+
+CORRECT ANSWER: No. Preemptive scheduling provides better responsiveness and
+prevents starvation, but at the cost of higher context switch overhead and
+increased complexity (need for synchronization). Non-preemptive scheduling
+is simpler, has less overhead, and is preferred in batch systems and some
+real-time systems where tasks can be guaranteed to complete within known
+time bounds. The choice depends on the use case.
+
+INTERVIEW TIP: Give the trade-off: responsiveness vs overhead. Mention that
+embedded/real-time systems sometimes prefer non-preemptive for determinism.
+
+-----------------------------------------------------------------------------
+Q16: Can a process with the highest priority always run first?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, the highest priority process always gets the CPU.
+
+WHY IT'S WRONG: Several factors can prevent this. A real-time process with
+the highest priority could be waiting for I/O and therefore not runnable.
+The scheduler only selects from the RUNNABLE queue. Also, in multiprocessor
+systems, another CPU might already be running it. Priority inversion can also
+occur where a high-priority process waits on a low-priority process holding
+a resource, while medium-priority processes run ahead.
+
+CORRECT ANSWER: No. The highest priority process only runs if it is in the
+RUNNABLE state (not blocked on I/O, waiting for a lock, etc.). The scheduler
+picks the highest priority process from the ready queue, not from all
+processes. Additionally, priority inversion can occur when a high-priority
+process depends on a resource held by a low-priority process, allowing
+medium-priority processes to run first.
+
+INTERVIEW TIP: Mention priority inversion as a real-world problem (it
+occurred on Mars Pathfinder) and how priority inheritance solves it.
+
+-----------------------------------------------------------------------------
+Q17: Does increasing the time quantum always reduce context switches?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, a larger time quantum means fewer context switches.
+
+WHY IT'S WRONG: Increasing the time quantum reduces context switches ONLY
+when the same set of processes run. But a larger quantum also increases
+response time and can degrade to FCFS behavior. If processes have varying
+burst times, a very large quantum means short processes wait longer. The
+total number of context switches also depends on process behavior - if a
+process voluntarily yields (I/O), the quantum size is irrelevant for that
+switch.
+
+CORRECT ANSWER: Increasing the time quantum reduces context switches only
+for CPU-bound processes. I/O-bound processes voluntarily yield the CPU before
+the quantum expires, so the quantum size is irrelevant for them. However, a
+larger quantum degrades Round Robin to FCFS, increasing average waiting time
+and response time. The optimal quantum balances switching overhead with
+responsiveness (typically 10-100ms).
+
+INTERVIEW TIP: Point out that the benefit only applies to CPU-bound processes.
+I/O-bound processes don't care about quantum size because they yield early.
+
+-----------------------------------------------------------------------------
+Q18: Is starvation possible in Round Robin?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: No, Round Robin guarantees every process gets CPU time,
+so starvation is impossible.
+
+WHY IT'S WRONG: Round Robin prevents starvation only when all processes are
+in the ready queue. If the time quantum is extremely small and new processes
+keep arriving, a process could theoretically wait a very long time for its
+turn, even though it's not permanently starved. True starvation (indefinite
+postponement) is very unlikely in RR, but the response time can become
+unacceptably large.
+
+CORRECT ANSWER: True starvation (indefinite postponement) is generally
+impossible in pure Round Robin because every process eventually gets a time
+quantum. However, if the quantum is very small and the system is heavily
+loaded, response time can degrade significantly, creating the practical
+equivalent of starvation. This is why RR is considered starvation-free in
+theory but may need quantum tuning in practice.
+
+INTERVIEW TIP: Distinguish between theoretical starvation (impossible in RR)
+and practical response time degradation (possible under heavy load).
+
+-----------------------------------------------------------------------------
+Q19: Does priority scheduling guarantee the highest priority process runs
+      first?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, that is the definition of priority scheduling.
+
+WHY IT'S WRONG: The scheduler runs the highest priority RUNNABLE process.
+A high-priority process waiting on I/O, a lock, or any blocking operation
+will not run even if it has the highest priority. Also, in multi-core
+systems, multiple processes can run simultaneously, so "runs first" is
+ambiguous. Priority scheduling only determines which process is SELECTED
+from the ready queue.
+
+CORRECT ANSWER: Priority scheduling selects the highest priority process
+from the ready (runnable) queue. A high-priority process that is blocked
+waiting for I/O, a lock, or any event will NOT be scheduled. The scheduler
+only considers runnable processes. This is why priority scheduling can lead
+to priority inversion, where a high-priority process waits on a low-priority
+process holding a needed resource.
+
+INTERVIEW TIP: Emphasize "from the ready queue" - the scheduler never sees
+blocked processes. This nuance separates strong candidates from average ones.
+
+-----------------------------------------------------------------------------
+Q20: Can the convoy effect occur in Round Robin?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, the convoy effect can happen in any scheduling
+algorithm.
+
+WHY IT'S WRONG: The convoy effect specifically occurs in FCFS scheduling
+when a CPU-bound process blocks many I/O-bound processes behind it. In Round
+Robin, processes are time-sliced, so a CPU-bound process cannot hold the CPU
+long enough to block others for an extended period. Round Robin was designed
+specifically to prevent the convoy effect.
+
+CORRECT ANSWER: No, the convoy effect is specific to FCFS scheduling. It
+occurs when a long CPU-bound process monopolizes the CPU, blocking shorter
+I/O-bound processes. Round Robin prevents this by giving each process only
+a time quantum before switching. However, if the time quantum is excessively
+large (approaching FCFS behavior), the convoy effect could theoretically
+reappear.
+
+INTERVIEW TIP: Define convoy effect precisely (FCFS-specific) then explain
+why RR's time-slicing prevents it. Mention that a very large quantum
+recreates FCFS behavior.
+
+
+=============================================================================
+SECTION 3: SYNCHRONIZATION (Questions 21-30)
+=============================================================================
+
+-----------------------------------------------------------------------------
+Q21: Is a race condition always observable?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, a race condition always produces visible incorrect
+behavior.
+
+WHY IT'S WRONG: A race condition exists whenever the outcome depends on the
+timing of thread/process execution, but it may not always produce observable
+errors. The incorrect behavior might be non-deterministic - it could work
+correctly millions of times before failing once. This makes race conditions
+extremely difficult to reproduce and debug. The condition EXISTS even if the
+bug is not triggered.
+
+CORRECT ANSWER: No. A race condition exists whenever the program's
+correctness depends on the relative timing of concurrent operations, even
+if no incorrect behavior is observed. It is non-deterministic - the bug
+may only manifest under specific timing conditions, load levels, or hardware.
+This is why race conditions are among the hardest bugs to find: they may
+pass all tests but fail in production.
+
+INTERVIEW TIP: Emphasize that race conditions are about POTENTIAL for
+incorrectness, not guaranteed incorrectness. Mention that tools like
+ThreadSanitizer help detect them.
+
+-----------------------------------------------------------------------------
+Q22: Can a mutex cause a deadlock by itself?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: No, a mutex only prevents race conditions and cannot
+cause deadlocks.
+
+WHY IT'S WRONG: A mutex alone will not cause a deadlock, but it is a
+necessary component of many deadlock scenarios. Two threads each holding one
+mutex and waiting for the other's mutex will deadlock. While the mutex alone
+doesn't cause it, the LOCKING PATTERN around mutexes is the primary cause.
+Also, a thread trying to acquire a mutex it already holds (non-recursive
+mutex) will deadlock with itself.
+
+CORRECT ANSWER: A single mutex cannot cause deadlock by itself. However,
+multiple mutexes used with inconsistent lock ordering will deadlock. Also,
+a non-recursive mutex will deadlock if the same thread tries to lock it
+twice (self-deadlock). The deadlock is caused by the locking pattern, not
+the mutex itself, but mutexes are the most common mechanism through which
+deadlocks occur.
+
+INTERVIEW TIP: Distinguish between "a mutex causes deadlock" (no) and
+"mutex usage patterns cause deadlock" (yes). Mention recursive mutexes as
+the solution for self-deadlock.
+
+-----------------------------------------------------------------------------
+Q23: Does a semaphore always prevent race conditions?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, semaphores are designed to prevent race conditions.
+
+WHY IT'S WRONG: Semaphores are a synchronization TOOL, not a guarantee.
+A semaphore only prevents race conditions if it is USED CORRECTLY. If a
+programmer forgets to acquire the semaphore before accessing shared data,
+or uses the wrong semaphore, race conditions will still occur. Semaphores
+provide the mechanism but not the correctness.
+
+CORRECT ANSWER: No. A semaphore only prevents race conditions if used
+correctly - the semaphore must be acquired BEFORE accessing the shared
+resource and released AFTER. If the programmer forgets to use the semaphore,
+uses the wrong one, or accesses the shared data without acquiring the lock,
+race conditions persist. A semaphore is a tool; correctness depends on proper
+usage patterns.
+
+INTERVIEW TIP: Make the point that synchronization is about discipline, not
+magic. The tool only works if the programmer follows the protocol.
+
+-----------------------------------------------------------------------------
+Q24: Is a binary semaphore the same as a mutex?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, they are functionally identical.
+
+WHY IT'S WRONG: They are similar but have key differences. A mutex has
+OWNERSHIP - only the thread that locked it can unlock it. A binary semaphore
+has no ownership - any thread can signal (release) it. Mutexes support
+priority inheritance to prevent priority inversion; semaphores typically do
+not. A mutex protects a resource; a binary semaphore signals an event.
+
+CORRECT ANSWER: No. Key differences: (1) Mutex has ownership - only the
+locking thread can unlock it. Any thread can release a binary semaphore.
+(2) Mutexes support priority inheritance for real-time systems. (3) Mutex
+protects a shared resource; binary semaphores are used for event signaling.
+(4) A mutex that is never locked is a bug; a binary semaphore that is never
+signaled is valid (used for initial synchronization).
+
+INTERVIEW TIP: Focus on OWNERSHIP as the key differentiator. Mutex = locked
+by a thread, only that thread can unlock. Semaphore = a signaling mechanism.
+
+-----------------------------------------------------------------------------
+Q25: Can you have a race condition without shared variables?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: No, race conditions require shared mutable state.
+
+WHY IT'S WRONG: Race conditions can occur through other shared resources
+besides variables - file systems, network sockets, databases, or even
+standard output (printf from multiple threads). Two threads writing to the
+same file without synchronization can produce interleaved, corrupted output.
+The "shared variable" is any shared resource, not just a memory variable.
+
+CORRECT ANSWER: Yes. Race conditions can occur on any shared resource, not
+just memory variables. Two threads writing to the same file, sending data to
+the same network socket, or printing to stdout concurrently can produce
+incorrect results. Even hardware resources like disk controllers can exhibit
+race conditions. The key requirement is shared mutable state - which includes
+files, sockets, devices, and databases, not just program variables.
+
+INTERVIEW TIP: Give a concrete example: two threads calling printf() at the
+same time can interleave their output. This is a race condition on stdout.
+
+-----------------------------------------------------------------------------
+Q26: Does using a mutex make code thread-safe?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, adding a mutex around shared data makes it
+thread-safe.
+
+WHY IT'S WRONG: A mutex only protects the code within its critical section.
+If a programmer protects some accesses but not all, or forgets to lock before
+reading while another thread locks before writing, the code is still
+thread-safe. Also, using a mutex on NON-SHARED data is unnecessary overhead,
+and using the WRONG mutex for different shared data provides no protection.
+
+CORRECT ANSWER: Not automatically. Thread safety requires that ALL accesses
+to shared data are protected by the SAME mutex. If even one access path
+bypasses the mutex, the code is not thread-safe. Additionally, double-checked
+locking patterns, lock granularity issues, and lock ordering problems can
+all make mutex-protected code unsafe. Thread safety is about the overall
+design, not just having a mutex somewhere.
+
+INTERVIEW TIP: Emphasize consistency - every access to shared data must be
+protected, and the same mutex must be used throughout.
+
+-----------------------------------------------------------------------------
+Q27: Can a semaphore cause starvation?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: No, semaphores are fair and prevent starvation.
+
+WHY IT'S WRONG: Standard semaphore implementations do not guarantee FIFO
+ordering. If multiple threads are waiting on a semaphore, the OS may wake
+them in any order. Under high contention, a thread could repeatedly lose the
+race to acquire the semaphore, experiencing indefinite postponement. This is
+particularly true with counting semaphores under heavy load.
+
+CORRECT ANSWER: Yes. Standard semaphores do not guarantee FIFO ordering of
+waiting threads. Under high contention, a thread may repeatedly fail to
+acquire the semaphore if other threads keep getting priority. Some
+implementations provide fair semaphores (FIFO ordering), but this is not
+guaranteed by the standard. Starvation is possible unless the semaphore
+implementation explicitly guarantees fairness.
+
+INTERVIEW TIP: Mention that some systems provide "fair semaphores" or
+"futex" with FIFO guarantees, but the standard definition does not require
+this.
+
+-----------------------------------------------------------------------------
+Q28: Is it safe to call signal() inside a critical section?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, it's fine to signal inside the critical section.
+
+WHY IT'S WRONG: Signaling inside the critical section can lead to problems.
+If signal() immediately wakes a waiting thread, that thread may try to
+acquire the same mutex and block, causing an unnecessary context switch.
+Also, if the signaled thread has higher priority, you get priority inversion.
+The best practice is to signal OUTSIDE the critical section after releasing
+the lock, when the shared state is fully consistent.
+
+CORRECT ANSWER: It works but is not recommended. Signaling inside the
+critical section means the woken thread immediately tries to acquire the
+same lock and blocks, causing an unnecessary context switch. Signaling after
+releasing the lock is better because: (1) the woken thread can immediately
+acquire the lock, (2) the shared state is fully updated, and (3) it reduces
+lock contention time.
+
+INTERVIEW TIP: Recommend the pattern: signal AFTER release. Show that you
+understand the practical implications, not just the correctness.
+
+-----------------------------------------------------------------------------
+Q29: Can a monitor solve all synchronization problems?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, monitors are a complete synchronization solution.
+
+WHY IT'S WRONG: Monitors cannot solve all synchronization problems. They
+cannot handle certain complex patterns like barrier synchronization,
+read-write locks with writer priority, or situations requiring multiple
+resource types. Monitors are also language-level constructs and not available
+in all languages. Some problems are more naturally expressed with semaphores
+or message passing.
+
+CORRECT ANSWER: No. While monitors provide a clean abstraction with mutual
+exclusion and condition variables, they cannot solve every synchronization
+problem. Some limitations: (1) monitors are language-level constructs not
+available in all languages, (2) they don't naturally handle barriers,
+reader-writer locks, or complex multi-resource allocation, (3) they can
+suffer from lost wakeups if wait() and signal() are not carefully paired.
+Lower-level primitives like semaphores are sometimes necessary.
+
+INTERVIEW TIP: Show awareness that monitors are high-level abstractions
+that work well for many cases but have limitations. Mention condition
+variable ordering issues.
+
+-----------------------------------------------------------------------------
+Q30: Is deadlock possible with only one resource type?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: No, deadlock requires at least two resource types.
+
+WHY IT'S WRONG: Deadlock CAN occur with a single resource type if that
+resource has multiple instances. For example, if there are 2 tape drives
+and 2 processes each hold 1 and request 1 more, deadlock occurs. The
+Coffman conditions do not require multiple resource TYPES - they require
+circular wait, which can happen with a single type of multiple-instance
+resource.
+
+CORRECT ANSWER: Yes, deadlock can occur with a single resource type that
+has multiple instances. Example: 2 instances of a resource, Process A holds
+1 and requests 1, Process B holds 1 and requests 1. This satisfies all four
+Coffman conditions (mutual exclusion, hold-and-wait, no preemption, circular
+wait). Multiple resource TYPES are not required for deadlock - multiple
+INSTANCES of one type suffice.
+
+INTERVIEW TIP: Give the 2-instance example. It's simple and clearly
+demonstrates single-resource-type deadlock.
+
+
+=============================================================================
+SECTION 4: DEADLOCK (Questions 31-38)
+=============================================================================
+
+-----------------------------------------------------------------------------
+Q31: Can deadlock occur with one process?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: No, deadlock requires at least two processes.
+
+WHY IT'S WRONG: A single process with multiple threads can deadlock itself.
+For example, Thread A in a process acquires Lock 1 then waits for Lock 2,
+while Thread B in the same process acquires Lock 2 then waits for Lock 1.
+The process has deadlocked its own threads. Since all threads belong to one
+process, the process is effectively deadlocked.
+
+CORRECT ANSWER: Yes. A single process with multiple threads can deadlock.
+If two threads in the same process acquire locks in opposite order, they
+create a circular wait. For example, Thread 1 holds Lock A and requests
+Lock B, while Thread 2 holds Lock B and requests Lock A. The process is
+deadlocked even though no other process is involved.
+
+INTERVIEW TIP: Emphasize that deadlock is about threads/processes and their
+resource requests, not about how many independent processes exist.
+
+-----------------------------------------------------------------------------
+Q32: Is circular wait the same as deadlock?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, if circular wait exists, deadlock has occurred.
+
+WHY IT'S WRONG: Circular wait is a NECESSARY but not SUFFICIENT condition for
+deadlock. All four Coffman conditions must hold simultaneously: mutual
+exclusion, hold-and-wait, no preemption, and circular wait. Circular wait
+without the other conditions (e.g., if preemption is allowed) does not
+produce deadlock. Circular wait is a necessary precondition, not a guarantee.
+
+CORRECT ANSWER: No, circular wait is only one of four necessary conditions
+for deadlock. All four must hold simultaneously: (1) mutual exclusion, (2)
+hold and wait, (3) no preemption, and (4) circular wait. If any one condition
+is broken, deadlock cannot occur. Circular wait without the other conditions
+is just a cycle in the wait-for graph, not necessarily a deadlock.
+
+INTERVIEW TIP: List all four Coffman conditions and emphasize that circular
+wait alone is insufficient. This shows systematic understanding.
+
+-----------------------------------------------------------------------------
+Q33: Can a system be in a safe state and still have deadlock?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: No, a safe state guarantees no deadlock.
+
+WHY IT'S WRONG: The question is about the definition. A safe state means
+there EXISTS a sequence of allocations that allows all processes to complete.
+If the system is in a safe state, deadlock has NOT yet occurred. However, a
+system in an UNSAFE state may or may not have deadlock - it just means there
+is a POSSIBILITY of deadlock. The safe/unsafe distinction is about whether
+deadlock is possible, not whether it has already occurred.
+
+CORRECT ANSWER: No, this is impossible by definition. A safe state means
+there exists at least one execution sequence that allows all processes to
+finish. If such a sequence exists, deadlock has not occurred. An unsafe
+state means deadlock MIGHT occur - it does not mean deadlock HAS occurred.
+Safe state = deadlock impossible. Unsafe state = deadlock possible but not
+guaranteed.
+
+INTERVIEW TIP: Be precise about safe vs unsafe. Safe = guaranteed no
+deadlock. Unsafe = possible deadlock (may or may not have occurred). This
+distinction is critical.
+
+-----------------------------------------------------------------------------
+Q34: Can Banker's algorithm prevent all deadlocks?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, Banker's algorithm prevents all deadlocks.
+
+WHY IT'S WRONG: Banker's algorithm prevents deadlock ONLY if the maximum
+resource needs of each process are known IN ADVANCE. If processes can
+request resources dynamically without declaring maximum needs, Banker's
+algorithm cannot be used. It also requires that resource counts are fixed
+and known. In practice, most real systems don't use Banker's algorithm
+because processes often don't know their maximum resource needs.
+
+CORRECT ANSWER: Banker's algorithm prevents deadlock only when: (1) maximum
+resource needs of each process are known in advance, (2) each process
+eventually releases all acquired resources, and (3) resource counts are
+fixed and known. If any condition is violated (e.g., processes request
+resources dynamically without declaring maximums), Banker's algorithm
+cannot guarantee deadlock prevention. This is why most real systems use
+deadlock detection and recovery instead.
+
+INTERVIEW TIP: Mention the practical limitation - most processes don't know
+their maximum resource needs, making Banker's algorithm impractical in
+real systems.
+
+-----------------------------------------------------------------------------
+Q35: Is it possible to have circular wait without deadlock?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: No, circular wait always means deadlock.
+
+WHY IT'S WRONG: Circular wait is a necessary condition for deadlock, but
+not sufficient. The other three Coffman conditions must also hold. For
+example, if preemption is allowed (resource can be forcibly taken from a
+process), circular wait does not lead to deadlock. Also, if processes
+occasionally release all resources, the cycle breaks. Circular wait in the
+wait-for graph is a necessary indicator, but not a guarantee.
+
+CORRECT ANSWER: Yes, this is possible. Circular wait is only one of four
+necessary conditions. If preemption is allowed (breaking "no preemption"),
+the circular wait does not cause deadlock. Also, if the resource graph
+cycle involves a process that voluntarily releases resources, the deadlock
+is broken. For true deadlock, all four conditions must hold simultaneously.
+
+INTERVIEW TIP: Give a specific example where preemption breaks the deadlock
+despite circular wait. This demonstrates deep understanding.
+
+-----------------------------------------------------------------------------
+Q36: Can deadlock detection cause additional deadlocks?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: No, detection is passive and cannot cause problems.
+
+WHY IT'S WRONG: Deadlock detection itself is passive, but the RECOVERY
+action can cause additional deadlocks. When a deadlock is detected, the
+system may terminate processes or preempt resources. If the recovery action
+releases resources in the wrong order, or if terminated processes held
+resources that other processes need, a new deadlock can form. The recovery
+must be carefully designed.
+
+CORRECT ANSWER: The detection itself is passive and safe, but the recovery
+action CAN cause additional deadlocks. When terminating processes or
+preempting resources to break a deadlock, the recovery must carefully manage
+resource release. If a terminated process held resources needed by multiple
+processes, releasing them could trigger new circular waits. The recovery
+strategy must be deadlock-free itself.
+
+INTERVIEW TIP: Distinguish between detection (passive, safe) and recovery
+(active, can cause problems). This shows nuanced understanding.
+
+-----------------------------------------------------------------------------
+Q37: Does breaking one Coffman condition guarantee no deadlock?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, breaking any one condition prevents all deadlock.
+
+WHY IT'S WRONG: This is actually TRUE and is the basis of deadlock
+prevention strategies. Each condition is necessary, so breaking any one
+prevents deadlock. However, the tricky part is that breaking one condition
+often has severe practical limitations. For example, breaking "hold and
+wait" by requiring processes to request all resources at once wastes resources
+and is often impractical.
+
+CORRECT ANSWER: Yes, breaking ANY one of the four Coffman conditions
+guarantees no deadlock, because all four are NECESSARY conditions. This is
+the basis of deadlock prevention: mutual exclusion (hard to break), hold
+and wait (request all at once), no preemption (forcibly take resources), or
+circular wait (impose lock ordering). However, each strategy has practical
+limitations and costs.
+
+INTERVIEW TIP: Agree with the statement but immediately discuss the practical
+cost of each strategy. Breaking "hold and wait" is correct but wasteful.
+Breaking "circular wait" via lock ordering is the most practical.
+
+-----------------------------------------------------------------------------
+Q38: Can a deadlock recovery action cause another deadlock?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: No, recovery resolves the deadlock completely.
+
+WHY IT'S WRONG: Recovery actions are themselves operations that involve
+resource allocation. Process termination releases resources, but those
+resources are then allocated to surviving processes, potentially creating
+new circular waits. Resource preemption similarly changes the allocation
+state. Poorly designed recovery can absolutely cause cascading deadlocks.
+
+CORRECT ANSWER: Yes. Recovery actions like process termination or resource
+preemption change the system state and can create new deadlocks. When
+resources are released from terminated processes, they may be allocated in
+a way that creates new circular waits. Robust recovery algorithms must
+analyze the post-recovery state to ensure no new deadlocks are formed, or
+repeat the recovery process until the system is deadlock-free.
+
+INTERVIEW TIP: Use the term "cascading deadlock" to describe this phenomenon.
+It shows you've thought beyond the immediate problem.
+
+
+=============================================================================
+SECTION 5: MEMORY MANAGEMENT (Questions 39-48)
+=============================================================================
+
+-----------------------------------------------------------------------------
+Q39: Does virtual memory guarantee no performance loss?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, virtual memory makes programs run as if they have
+all the memory they need, so there is no performance penalty.
+
+WHY IT'S WRONG: Virtual memory introduces significant overhead: page table
+walks for every memory access (mitigated by TLB), page faults that require
+disk I/O (extremely slow), and memory management overhead. Even with a TLB
+hit, there is overhead. Page faults can cause orders of magnitude slowdown.
+Virtual memory trades performance for flexibility - it is not free.
+
+CORRECT ANSWER: No. Virtual memory introduces overhead from page table
+lookups (mitigated by TLB), page fault handling (disk I/O is 100,000x slower
+than RAM), and page replacement algorithms. The performance depends on the
+ locality of reference and how well the working set fits in physical memory.
+Heavy page faulting (thrashing) can degrade performance severely. Virtual
+memory trades some performance for the flexibility of using more memory than
+physically available.
+
+INTERVIEW TIP: Quantify the cost - disk I/O is 5-6 orders of magnitude
+slower than RAM. This makes the performance impact concrete.
+
+-----------------------------------------------------------------------------
+Q40: Can a page fault occur even when physical memory has free frames?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: No, page faults only occur when memory is full and
+replacement is needed.
+
+WHY IT'S WRONG: A page fault occurs whenever a referenced page is not in
+physical memory, regardless of whether free frames exist. Free frames are
+only relevant to the page REPLACEMENT policy, not to page fault occurrence.
+A page fault can happen on the very first memory access if the page hasn't
+been loaded yet (demand paging). The page fault handler then uses a free
+frame to load the page from disk.
+
+CORRECT ANSWER: Yes. A page fault occurs whenever the OS tries to access a
+page that is not currently mapped in physical memory. This can happen even
+with abundant free frames - for example, when a program first accesses a
+new page that hasn't been loaded from disk yet. The free frames simply make
+the page fault resolution faster (no replacement needed), but the fault
+itself still occurs.
+
+INTERVIEW TIP: Clearly separate "page fault occurrence" from "page fault
+resolution." The fault happens because the page is not in memory, not
+because memory is full.
+
+-----------------------------------------------------------------------------
+Q41: Is a TLB miss always worse than a cache miss?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, a TLB miss is always more expensive than a cache
+miss because it requires a page table walk.
+
+WHY IT'S WRONG: A TLB miss requires a page table walk (10-100 cycles for
+multi-level page tables), while a cache miss requires accessing main memory
+(100+ cycles). In many architectures, a TLB miss is actually CHEAPER than
+a cache miss. The TLB miss penalty depends on whether the page table entries
+are in the cache. If the page table is in L1 cache, a TLB miss is ~10-30
+cycles. A cache miss is ~100-300 cycles.
+
+CORRECT ANSWER: No, not always. A TLB miss penalty is the cost of a page
+table walk, which varies by architecture (10-100 cycles with multi-level
+page tables). A cache miss penalty is the cost of accessing main memory
+(100-300 cycles). If page table entries are cached, a TLB miss is often
+CHEAPER than a cache miss. The cost comparison depends on the page table
+depth and cache hierarchy. Modern systems use hardware page table walkers
+and multi-level TLBs to minimize this cost.
+
+INTERVIEW TIP: Give approximate cycle counts. TLB miss: 10-100 cycles.
+Cache miss: 100-300 cycles. This makes the answer precise and concrete.
+
+-----------------------------------------------------------------------------
+Q42: Does paging always eliminate external fragmentation?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, paging eliminates all fragmentation.
+
+WHY IT'S WRONG: Paging eliminates EXTERNAL fragmentation because any free
+frame can be allocated to any page. However, it introduces INTERNAL
+fragmentation - the last page of a process may not be fully utilized. If
+a process needs 4100 bytes and pages are 4096 bytes, it needs 2 pages, but
+the second page is mostly wasted. So paging eliminates external but
+introduces internal fragmentation.
+
+CORRECT ANSWER: Paging eliminates external fragmentation because any free
+frame can be used for any page. However, it introduces internal fragmentation
+in the last page of each process. For example, with 4KB pages, a 5KB
+process uses 2 pages (8KB allocated), wasting 3KB. The amount of internal
+fragmentation depends on the page size and process size. Smaller pages
+reduce internal fragmentation but increase page table overhead.
+
+INTERVIEW TIP: Make the distinction clear: paging eliminates external
+fragmentation but introduces internal fragmentation. The total fragmentation
+is the internal fragmentation in the last page.
+
+-----------------------------------------------------------------------------
+Q43: Can LRU replacement cause Belady's anomaly?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, any page replacement algorithm can exhibit Belady's
+anomaly.
+
+WHY IT'S WRONG: LRU (and all stack algorithms) do NOT exhibit Belady's
+anomaly. Belady's anomaly only occurs in non-stack algorithms like FIFO.
+The property that prevents Belady's anomaly is the stack property: for a
+stack algorithm, the set of pages in memory with M frames is always a subset
+of the pages with M+1 frames. LRU satisfies this property, so increasing
+frames never increases page faults.
+
+CORRECT ANSWER: No. LRU is a stack algorithm and does not exhibit Belady's
+anomaly. Stack algorithms have the property that the set of pages in memory
+with M frames is always a subset of those with M+1 frames, so more frames
+means fewer or equal page faults. FIFO is a non-stack algorithm and DOES
+exhibit Belady's anomaly. Optimal (OPT) and LRU are stack algorithms and
+are anomaly-free.
+
+INTERVIEW TIP: Define "stack algorithm" and explain why it prevents Belady's
+anomaly. Then give FIFO as the counterexample that DOES exhibit it.
+
+-----------------------------------------------------------------------------
+Q44: Is thrashing caused by too few processes?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, thrashing happens when there are too few processes.
+
+WHY IT'S WRONG: Thrashing is caused by TOO MANY processes competing for
+limited physical memory, not too few. When the total working sets of all
+processes exceed available physical memory, the system constantly pages
+in and out, spending more time on page fault handling than on useful work.
+This is the opposite of "too few processes."
+
+CORRECT ANSWER: No, thrashing is caused by TOO MANY processes (or processes
+with too-large working sets) competing for limited physical memory. When the
+sum of all processes' working sets exceeds physical memory, the system
+constantly swaps pages in and out, spending most of its time on I/O rather
+than computation. The degree of multiprogramming exceeds what memory can
+support. Adding MORE processes makes it worse; reducing the number of
+processes helps.
+
+INTERVIEW TIP: Clearly state that thrashing is caused by excessive
+multiprogramming. The solution is to reduce the number of processes or
+increase physical memory.
+
+-----------------------------------------------------------------------------
+Q45: Does a larger page size always improve performance?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, larger pages reduce TLB misses and page table
+size.
+
+WHY IT'S WRONG: Larger pages have trade-offs. Benefits: fewer TLB misses,
+smaller page tables, better sequential I/O performance. Costs: more internal
+fragmentation, higher memory waste for small processes, longer page fault
+handling time (more data to transfer from disk), and worse cache behavior
+(pollution). The optimal page size depends on the workload - not all
+applications benefit from large pages.
+
+CORRECT ANSWER: No. Larger pages reduce TLB misses and page table overhead,
+but increase internal fragmentation, page fault transfer time, and cache
+pollution. A 64KB page for a process needing 1KB wastes 63KB. Large pages
+help sequential access patterns but hurt random small-access workloads. The
+optimal page size is workload-dependent. This is why modern systems support
+multiple page sizes (huge pages, standard pages) simultaneously.
+
+INTERVIEW TIP: Mention that modern systems use transparent huge pages (THP)
+dynamically choosing page sizes. This shows practical, up-to-date knowledge.
+
+-----------------------------------------------------------------------------
+Q46: Can a process have a virtual address larger than physical memory?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: No, the virtual address space cannot exceed physical
+memory.
+
+WHY IT'S WRONG: This is exactly what virtual memory enables. A 64-bit
+process can have a virtual address space of up to 2^48 bytes (256 TB on
+x86-64) regardless of how much physical RAM is installed. The virtual
+address space is mapped to physical memory on demand. Pages that are not
+currently used are stored on disk (swap space). The entire point of virtual
+memory is to decouple virtual addresses from physical memory size.
+
+CORRECT ANSWER: Yes, this is the fundamental purpose of virtual memory.
+Virtual memory decouples virtual addresses from physical memory. A process
+can have a virtual address space vastly larger than physical RAM by storing
+inactive pages on disk (swap). For example, a 64-bit process can address
+up to 256 TB of virtual memory even on a system with 8GB of RAM. Active
+pages are kept in physical memory; inactive pages reside on disk.
+
+INTERVIEW TIP: State confidently that this is the CORE PURPOSE of virtual
+memory. Give a concrete example with numbers to make it impressive.
+
+-----------------------------------------------------------------------------
+Q47: Is memory fragmentation a problem in modern systems?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: No, modern systems use paging and virtual memory, so
+fragmentation is solved.
+
+WHY IT'S WRONG: External fragmentation is solved by paging, but internal
+fragmentation still exists (last page waste). Additionally, heap-level
+fragmentation (from malloc/free) is a real problem even in modern systems.
+Long-running servers (web servers, databases) can suffer significant heap
+fragmentation over time, leading to memory allocation failures despite
+having enough total free memory.
+
+CORRECT ANSWER: External fragmentation is largely solved by paging. However,
+internal fragmentation (wasted space in last pages) still exists. More
+importantly, heap-level fragmentation from dynamic memory allocation
+(malloc/free) remains a real problem in modern systems, especially long-
+running servers. Fragmentation can cause allocation failures even when
+total free memory is sufficient, because the free memory is scattered in
+small non-contiguous blocks.
+
+INTERVIEW TIP: Distinguish between three types: external (solved by paging),
+internal (still exists), and heap fragmentation (real problem in practice).
+
+-----------------------------------------------------------------------------
+Q48: Does demand paging always use less memory than pre-paging?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, demand paging only loads pages when needed, so
+it always uses less memory.
+
+WHY IT'S WRONG: Demand paging loads pages on-demand, which minimizes wasted
+I/O for pages never accessed. But it can cause MORE page faults if pages
+are accessed in patterns the page fault handler doesn't predict. Pre-paging
+(loading neighboring pages proactively) can reduce total page faults for
+sequential access patterns, reducing overall I/O time. "Uses less memory"
+is ambiguous - both approaches use the same amount of physical memory for
+active pages; the difference is in I/O efficiency.
+
+CORRECT ANSWER: Demand paging and pre-paging use the same amount of physical
+memory for actively-used pages. Demand paging minimizes wasted I/O by only
+loading pages on demand, but may cause more page faults for predictable
+access patterns. Pre-paging proactively loads neighboring pages, reducing
+page faults for sequential access but wasting I/O for pages never accessed.
+Neither always uses "less" memory - they differ in I/O efficiency and page
+fault frequency, not memory consumption.
+
+INTERVIEW TIP: Clarify that both approaches use the same physical memory
+for active pages. The difference is I/O behavior, not memory consumption.
+
+
+=============================================================================
+SECTION 6: I/O AND INTERRUPTS (Questions 49-55)
+=============================================================================
+
+-----------------------------------------------------------------------------
+Q49: Does every interrupt cause a context switch?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, every interrupt forces a context switch to the
+kernel and back.
+
+WHY IT'S WRONG: An interrupt causes a switch to kernel mode (interrupt
+handler), but not necessarily a full context switch to another process. If
+the interrupt handler completes quickly and returns to the same process, no
+process context switch occurs - only a mode switch (user to kernel and back).
+A full context switch only happens if the interrupt handler wakes a
+higher-priority process or the current process blocks.
+
+CORRECT ANSWER: No. An interrupt causes a mode switch (user to kernel), but
+not always a full process context switch. If the interrupt handler completes
+and returns to the same process, only the mode switch occurs. A full context
+switch (saving/restoring registers, switching address spaces) only happens
+if the handler wakes a higher-priority process, the current process blocks,
+or the scheduler decides to preempt. Mode switch: ~microseconds. Context
+switch: ~tens of microseconds.
+
+INTERVIEW TIP: Distinguish between mode switch and context switch. This
+precision demonstrates deep understanding of interrupt handling.
+
+-----------------------------------------------------------------------------
+Q50: Is polling always worse than interrupts?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, interrupts are always more efficient than polling.
+
+WHY IT'S WRONG: Polling is better when devices respond very quickly (within
+microseconds). In that case, the overhead of an interrupt (context saving,
+handler setup, mode switch) is higher than simply checking the device status
+in a tight loop. Polling also avoids interrupt storms (many rapid interrupts
+overwhelming the CPU). Modern high-speed networks and SSDs sometimes use
+polling (busy-waiting) for the lowest latency. Hybrid approaches (adaptive
+polling) are also common.
+
+CORRECT ANSWER: No. Polling is more efficient when devices respond very
+quickly, because interrupt handling has overhead (context save, mode switch,
+handler dispatch). For fast devices, polling avoids this overhead. Polling
+also prevents interrupt storms and gives deterministic latency. Modern systems
+use adaptive approaches: poll first, then switch to interrupts if the device
+takes longer. NVMe and high-speed networking often use polling for minimum
+latency.
+
+INTERVIEW TIP: Give a concrete example: high-frequency trading systems use
+polling for nanosecond-level latency, not interrupts.
+
+-----------------------------------------------------------------------------
+Q51: Can DMA work without interrupts?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: No, DMA always uses interrupts to signal completion.
+
+WHY IT'S WRONG: DMA can work without interrupts by using polling. The CPU
+can periodically check the DMA controller's status register to see if the
+transfer is complete. This is called "polling mode DMA." While interrupt-
+driven DMA is more common (the device signals completion via interrupt),
+polling-based DMA is used when low latency is critical and the transfer
+time is very short. Some systems also use DMA completion callbacks without
+traditional interrupts.
+
+CORRECT ANSWER: Yes. DMA can operate in polling mode where the CPU
+periodically checks the DMA controller's status register instead of
+receiving an interrupt. The CPU programs the DMA controller, starts the
+transfer, and polls for completion. While less common than interrupt-driven
+DMA (where the device signals completion via interrupt), polling-based DMA
+avoids interrupt overhead for very short transfers. Modern systems may also
+use memory-mapped DMA descriptors polled by the CPU.
+
+INTERVIEW TIP: Mention that DMA's purpose is to offload data transfer from
+the CPU - the completion signaling mechanism (interrupt vs poll) is separate
+from the DMA transfer itself.
+
+-----------------------------------------------------------------------------
+Q52: Is an interrupt the same as an exception?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, they are both hardware signals that cause the CPU
+to change modes.
+
+WHY IT'S WRONG: They are related but different. An interrupt is asynchronous
+- it comes from external hardware (I/O devices, timers) and can happen at
+any point in instruction execution. An exception is synchronous - it is
+caused by the instruction currently executing (page fault, divide by zero,
+system call). Both cause a switch to kernel mode, but their origin and
+predictability differ.
+
+CORRECT ANSWER: No. An interrupt is asynchronous, triggered by external
+hardware events (I/O completion, timer, network packet) at unpredictable
+times. An exception is synchronous, triggered by the currently executing
+instruction (page fault, divide by zero, illegal instruction, system call).
+Both cause a mode switch to kernel mode, but interrupts are unpredictable
+(external) while exceptions are deterministic consequences of the current
+instruction. System calls are a special type of exception (trap).
+
+INTERVIEW TIP: Use the keywords "asynchronous" for interrupts and
+"synchronous" for exceptions. This is the core distinction.
+
+-----------------------------------------------------------------------------
+Q53: Can a device driver be written in user space?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: No, device drivers must be in kernel space to access
+hardware.
+
+WHY IT'S WRONG: User-space drivers are not only possible but increasingly
+common. User-space drivers use mechanisms like UIO (Userspace I/O) in Linux,
+FUSE for filesystems, and io_uring for I/O. They communicate with hardware
+through memory-mapped I/O or kernel-provided interfaces. Benefits include
+better isolation (a driver crash doesn't crash the kernel), easier debugging,
+and no need to recompile the kernel. Trade-offs include higher latency for
+some operations.
+
+CORRECT ANSWER: Yes, user-space drivers are increasingly common. Linux UIO
+(Userspace I/O), FUSE (Filesystem in Userspace), and io_uring support
+user-space drivers. They access hardware through memory-mapped I/O regions
+exposed by a minimal kernel stub, or through kernel-mediated interfaces.
+Benefits: better isolation (driver crash doesn't kernel panic), easier
+development/debugging, no kernel recompilation. Trade-offs: higher latency
+for some operations and limited access to kernel facilities.
+
+INTERVIEW TIP: Give FUSE as a concrete example - it's widely used (SSHFS,
+NTFS-3G) and clearly demonstrates user-space driver capability.
+
+-----------------------------------------------------------------------------
+Q54: Is every system call implemented via an interrupt?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, system calls are triggered by software interrupts
+(int 0x80).
+
+WHY IT'S WRONG: Modern x86-64 systems use the SYSCALL/SYSRET mechanism,
+not interrupts. On ARM, they use SVC (Supervisor Call). While historically
+system calls were implemented via software interrupts (int 0x80 on older
+x86), modern CPUs provide dedicated, faster instructions for the user-to-
+kernel transition. The concept is the same (mode switch), but the mechanism
+is not an interrupt.
+
+CORRECT ANSWER: No. While historically system calls used software interrupts
+(int 0x80 on 32-bit x86), modern systems use dedicated instructions:
+SYSCALL/SYSRET on x86-64, SVC on ARM. These are faster than interrupt-based
+transitions because they don't require an interrupt descriptor table lookup.
+All system calls cause a mode switch to kernel mode, but the mechanism is
+a dedicated trap instruction, not a hardware interrupt. The distinction is
+implementation detail - the conceptual mechanism is a privileged mode switch.
+
+INTERVIEW TIP: Mention the evolution: int 0x80 (old x86) -> SYSCALL (x86-64)
+-> dedicated ARM instructions. This shows historical and practical knowledge.
+
+-----------------------------------------------------------------------------
+Q55: Does DMA completely eliminate CPU involvement?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, DMA handles all data transfer without any CPU
+involvement.
+
+WHY IT'S WRONG: DMA eliminates CPU involvement in the DATA TRANSFER phase,
+but the CPU is still needed for: (1) setting up the DMA transfer (programming
+the controller with source, destination, length), (2) handling the completion
+interrupt, (3) handling errors, and (4) managing buffers. The CPU is freed
+from copying each byte, but the DMA setup and completion handling still
+require CPU time.
+
+CORRECT ANSWER: No. DMA eliminates CPU involvement in the actual data
+transfer phase - the DMA controller moves data between devices and memory
+without CPU intervention. However, the CPU must still: (1) program the DMA
+controller with transfer parameters (source, destination, size), (2) handle
+the completion interrupt, (3) manage buffer allocation and error handling,
+and (4) set up subsequent transfers. DMA saves CPU time during transfer but
+does not make the CPU completely uninvolved.
+
+INTERVIEW TIP: Break it into phases: setup (CPU involved), transfer (CPU
+free), completion (CPU involved). This structured answer shows clarity.
+
+
+=============================================================================
+SECTION 7: SYSTEM CALLS AND KERNEL (Questions 56-60)
+=============================================================================
+
+-----------------------------------------------------------------------------
+Q56: Are system calls always slower than regular function calls?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, system calls are always much slower than regular
+function calls because they involve a mode switch.
+
+WHY IT'S WRONG: While system calls are generally slower than user-space
+function calls, the difference depends on the function call. A complex
+user-space computation may take much longer than a simple system call like
+getpid() (which may be cached by vDSO). Modern Linux uses vDSO (virtual
+Dynamic Shared Object) to implement some system calls entirely in user space,
+eliminating the mode switch. The overhead of system calls has also decreased
+with modern CPU features.
+
+CORRECT ANSWER: Generally yes, due to mode switch overhead (save/restore
+registers, kernel entry/exit, address space switch). However, some system
+calls are optimized: Linux vDSO implements gettimeofday() and clock_gettime()
+in user space without a mode switch. Also, a system call like getpid() is
+very fast (cached result), while a complex user-space function may take
+longer. The overhead is significant (~100-1000ns per call) but the comparison
+depends on the specific function being called.
+
+INTERVIEW TIP: Mention vDSO - it's a clever optimization that implements
+certain system calls in user space. This shows deep Linux knowledge.
+
+-----------------------------------------------------------------------------
+Q57: Can user code ever run in kernel mode?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, during a system call, user code runs in kernel
+mode.
+
+WHY IT'S WRONG: This is tricky. User code NEVER runs in kernel mode. When
+a system call is made, the CPU switches to kernel mode and the KERNEL CODE
+handles the request. The user code is suspended and resumes after the kernel
+completes the operation. The user's instruction stream does not continue in
+kernel mode - entirely different kernel code executes. This is a critical
+security boundary.
+
+CORRECT ANSWER: No, user code never executes in kernel mode. When a system
+call is made, the CPU transitions to kernel mode and the KERNEL's code
+executes the system call handler. The user code is suspended at the point
+of the system call and resumes after the kernel completes the operation. The
+entire purpose of kernel/user mode separation is to prevent user code from
+executing privileged instructions. Even during interrupt handling, it is
+kernel code that runs, not the interrupted user code.
+
+INTERVIEW TIP: Be very clear: the CPU switches to kernel mode, but it runs
+KERNEL CODE, not user code. This is a crucial distinction that many
+candidates miss.
+
+-----------------------------------------------------------------------------
+Q58: Is the kernel always running in kernel mode?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, kernel code always executes in kernel mode.
+
+WHY IT'S WRONG: The kernel sometimes runs in user mode! When the kernel
+returns to a user process via the sysret/iret instruction, there is a brief
+window. More importantly, in Linux, the kernel runs in user mode when it
+returns to user space and when certain kernel threads (like vDSO) execute
+in user-mode context. Also, the kernel runs in the context of a user process
+and uses the user process's address space (switching page tables on return).
+
+CORRECT ANSWER: Mostly yes, but with nuances. The kernel runs in kernel mode
+when handling system calls, interrupts, and exceptions. However, when the
+kernel returns control to user space (via sysret), there is a transition
+period. Additionally, Linux kernel threads run in kernel mode but can be
+scheduled like user processes. The kernel also temporarily uses the user
+process's address space during certain operations. In practice, the kernel
+is almost always in kernel mode when executing kernel code.
+
+INTERVIEW TIP: Acknowledge the nuance. The answer is "almost always, yes"
+but show awareness of the transition points and edge cases.
+
+-----------------------------------------------------------------------------
+Q59: Can a system call cause a context switch?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: No, a system call just switches to kernel mode and
+returns.
+
+WHY IT'S WRONG: A system call CAN cause a context switch if the kernel
+determines that the calling process should be descheduled. Examples: the
+process calls read() and no data is available (blocks), calls sleep()
+voluntarily, calls yield(), or a higher-priority process becomes runnable.
+Any system call that blocks the current process will cause a context switch
+to another process.
+
+CORRECT ANSWER: Yes, many system calls can cause a context switch. If the
+system call blocks the process (e.g., read() with no data available, sleep(),
+wait()), the kernel scheduler selects another process to run, causing a full
+context switch. Even non-blocking system calls can trigger a context switch
+if they wake a higher-priority process (e.g., write() completing an I/O
+operation that wakes a waiting reader). System calls like yield() explicitly
+request a context switch.
+
+INTERVIEW TIP: Give specific examples: read() blocking on empty pipe,
+sleep() for timer, write() waking a reader. These concrete examples
+demonstrate practical understanding.
+
+-----------------------------------------------------------------------------
+Q60: Is every trap a system call?
+-----------------------------------------------------------------------------
+COMMON WRONG ANSWER: Yes, traps are how user programs make system calls.
+
+WHY IT'S WRONG: Traps are a broader category that INCLUDES system calls but
+is not limited to them. A trap is any synchronous exception caused by
+software. System calls are traps, but so are: divide-by-zero exceptions,
+page faults, breakpoint traps (for debugging), overflow traps, and illegal
+instruction traps. System calls are intentional traps; many other traps are
+error conditions or debugging mechanisms.
+
+CORRECT ANSWER: No. A trap is any synchronous software-triggered exception,
+which is a broader category. System calls are intentional traps used to
+request kernel services. But traps also include: page faults (not a system
+call), divide-by-zero exceptions, arithmetic overflow, breakpoint traps
+for debuggers, and illegal instruction faults. System calls are a SUBSET
+of traps - specifically, the ones deliberately invoked by user programs
+via dedicated instructions (syscall, int 0x80, SVC).
+
+INTERVIEW TIP: Draw the hierarchy: Exceptions (broad) -> Traps (software-
+triggered) -> System calls (intentional service requests). This shows
+systematic understanding.
+
+
+=============================================================================
+QUICK REFERENCE: KEY CORRECTIONS SUMMARY
+=============================================================================
+
+#  MISTAKE                                        CORRECTION
+-- --------------------------------------------  -------------------------------------------
+1  Node.js = single-threaded OS process           Multi-threaded at OS level (libuv)
+2  Process always heavier than thread             Depends on resource sharing, not raw cost
+3  Multithreading always improves perf            Can hurt on single-core, CPU-bound tasks
+4  Thread can run without process                 Never - thread requires process resources
+5  Threads share the same stack                  Each thread has its OWN private stack
+6  Process always has at least one thread         Zombie process has zero threads
+7  fork() creates a thread                        fork() creates a new PROCESS
+8  fork() ~= thread creation                     Completely different (separate vs shared)
+9  Zombie process consumes CPU                    Consumes PID slot, not CPU time
+10 Orphan process always bad                     Daemons intentionally orphan themselves
+11 Process has exactly one parent always          Can be reparented to init after parent dies
+12 Process survives with zero threads             Process terminates when last thread exits
+13 Round Robin always fair                        Fair in access, not in completion time
+14 SJF always optimal avg wait                   Only non-preemptive SJF; SRTF is optimal
+15 Preemptive always better                      More overhead; non-preemptive better for batch
+16 Highest priority always runs first             Only if RUNNABLE (not blocked on I/O)
+17 Larger quantum always fewer switches           Only for CPU-bound; I/O-bound unaffected
+18 Starvation impossible in Round Robin           Theoretically yes; practically degraded
+19 Priority = runs first always                  Only from the ready queue
+20 Convoy effect in Round Robin                  RR was designed to prevent it
+21 Race condition always observable              Non-deterministic; may never manifest
+22 Mutex alone causes deadlock                   Locking PATTERN causes deadlock
+23 Semaphore always prevents race conditions      Only if used correctly
+24 Binary semaphore == mutex                     Different: ownership, priority inheritance
+25 Race condition needs shared variables          Files, sockets, stdout are shared too
+26 Mutex automatically makes code thread-safe     ALL accesses must be protected consistently
+27 Semaphore cannot cause starvation              No FIFO guarantee in standard semaphore
+28 Signal inside critical section is fine          Better to signal after lock release
+29 Monitor solves all sync problems               Can't handle barriers, complex patterns
+30 Deadlock needs multiple resource types         One type with multiple instances suffices
+31 Deadlock needs multiple processes              Single process with multithreading can deadlock
+32 Circular wait == deadlock                      Necessary but not sufficient condition
+33 Safe state and deadlock possible               Safe = deadlock impossible by definition
+34 Banker's prevents all deadlocks                Only if max needs known in advance
+35 Circular wait without deadlock impossible      Possible if preemption is allowed
+36 Detection causes additional deadlocks          Recovery actions can, not detection itself
+37 Breaking one condition prevents deadlock       Yes, but practical costs vary greatly
+38 Recovery cannot cause deadlock                 Poor recovery can cause cascading deadlocks
+39 Virtual memory = no performance loss           Page faults, TLB overhead, thrashing
+40 Page fault only when memory full               Occurs whenever page not in physical memory
+41 TLB miss always worse than cache miss          TLB miss often cheaper (10-100 vs 100-300 cycles)
+42 Paging eliminates all fragmentation            Eliminates external, introduces internal
+43 LRU causes Belady's anomaly                   LRU is a stack algorithm - anomaly-free
+44 Thrashing from too few processes               From too many processes overloading memory
+45 Larger page always improves performance        Trade-off: TLB efficiency vs waste/overhead
+46 Virtual addr <= physical memory                Virtual memory explicitly decouples them
+47 Fragmentation not a problem in modern systems   Heap fragmentation remains real problem
+48 Demand paging uses less memory                 Same physical memory; different I/O patterns
+49 Every interrupt causes context switch          Mode switch, not necessarily context switch
+50 Polling always worse than interrupts           Better for fast devices, low-latency needs
+51 DMA requires interrupts                       Can use polling for completion signaling
+52 Interrupt == exception                        Async (external) vs sync (instruction)
+53 Driver must be in kernel space                UIO, FUSE, io_uring support user-space
+54 System call via interrupt                      Modern: SYSCALL/SYSRET, SVC instructions
+55 DMA eliminates all CPU involvement             CPU still does setup, completion, errors
+56 System calls always slower                    vDSO implements some in user space
+57 User code runs in kernel mode                 Never - kernel code runs, user code suspended
+58 Kernel always in kernel mode                  Almost; transition windows exist
+59 System call never causes context switch        Blocking calls (read, sleep) do
+60 Every trap is a system call                   Traps include faults, breakpoints, overflows
+
+=============================================================================
+            END OF OS TRICKY INTERVIEW QUESTIONS
+=============================================================================
